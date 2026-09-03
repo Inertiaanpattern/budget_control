@@ -1,420 +1,463 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f3dfe4">
+<link rel="apple-touch-icon" href="money-pouch-icon.png">
+
 <title>Контроль трат</title>
 
 <style>
-:root {
-  --bg: #f8f2f1;
-  --card: #fffafa;
-  --text: #292526;
-  --muted: #8c8181;
-  --pink: #c98f9d;
-  --pink-light: #f1dfe3;
-  --pink-pale: #f8ecee;
-  --danger: #b85f68;
-  --border: #eadedf;
-  --dark: #302b2c;
+:root{
+  --bg:#f5f2ed;
+  --card:#fff;
+  --ink:#242229;
+  --muted:#77727b;
+  --accent:#c98f9f;
+  --soft:#f5e7eb;
+  --line:#e7e2db;
+  --good:#287b58;
+  --bad:#bd4e4e;
 }
 
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
+*{
+  box-sizing:border-box;
 }
 
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
-               "SF Pro Text", Arial, sans-serif;
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "Segoe UI",
+    sans-serif;
 }
 
-.app {
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 18px 16px 100px;
+button,
+input,
+select{
+  font:inherit;
 }
 
-h1, h2, h3, p {
-  margin: 0;
+button{
+  cursor:pointer;
+  border:0;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
+.app{
+  width:min(100%,480px);
+  margin:auto;
+  min-height:100vh;
+  padding:
+    18px
+    16px
+    calc(100px + env(safe-area-inset-bottom));
 }
 
-.header-title {
-  font-size: 27px;
-  font-weight: 750;
-  letter-spacing: -0.7px;
+/* HEADER */
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:16px;
 }
 
-.month {
-  color: var(--muted);
-  font-size: 14px;
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
 
-/* HERO */
-
-.hero {
-  background: var(--dark);
-  color: white;
-  border-radius: 28px;
-  padding: 24px;
-  margin-bottom: 14px;
+.brand-icon{
+  width:48px;
+  height:48px;
+  border-radius:14px;
+  object-fit:cover;
+  box-shadow:0 4px 12px #7a4b5018;
 }
 
-.hero-label {
-  font-size: 14px;
-  opacity: .7;
-  margin-bottom: 8px;
+.top h1{
+  font-size:25px;
+  margin:0;
+  letter-spacing:-.5px;
 }
 
-.hero-number {
-  font-size: 43px;
-  font-weight: 800;
-  letter-spacing: -1.5px;
+.eyebrow,
+.muted{
+  font-size:13px;
+  color:var(--muted);
 }
 
-.hero-sub {
-  margin-top: 8px;
-  font-size: 14px;
-  opacity: .72;
-}
-
-.progress {
-  height: 7px;
-  background: rgba(255,255,255,.14);
-  border-radius: 10px;
-  margin-top: 20px;
-  overflow: hidden;
-}
-
-.progress-inner {
-  height: 100%;
-  width: 0%;
-  background: #e5b9c3;
-  border-radius: 10px;
-  transition: width .25s;
+.iconbtn{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  background:#fff;
+  border:1px solid var(--line);
+  font-size:18px;
 }
 
 /* CARDS */
 
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 23px;
-  padding: 19px;
-  margin-bottom: 12px;
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:17px;
+  margin:11px 0;
+  box-shadow:0 5px 18px #00000008;
 }
 
-.card-title {
-  font-size: 15px;
-  font-weight: 700;
-  margin-bottom: 14px;
+.hero{
+  background:#25222b;
+  color:#fff;
+  border:0;
+  padding:20px;
 }
 
-.stat-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  font-size: 14px;
+.hero .eyebrow{
+  color:#bdb8c5;
 }
 
-.stat-row span:first-child {
-  color: var(--muted);
+.big{
+  font-size:43px;
+  line-height:1.05;
+  font-weight:800;
+  letter-spacing:-2px;
+  margin:7px 0;
 }
 
-.stat-value {
-  font-weight: 700;
+.hero .big{
+  font-size:45px;
 }
 
-/* BUTTON */
-
-.primary {
-  width: 100%;
-  border: 0;
-  background: var(--pink);
-  color: white;
-  padding: 16px;
-  border-radius: 17px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
+.hero .muted{
+  color:#c4bec9;
 }
 
-.primary:active {
-  transform: scale(.98);
+.line{
+  height:1px;
+  background:var(--line);
+  margin:14px 0;
 }
 
-.secondary {
-  width: 100%;
-  border: 0;
-  background: var(--pink-light);
-  color: #64484f;
-  padding: 14px;
-  border-radius: 15px;
-  font-size: 15px;
-  font-weight: 650;
-  cursor: pointer;
+.hero .line{
+  background:#47434d;
 }
 
-/* CATEGORY */
-
-.category-row {
-  padding: 13px 0;
-  border-bottom: 1px solid var(--border);
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
 }
 
-.category-row:last-child {
-  border-bottom: 0;
+.mini{
+  background:#faf9f7;
+  border-radius:16px;
+  padding:13px;
 }
 
-.category-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.label{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:4px;
 }
 
-.category-name {
-  font-size: 14px;
-  font-weight: 650;
+.hero .label{
+  color:#c7c1cc;
 }
 
-.category-remaining {
-  font-size: 14px;
-  font-weight: 750;
+.section{
+  font-size:18px;
+  font-weight:750;
+  margin:23px 2px 8px;
 }
 
-.category-remaining.negative {
-  color: var(--danger);
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
 }
 
-.category-meta {
-  display: flex;
-  justify-content: space-between;
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 5px;
+.amount{
+  font-weight:750;
 }
 
-.category-bar {
-  height: 5px;
-  background: #eee4e4;
-  border-radius: 10px;
-  margin-top: 8px;
-  overflow: hidden;
+.good{
+  color:var(--good);
 }
 
-.category-bar-inner {
-  height: 100%;
-  background: var(--pink);
-  border-radius: 10px;
+.bad{
+  color:var(--bad);
 }
 
-/* MODAL */
+/* PROGRESS */
 
-.overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(40,35,36,.38);
-  z-index: 10;
-  align-items: flex-end;
-  justify-content: center;
+.progress{
+  height:8px;
+  background:#ebe7e1;
+  border-radius:99px;
+  overflow:hidden;
+  margin:11px 0;
 }
 
-.overlay.open {
-  display: flex;
+.progress i{
+  display:block;
+  height:100%;
+  background:var(--accent);
 }
 
-.modal {
-  width: 100%;
-  max-width: 480px;
-  background: #fffafa;
-  border-radius: 28px 28px 0 0;
-  padding: 20px 17px 30px;
-  max-height: 90vh;
-  overflow-y: auto;
+/* ACCOUNTS */
+
+.account{
+  display:flex;
+  align-items:center;
+  gap:12px;
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+.ico{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  background:var(--soft);
+  display:grid;
+  place-items:center;
+  font-size:20px;
 }
 
-.modal-title {
-  font-size: 21px;
-  font-weight: 750;
+/* OPERATIONS */
+
+.op{
+  padding:12px 0;
+  border-bottom:1px solid var(--line);
 }
 
-.close {
-  width: 34px;
-  height: 34px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--pink-pale);
-  font-size: 20px;
-  cursor: pointer;
+.op:last-child{
+  border-bottom:0;
 }
 
-.amount {
-  width: 100%;
-  border: 0;
-  background: var(--pink-pale);
-  border-radius: 20px;
-  padding: 20px;
-  font-size: 36px;
-  font-weight: 750;
-  text-align: center;
-  outline: none;
-  color: var(--text);
-  margin-bottom: 15px;
+.op .title{
+  font-weight:650;
 }
 
-.field-label {
-  color: var(--muted);
-  font-size: 12px;
-  margin: 14px 0 7px;
+.pill{
+  font-size:11px;
+  padding:5px 8px;
+  border-radius:99px;
+  background:var(--soft);
+  color:#8f5f6d;
 }
 
-.select {
-  width: 100%;
-  border: 1px solid var(--border);
-  background: white;
-  border-radius: 15px;
-  padding: 14px;
-  font-size: 15px;
-  color: var(--text);
+/* BUTTONS */
+
+.primary{
+  width:100%;
+  padding:14px;
+  border-radius:15px;
+  background:var(--accent);
+  color:#fff;
+  font-weight:750;
 }
 
-.category-info {
-  margin-top: 12px;
-  background: var(--pink-pale);
-  border-radius: 17px;
-  padding: 14px;
-}
-
-.category-info-title {
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 7px;
-}
-
-.category-info-main {
-  font-size: 21px;
-  font-weight: 800;
-}
-
-.category-info-main.danger {
-  color: var(--danger);
-}
-
-.consequence {
-  margin-top: 10px;
-  padding: 13px;
-  border-radius: 15px;
-  background: white;
-  border: 1px solid var(--border);
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.consequence strong {
-  font-weight: 750;
-}
-
-.modal-button {
-  margin-top: 18px;
+.secondaryBtn{
+  width:100%;
+  padding:13px;
+  border-radius:15px;
+  background:#f4e8ec;
+  color:#8f5f6d;
+  font-weight:700;
+  margin-top:8px;
 }
 
 /* NAV */
 
-.nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(255,250,250,.94);
-  backdrop-filter: blur(15px);
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: center;
-  z-index: 5;
+.bottom{
+  position:fixed;
+  z-index:20;
+  bottom:0;
+  left:0;
+  right:0;
+
+  padding:
+    10px
+    16px
+    calc(10px + env(safe-area-inset-bottom));
+
+  background:#fff;
+  border-top:1px solid var(--line);
+
+  display:flex;
+  gap:8px;
 }
 
-.nav-inner {
-  width: 100%;
-  max-width: 480px;
-  display: flex;
-  justify-content: space-around;
-  padding: 9px 8px 11px;
+.bottom button{
+  flex:1;
+  padding:14px 8px;
+  border-radius:16px;
+  font-weight:750;
+  background:var(--accent);
+  color:#fff;
 }
 
-.nav button {
-  border: 0;
-  background: none;
-  color: var(--muted);
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.nav button.active {
-  color: var(--pink);
-  font-weight: 750;
-}
-
-.nav-icon {
-  font-size: 20px;
-  display: block;
-  margin-bottom: 2px;
+.bottom button.secondary{
+  background:#f4e8ec;
+  color:#8f5f6d;
 }
 
 /* SCREENS */
 
-.screen {
-  display: none;
+.screen{
+  display:none;
 }
 
-.screen.active {
-  display: block;
+.screen.active{
+  display:block;
 }
 
-.hidden {
-  display: none !important;
+.navtitle{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:5px 0 18px;
 }
 
-.section-heading {
-  font-size: 21px;
-  font-weight: 750;
-  margin: 8px 0 14px;
+.back{
+  background:transparent;
+  padding:4px 0;
+  color:var(--accent);
+  font-weight:700;
+}
+
+/* FORMS */
+
+.field{
+  margin:11px 0;
+}
+
+.field label{
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+
+input,
+select{
+  width:100%;
+  padding:13px 14px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fff;
+  outline:0;
+}
+
+input:focus,
+select:focus{
+  border-color:var(--accent);
+}
+
+/* CATEGORIES */
+
+.category{
+  padding:13px 0;
+  border-bottom:1px solid var(--line);
+}
+
+.category:last-child{
+  border-bottom:0;
+}
+
+.cathead{
+  display:flex;
+  justify-content:space-between;
+}
+
+.catbar{
+  height:6px;
+  background:#eeeae4;
+  border-radius:99px;
+  margin-top:8px;
+  overflow:hidden;
+}
+
+.catbar i{
+  display:block;
+  height:100%;
+  background:var(--accent);
 }
 
 /* SCENARIO */
 
-.scenario-box {
-  background: var(--pink-pale);
-  border-radius: 18px;
-  padding: 15px;
-  margin-top: 13px;
-  font-size: 14px;
-  line-height: 1.5;
+.scenario{
+  background:#fbf2f5;
+  border:1px solid #efdce2;
+  border-radius:18px;
+  padding:15px;
+  margin-top:12px;
 }
 
-.small-note {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.4;
-  margin-top: 10px;
+/* MODAL */
+
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:50;
+  background:#0008;
+  display:none;
+  align-items:flex-end;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.sheet{
+  width:min(480px,100%);
+  background:#fff;
+  border-radius:26px 26px 0 0;
+  padding:
+    20px
+    18px
+    calc(24px + env(safe-area-inset-bottom));
+  max-height:90vh;
+  overflow:auto;
+}
+
+.sheet h2{
+  margin:0 0 14px;
+}
+
+/* TOAST */
+
+.toast{
+  position:fixed;
+  z-index:80;
+  left:50%;
+  bottom:95px;
+  transform:translateX(-50%);
+
+  background:#25222b;
+  color:#fff;
+
+  padding:12px 16px;
+  border-radius:14px;
+
+  display:none;
+  white-space:nowrap;
+
+  box-shadow:0 8px 30px #0003;
+}
+
+.empty{
+  padding:18px 0;
+  text-align:center;
+  color:var(--muted);
 }
 </style>
 </head>
@@ -423,180 +466,91 @@ h1, h2, h3, p {
 
 <div class="app">
 
-  <!-- HOME -->
-  <section id="home" class="screen active">
+<!-- =========================
+     ГЛАВНЫЙ ЭКРАН
+========================= -->
 
-    <div class="header">
+<div id="home" class="screen active">
+
+  <div class="top">
+
+    <div class="brand">
+
+      <img
+        class="brand-icon"
+        src="money-pouch-icon.png"
+        alt="Мешочек с монетами"
+      >
+
       <div>
-        <div class="header-title">Контроль трат</div>
-        <div class="month">Июль 2026</div>
+        <div class="eyebrow">
+          Сентябрь 2026
+        </div>
+
+        <h1>
+          Контроль трат
+        </h1>
       </div>
+
     </div>
 
-    <div class="hero">
-      <div class="hero-label">Сегодня можно потратить</div>
-      <div class="hero-number" id="dailyLimit">4 200 ₽</div>
-      <div class="hero-sub" id="dailyDescription">
-        Расчёт на основе бюджета и текущих трат
-      </div>
-
-      <div class="progress">
-        <div class="progress-inner" id="monthProgress"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Сегодня</div>
-
-      <div class="stat-row">
-        <span>Потрачено</span>
-        <span class="stat-value" id="todaySpent">0 ₽</span>
-      </div>
-
-      <div class="stat-row">
-        <span>Осталось сегодня</span>
-        <span class="stat-value" id="todayLeft">4 200 ₽</span>
-      </div>
-    </div>
-
-    <button class="primary" onclick="openExpense()">
-      ＋ Быстро записать
+    <button
+      class="iconbtn"
+      onclick="show('settings')"
+    >
+      ⚙️
     </button>
 
-    <div style="height:18px"></div>
+  </div>
 
-    <div class="card">
-      <div class="card-title">Месяц</div>
 
-      <div class="stat-row">
-        <span>План расходов</span>
-        <span class="stat-value">168 196 ₽</span>
-      </div>
+  <!-- Сегодня -->
 
-      <div class="stat-row">
-        <span>Потрачено</span>
-        <span class="stat-value" id="monthSpent">127 572 ₽</span>
-      </div>
+  <section class="card hero">
 
-      <div class="stat-row">
-        <span>Осталось</span>
-        <span class="stat-value" id="monthLeft">40 624 ₽</span>
-      </div>
+    <div
+      class="eyebrow"
+      id="dailyCaption"
+    >
+      Сегодня можно потратить
     </div>
 
-  </section>
-
-
-  <!-- BUDGET -->
-  <section id="budget" class="screen">
-
-    <div class="section-heading">Бюджет</div>
-
-    <div class="card">
-
-      <div class="stat-row">
-        <span>Доход</span>
-        <span class="stat-value">140 000 ₽</span>
-      </div>
-
-      <div class="stat-row">
-        <span>План расходов</span>
-        <span class="stat-value">168 196 ₽</span>
-      </div>
-
-      <div class="stat-row">
-        <span>Цель накоплений</span>
-        <span class="stat-value">28 000 ₽</span>
-      </div>
-
+    <div
+      class="big"
+      id="daily"
+    >
+      —
     </div>
 
-    <div class="section-heading">Категории</div>
-
-    <div class="card" id="categoryList"></div>
-
-  </section>
-
-
-  <!-- ACCOUNTS -->
-  <section id="accounts" class="screen">
-
-    <div class="section-heading">Счета</div>
-
-    <div class="card">
-
-      <div class="stat-row">
-        <span>Общий баланс</span>
-        <span class="stat-value">Не указан</span>
-      </div>
-
-      <div class="small-note">
-        Реальные остатки счетов пока отсутствуют в исходной таблице.
-        Поэтому приложение не придумывает их.
-      </div>
-
+    <div
+      class="muted"
+      id="dailySub"
+    >
+      До следующего поступления
     </div>
 
-    <button class="secondary" onclick="alert('Добавление счёта — следующий шаг')">
-      ＋ Добавить счёт
-    </button>
+    <div class="line"></div>
 
-  </section>
+    <div class="grid">
 
+      <div>
+        <div class="label">
+          Потрачено сегодня
+        </div>
 
-  <!-- DEBTS -->
-  <section id="debts" class="screen">
-
-    <div class="section-heading">Долги и обязательства</div>
-
-    <div class="card">
-
-      <div class="card-title">Июль</div>
-
-      <div class="stat-row">
-        <span>Ozon рассрочка</span>
-        <span class="stat-value">966 ₽</span>
+        <b id="todaySpent">
+          0 ₽
+        </b>
       </div>
 
-      <div class="stat-row">
-        <span>Т-Банк кредитка</span>
-        <span class="stat-value">5 259,83 ₽</span>
-      </div>
+      <div>
+        <div class="label">
+          Осталось сегодня
+        </div>
 
-      <div class="stat-row">
-        <span>ВТБ кредитка</span>
-        <span class="stat-value">6 000 ₽</span>
-      </div>
-
-      <div class="stat-row">
-        <span>Кредит</span>
-        <span class="stat-value">15 030 ₽</span>
-      </div>
-
-      <div class="stat-row">
-        <span>Всего</span>
-        <span class="stat-value">27 255,83 ₽</span>
-      </div>
-
-    </div>
-
-    <div class="card">
-
-      <div class="card-title">Впереди</div>
-
-      <div class="stat-row">
-        <span>Август</span>
-        <span class="stat-value">27 255,83 ₽</span>
-      </div>
-
-      <div class="stat-row">
-        <span>Сентябрь</span>
-        <span class="stat-value">26 155,83 ₽</span>
-      </div>
-
-      <div class="stat-row">
-        <span>Октябрь</span>
-        <span class="stat-value">15 996 ₽</span>
+        <b id="todayLeft">
+          —
+        </b>
       </div>
 
     </div>
@@ -604,661 +558,1727 @@ h1, h2, h3, p {
   </section>
 
 
-  <!-- SETTINGS -->
-  <section id="settings" class="screen">
+  <!-- До зарплаты -->
 
-    <div class="section-heading">Настройки</div>
+  <section class="card">
 
-    <div class="card">
+    <div class="row">
 
-      <div class="stat-row">
-        <span>Зарплата</span>
-        <span class="stat-value">140 000 ₽</span>
-      </div>
+      <b id="cashflowTitle">
+        До основной зарплаты
+      </b>
 
-      <div class="stat-row">
-        <span>Аванс</span>
-        <span class="stat-value">26 000 ₽</span>
-      </div>
-
-      <div class="stat-row">
-        <span>Основная зарплата</span>
-        <span class="stat-value">15 числа</span>
-      </div>
-
-      <div class="stat-row">
-        <span>Цель накоплений</span>
-        <span class="stat-value">20%</span>
-      </div>
+      <span
+        class="pill"
+        id="salaryDate"
+      >
+        15 сентября
+      </span>
 
     </div>
 
-  </section>
-
-</div>
-
-
-<!-- EXPENSE MODAL -->
-
-<div class="overlay" id="expenseOverlay">
-
-  <div class="modal">
-
-    <div class="modal-header">
-      <div class="modal-title">Новая трата</div>
-      <button class="close" onclick="closeExpense()">×</button>
-    </div>
-
-    <input
-      id="amount"
-      class="amount"
-      type="number"
-      inputmode="decimal"
-      placeholder="0 ₽"
-      oninput="calculateExpense()"
+    <div
+      class="grid"
+      style="margin-top:12px"
     >
 
-    <div class="field-label">Категория</div>
+      <div class="mini">
 
-    <select
-      id="categorySelect"
-      class="select"
-      onchange="calculateExpense()">
-    </select>
+        <div class="label">
+          Аванс
+        </div>
 
-    <div class="category-info">
+        <b id="advance">
+          —
+        </b>
 
-      <div class="category-info-title">
-        Осталось в категории
       </div>
 
-      <div
-        class="category-info-main"
-        id="categoryRemaining">
+      <div class="mini">
+
+        <div class="label">
+          Свободно
+        </div>
+
+        <b id="free">
+          —
+        </b>
+
+      </div>
+
+    </div>
+
+    <div class="line"></div>
+
+    <div class="row">
+
+      <span>
+        Обязательства до зарплаты
+      </span>
+
+      <b id="beforeDue">
         —
-      </div>
-
-      <div class="consequence" id="categoryConsequence">
-        Введи сумму — я покажу, что произойдёт.
-      </div>
+      </b>
 
     </div>
 
+    <div
+      class="row"
+      style="margin-top:8px"
+    >
 
-    <div class="category-info">
+      <span>
+        Накопления сейчас
+      </span>
 
-      <div class="category-info-title">
-        Общий бюджет после покупки
-      </div>
-
-      <div
-        class="category-info-main"
-        id="monthRemainingAfter">
-        —
-      </div>
-
-      <div class="small-note">
-        Здесь учитывается эта покупка, но она ещё не записана.
-      </div>
+      <b>
+        0 ₽
+      </b>
 
     </div>
 
-
-    <div class="modal-button">
-
-      <button
-        class="primary"
-        onclick="saveExpense()">
-        Записать трату
-      </button>
-
+    <div
+      class="muted"
+      style="margin-top:10px"
+    >
+      Цель накоплений учитывается после основной зарплаты.
     </div>
 
+  </section>
+
+
+  <!-- Баланс -->
+
+  <div class="section">
+    Общий баланс
   </div>
+
+  <section class="card">
+
+    <div
+      class="big"
+      style="font-size:31px"
+      id="balance"
+    >
+      —
+    </div>
+
+    <div class="muted">
+      Активные деньги, без кредитки
+    </div>
+
+    <div class="line"></div>
+
+    <div class="row">
+
+      <span>
+        С учётом долгов
+      </span>
+
+      <b id="net">
+        —
+      </b>
+
+    </div>
+
+  </section>
+
+
+  <!-- План -->
+
+  <div class="section">
+    План месяца
+  </div>
+
+  <section class="card">
+
+    <div class="row">
+
+      <span>
+        План расходов
+      </span>
+
+      <b id="budget">
+        —
+      </b>
+
+    </div>
+
+    <div class="progress">
+
+      <i id="budgetBar"></i>
+
+    </div>
+
+    <div class="row">
+
+      <span class="muted">
+        Факт расходов
+      </span>
+
+      <b id="monthSpent">
+        —
+      </b>
+
+    </div>
+
+    <div class="line"></div>
+
+    <div class="row">
+
+      <span>
+        Цель накоплений
+      </span>
+
+      <b id="saveTarget">
+        —
+      </b>
+
+    </div>
+
+  </section>
+
+
+  <!-- Обязательства -->
+
+  <div class="section">
+    Ближайшие обязательства
+  </div>
+
+  <section
+    class="card"
+    id="homeObligations"
+  ></section>
+
+
+  <!-- Операции -->
+
+  <div class="section">
+    Последние операции
+  </div>
+
+  <section
+    class="card"
+    id="homeOps"
+  ></section>
 
 </div>
 
 
-<!-- NAV -->
+<!-- =========================
+     БЮДЖЕТ
+========================= -->
 
-<div class="nav">
+<div
+  id="budgetScreen"
+  class="screen"
+>
 
-  <div class="nav-inner">
+  <div class="navtitle">
 
-    <button class="active" onclick="showScreen('home', this)">
-      <span class="nav-icon">⌂</span>
-      Сегодня
+    <button
+      class="back"
+      onclick="show('home')"
+    >
+      ‹ Назад
     </button>
 
-    <button onclick="showScreen('budget', this)">
-      <span class="nav-icon">▤</span>
-      Бюджет
+    <h2 style="margin:0">
+      Бюджет месяца
+    </h2>
+
+  </div>
+
+
+  <section class="card hero">
+
+    <div class="eyebrow">
+      Твой июльский план из таблицы
+    </div>
+
+    <div
+      class="big"
+      id="budgetBig"
+    >
+      168 196 ₽
+    </div>
+
+    <div class="muted">
+      Факт: 127 572 ₽
+    </div>
+
+  </section>
+
+
+  <section
+    class="card"
+    id="categories"
+  ></section>
+
+</div>
+
+
+<!-- =========================
+     СЧЕТА
+========================= -->
+
+<div
+  id="accountsScreen"
+  class="screen"
+>
+
+  <div class="navtitle">
+
+    <button
+      class="back"
+      onclick="show('home')"
+    >
+      ‹ Назад
     </button>
 
-    <button onclick="showScreen('accounts', this)">
-      <span class="nav-icon">◉</span>
+    <h2 style="margin:0">
       Счета
-    </button>
-
-    <button onclick="showScreen('debts', this)">
-      <span class="nav-icon">₽</span>
-      Долги
-    </button>
-
-    <button onclick="showScreen('settings', this)">
-      <span class="nav-icon">⚙</span>
-      Ещё
-    </button>
+    </h2>
 
   </div>
 
+
+  <section
+    class="card"
+    id="accounts"
+  ></section>
+
+
+  <button
+    class="primary"
+    onclick="addAccount()"
+  >
+    ＋ Добавить счёт
+  </button>
+
 </div>
+
+
+<!-- =========================
+     ДОЛГИ
+========================= -->
+
+<div
+  id="debtsScreen"
+  class="screen"
+>
+
+  <div class="navtitle">
+
+    <button
+      class="back"
+      onclick="show('home')"
+    >
+      ‹ Назад
+    </button>
+
+    <h2 style="margin:0">
+      Долги и обязательства
+    </h2>
+
+  </div>
+
+
+  <section class="card">
+
+    <div class="row">
+
+      <b>
+        Всего обязательств
+      </b>
+
+      <b id="debtTotal">
+        —
+      </b>
+
+    </div>
+
+    <div
+      class="muted"
+      style="margin-top:6px"
+    >
+      Включая платежи, которые ещё предстоят.
+    </div>
+
+  </section>
+
+
+  <section
+    class="card"
+    id="debtList"
+  ></section>
+
+</div>
+
+
+<!-- =========================
+     НАСТРОЙКИ
+========================= -->
+
+<div
+  id="settings"
+  class="screen"
+>
+
+  <div class="navtitle">
+
+    <button
+      class="back"
+      onclick="show('home')"
+    >
+      ‹ Назад
+    </button>
+
+    <h2 style="margin:0">
+      Настройки
+    </h2>
+
+  </div>
+
+
+  <section class="card">
+
+    <div class="field">
+
+      <label>
+        Аванс
+      </label>
+
+      <input
+        id="setAdvance"
+        type="number"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Дата основной зарплаты
+      </label>
+
+      <input
+        id="setDate"
+        type="number"
+        min="1"
+        max="31"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Цель накоплений, %
+      </label>
+
+      <input
+        id="setSave"
+        type="number"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Месячный бюджет расходов
+      </label>
+
+      <input
+        id="setBudget"
+        type="number"
+      >
+
+    </div>
+
+
+    <button
+      class="primary"
+      onclick="saveSettings()"
+    >
+      Сохранить
+    </button>
+
+  </section>
+
+</div>
+
+
+<!-- =========================
+     НИЖНЕЕ МЕНЮ
+========================= -->
+
+<div class="bottom">
+
+  <button
+    onclick="show('budgetScreen')"
+  >
+    📊 Бюджет
+  </button>
+
+  <button
+    onclick="openExpense()"
+  >
+    ＋ Трата
+  </button>
+
+  <button
+    class="secondary"
+    onclick="scenario()"
+  >
+    🔮 Сценарий
+  </button>
+
+  <button
+    class="secondary"
+    onclick="show('debtsScreen')"
+  >
+    💳 Долги
+  </button>
+
+</div>
+
+</div>
+
+
+<!-- =========================
+     МОДАЛЬНОЕ ОКНО
+========================= -->
+
+<div
+  class="modal"
+  id="modal"
+>
+
+  <div
+    class="sheet"
+    id="sheet"
+  ></div>
+
+</div>
+
+
+<div
+  class="toast"
+  id="toast"
+></div>
 
 
 <script>
 
-/* =========================================================
-   ДАННЫЕ
-========================================================= */
+/* =========================================
+   НАСТРОЙКИ
+========================================= */
 
-const monthlyBudget = 168196;
-const salary = 140000;
-const savingsGoal = salary * 0.20;
+const initial = {
 
-/*
-  Реальные данные из бюджета пользователя.
-*/
+  salary: 140000,
 
-const categories = [
-  { name: "Еда вне дома", plan: 25000, fact: 21208 },
-  { name: "Транспорт (общ.)", plan: 6000, fact: 3213 },
-  { name: "Дом", plan: 5000, fact: 0 },
-  { name: "Одежда", plan: 7000, fact: 18133 },
-  { name: "Здоровье", plan: 3000, fact: 4215.70 },
-  { name: "Кредиты | Долги", plan: 29096, fact: 0 },
-  { name: "Подарки", plan: 8700, fact: 0 },
-  { name: "Подписки", plan: 2500, fact: 1636 },
-  { name: "Досуг", plan: 35000, fact: 418 },
-  { name: "Продукты", plan: 19000, fact: 15301.85 },
-  { name: "Книги", plan: 0, fact: 0 },
-  { name: "Канцелярия", plan: 500, fact: 0 },
-  { name: "Бьюти", plan: 4200, fact: 1627 },
-  { name: "Путешествия", plan: 0, fact: 0 },
-  { name: "Аксессуары", plan: 0, fact: 0 },
-  { name: "Проценты", plan: 500, fact: 438.36 },
-  { name: "Комиссии/обслуживание карт", plan: 350, fact: 122.83 },
-  { name: "Гигиена", plan: 500, fact: 0 },
-  { name: "Коммунальные платежи", plan: 6000, fact: 0 },
-  { name: "Налоги", plan: 0, fact: 80.64 },
-  { name: "Транспорт (такси)", plan: 12000, fact: 17682 },
-  { name: "Мобильная связь", plan: 350, fact: 520 },
-  { name: "Техника", plan: 0, fact: 0 },
-  { name: "Прочие", plan: 2300, fact: 42975.62 },
-  { name: "Благотворительность", plan: 1200, fact: 0 },
-  { name: "Хобби", plan: 0, fact: 0 }
-];
+  advance: 26000,
+
+  salaryDate: 15,
+
+  savePct: 20,
+
+  monthlyBudget: 168196,
+
+  julyFact: 127572,
 
 
-/*
-  Уже совершённые дополнительные траты в этом прототипе.
-  Они используются только для проверки динамики.
-*/
+  /*
+    ВАЖНО:
+    Здесь пока нет выдуманных остатков счетов.
+    Их нужно будет ввести самостоятельно.
+  */
 
-let transactions = [
-  {
-    amount: 0,
-    category: "Продукты"
-  }
-];
+  accounts: [],
 
 
-/* =========================================================
+  /*
+    Реальные категории из бюджета.
+  */
+
+  categories: [
+
+    ["Еда вне дома",25000,21208],
+
+    ["Транспорт (общ.)",6000,3213],
+
+    ["Дом",5000,0],
+
+    ["Одежда",7000,18133],
+
+    ["Здоровье",3000,4215.70],
+
+    ["Кредиты | Долги",29096,0],
+
+    ["Подарки",8700,0],
+
+    ["Подписки",2500,1636],
+
+    ["Досуг",35000,418],
+
+    ["Продукты",19000,15301.85],
+
+    ["Книги",0,0],
+
+    ["Канцелярия",500,0],
+
+    ["Бьюти",4200,1627],
+
+    ["Путешествия",0,0],
+
+    ["Аксессуары",0,0],
+
+    ["Проценты",500,438.36],
+
+    ["Комиссии/обслуживание карт",350,122.83],
+
+    ["Гигиена",500,0],
+
+    ["Коммунальные платежи",6000,0],
+
+    ["Налоги",0,80.64],
+
+    ["Транспорт (такси)",12000,17682],
+
+    ["Мобильная связь",350,520],
+
+    ["Техника",0,0],
+
+    ["Прочие",2300,42975.62],
+
+    ["Благотворительность",1200,0],
+
+    ["Хобби",0,0]
+
+  ],
+
+
+  obligations: [
+
+    {
+      name:"Ozon",
+      date:"07.07",
+      amount:966
+    },
+
+    {
+      name:"Т-Банк кредитка",
+      date:"",
+      amount:5259.83
+    },
+
+    {
+      name:"ВТБ кредитка",
+      date:"",
+      amount:6000
+    },
+
+    {
+      name:"Кредит",
+      date:"",
+      amount:15030
+    }
+
+  ],
+
+
+  ops: [],
+
+  todaySpent:0
+
+};
+
+
+let state =
+  JSON.parse(
+    localStorage.getItem("kt-demo") || "null"
+  ) || initial;
+
+
+/* =========================================
    ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-========================================================= */
+========================================= */
 
-function money(value) {
-
-  return new Intl.NumberFormat("ru-RU", {
-    maximumFractionDigits: 2
-  }).format(Math.round(value * 100) / 100) + " ₽";
-
-}
+const $ = id =>
+  document.getElementById(id);
 
 
-function getCategory(name) {
-
-  return categories.find(c => c.name === name);
-
-}
+const fmt = n =>
+  Math.round(n).toLocaleString("ru-RU") + " ₽";
 
 
-/*
-  Фактическая сумма месяца.
+function persist(){
 
-  В этой версии за основу берём реальные
-  факты из таблицы.
-*/
-
-function getMonthSpent() {
-
-  return categories.reduce(
-    (sum, category) => sum + category.fact,
-    0
+  localStorage.setItem(
+    "kt-demo",
+    JSON.stringify(state)
   );
 
 }
 
 
-/* =========================================================
-   КАТЕГОРИИ
-========================================================= */
+function esc(s){
 
-function renderCategories() {
-
-  const container =
-    document.getElementById("categoryList");
-
-  container.innerHTML = "";
-
-  categories.forEach(category => {
-
-    const remaining =
-      category.plan - category.fact;
-
-    const percentage =
-      category.plan > 0
-        ? Math.min(
-            100,
-            Math.max(
-              0,
-              category.fact / category.plan * 100
-            )
-          )
-        : 0;
-
-    const row =
-      document.createElement("div");
-
-    row.className = "category-row";
-
-    row.innerHTML = `
-      <div class="category-top">
-
-        <div class="category-name">
-          ${category.name}
-        </div>
-
-        <div class="category-remaining
-          ${remaining < 0 ? "negative" : ""}">
-          ${remaining >= 0 ? "осталось " : "перерасход "}
-          ${money(Math.abs(remaining))}
-        </div>
-
-      </div>
-
-      <div class="category-meta">
-        <span>
-          ${money(category.fact)} из ${money(category.plan)}
-        </span>
-      </div>
-
-      <div class="category-bar">
-        <div
-          class="category-bar-inner"
-          style="width:${percentage}%">
-        </div>
-      </div>
-    `;
-
-    container.appendChild(row);
-
-  });
+  return String(s).replace(
+    /[&<>"']/g,
+    m => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    }[m])
+  );
 
 }
 
 
-/* =========================================================
-   MODAL
-========================================================= */
+/* =========================================
+   НАВИГАЦИЯ
+========================================= */
 
-function openExpense() {
+function show(id){
 
   document
-    .getElementById("expenseOverlay")
-    .classList.add("open");
-
-  document
-    .getElementById("amount")
-    .value = "";
-
-  populateCategories();
-
-  calculateExpense();
-
-}
+    .querySelectorAll(".screen")
+    .forEach(x =>
+      x.classList.remove("active")
+    );
 
 
-function closeExpense() {
-
-  document
-    .getElementById("expenseOverlay")
-    .classList.remove("open");
-
-}
+  $(id).classList.add("active");
 
 
-function populateCategories() {
+  if(id === "home")
+    render();
 
-  const select =
-    document.getElementById("categorySelect");
+  if(id === "budgetScreen")
+    renderBudget();
 
-  select.innerHTML = "";
+  if(id === "accountsScreen")
+    renderAccounts();
 
-  categories.forEach(category => {
+  if(id === "debtsScreen")
+    renderDebts();
 
-    const option =
-      document.createElement("option");
+  if(id === "settings")
+    loadSettings();
 
-    option.value = category.name;
-    option.textContent = category.name;
 
-    select.appendChild(option);
-
-  });
+  window.scrollTo(0,0);
 
 }
 
 
-/* =========================================================
-   ГЛАВНАЯ МАТЕМАТИКА ВВОДА ТРАТЫ
-========================================================= */
+/* =========================================
+   РАСЧЁТ
+========================================= */
 
-function calculateExpense() {
+function calc(){
 
-  const amount =
-    Number(
-      document.getElementById("amount").value
-    ) || 0;
-
-  const categoryName =
-    document.getElementById("categorySelect").value;
-
-  const category =
-    getCategory(categoryName);
-
-  if (!category) return;
-
-
-  /*
-    Сколько осталось в категории
-    ДО новой покупки.
-  */
-
-  const remainingBefore =
-    category.plan - category.fact;
+  const assets =
+    state.accounts
+      .filter(
+        a =>
+          a.include &&
+          a.type !== "credit"
+      )
+      .reduce(
+        (s,a) => s + a.balance,
+        0
+      );
 
 
-  /*
-    Сколько останется ПОСЛЕ покупки.
-  */
-
-  const remainingAfter =
-    remainingBefore - amount;
-
-
-  const remainingElement =
-    document.getElementById("categoryRemaining");
-
-  const consequence =
-    document.getElementById("categoryConsequence");
+  const creditDebt =
+    state.accounts
+      .filter(
+        a =>
+          a.type === "credit"
+      )
+      .reduce(
+        (s,a) =>
+          s + Math.max(0,-a.balance),
+        0
+      );
 
 
-  if (amount === 0) {
+  const before =
+    state.obligations
+      .filter(o => {
 
-    remainingElement.textContent =
-      money(remainingBefore);
+        let d =
+          parseInt(o.date);
 
-    remainingElement.className =
-      "category-info-main" +
-      (remainingBefore < 0 ? " danger" : "");
+        return (
+          !isNaN(d) &&
+          d < state.salaryDate
+        );
 
-    consequence.innerHTML =
-      "Введи сумму — я покажу, что произойдёт.";
-
-  } else {
-
-    if (remainingAfter >= 0) {
-
-      remainingElement.textContent =
-        money(remainingBefore);
-
-      remainingElement.className =
-        "category-info-main";
-
-      consequence.innerHTML = `
-        После покупки в категории останется
-        <strong>${money(remainingAfter)}</strong>.
-      `;
-
-    } else {
-
-      remainingElement.textContent =
-        money(remainingBefore);
-
-      remainingElement.className =
-        "category-info-main danger";
-
-      consequence.innerHTML = `
-        После покупки будет перерасход
-        <strong>${money(Math.abs(remainingAfter))}</strong>.
-      `;
-
-    }
-
-  }
+      })
+      .reduce(
+        (s,o) => s + o.amount,
+        0
+      );
 
 
-  /*
-    ОБЩИЙ МЕСЯЧНЫЙ БЮДЖЕТ
-  */
+  const today =
+    new Date().getDate();
+
+
+  const days =
+    Math.max(
+      1,
+      state.salaryDate - today
+    );
+
+
+  const free =
+    Math.max(
+      0,
+      state.advance - before
+    );
+
+
+  const daily =
+    free / days;
+
 
   const monthSpent =
-    getMonthSpent();
-
-  const monthLeft =
-    monthlyBudget - monthSpent;
-
-  const monthAfter =
-    monthLeft - amount;
-
-
-  const monthElement =
-    document.getElementById("monthRemainingAfter");
+    state.ops.reduce(
+      (s,o) =>
+        s +
+        (o.amount < 0
+          ? -o.amount
+          : 0),
+      0
+    ) +
+    state.todaySpent;
 
 
-  monthElement.textContent =
-    money(monthAfter);
-
-
-  if (monthAfter < 0) {
-
-    monthElement.className =
-      "category-info-main danger";
-
-  } else {
-
-    monthElement.className =
-      "category-info-main";
-
-  }
+  return {
+    assets,
+    creditDebt,
+    before,
+    free,
+    daily,
+    monthSpent
+  };
 
 }
 
 
-/* =========================================================
-   СОХРАНЕНИЕ
-========================================================= */
+/* =========================================
+   ГЛАВНЫЙ ЭКРАН
+========================================= */
 
-function saveExpense() {
+function render(){
 
-  const amount =
+  const c = calc();
+
+
+  $("daily").textContent =
+    fmt(c.daily);
+
+
+  $("todaySpent").textContent =
+    fmt(state.todaySpent);
+
+
+  $("todayLeft").textContent =
+    fmt(
+      Math.max(
+        0,
+        c.daily - state.todaySpent
+      )
+    );
+
+
+  $("advance").textContent =
+    fmt(state.advance);
+
+
+  $("free").textContent =
+    fmt(c.free);
+
+
+  $("beforeDue").textContent =
+    fmt(c.before);
+
+
+  $("salaryDate").textContent =
+    state.salaryDate +
+    " сентября";
+
+
+  $("balance").textContent =
+    fmt(c.assets);
+
+
+  $("net").textContent =
+    fmt(
+      c.assets - c.creditDebt
+    );
+
+
+  $("budget").textContent =
+    fmt(state.monthlyBudget);
+
+
+  $("monthSpent").textContent =
+    fmt(c.monthSpent);
+
+
+  $("budgetBar").style.width =
+    Math.min(
+      100,
+      c.monthSpent /
+      state.monthlyBudget *
+      100
+    ) + "%";
+
+
+  $("saveTarget").textContent =
+    fmt(
+      state.salary *
+      state.savePct /
+      100
+    );
+
+
+  $("homeObligations").innerHTML =
+    state.obligations
+      .map(o => `
+
+        <div class="op">
+
+          <div class="row">
+
+            <div>
+
+              <div class="title">
+                ${esc(o.name)}
+              </div>
+
+              <div class="muted">
+                ${o.date || "дата не задана"}
+              </div>
+
+            </div>
+
+            <div class="amount">
+              ${fmt(o.amount)}
+            </div>
+
+          </div>
+
+        </div>
+
+      `)
+      .join("");
+
+
+  $("homeOps").innerHTML =
+    state.ops
+      .slice(-5)
+      .reverse()
+      .map(o => `
+
+        <div class="op">
+
+          <div class="row">
+
+            <span class="title">
+              ${esc(o.text)}
+            </span>
+
+            <b class="${o.amount < 0 ? "bad" : "good"}">
+
+              ${o.amount > 0 ? "+" : ""}
+              ${fmt(o.amount)}
+
+            </b>
+
+          </div>
+
+        </div>
+
+      `)
+      .join("")
+
+      ||
+      '<div class="empty">Пока нет операций</div>';
+
+}
+
+
+/* =========================================
+   БЮДЖЕТ
+========================================= */
+
+function renderBudget(){
+
+  $("budgetBig").textContent =
+    fmt(state.monthlyBudget);
+
+
+  $("categories").innerHTML =
+    state.categories
+      .map((c,i) => {
+
+        const plan =
+          c[1] || 0;
+
+        const fact =
+          c[2] || 0;
+
+        const pct =
+          plan
+            ? Math.min(
+                100,
+                fact / plan * 100
+              )
+            : 0;
+
+
+        return `
+
+          <div class="category">
+
+            <div class="cathead">
+
+              <span>
+                ${esc(c[0])}
+              </span>
+
+              <b>
+                ${fmt(plan)}
+              </b>
+
+            </div>
+
+
+            <div
+              class="muted"
+              style="margin-top:4px"
+            >
+
+              Факт ${fmt(fact)}
+
+              ·
+
+              осталось ${fmt(plan-fact)}
+
+            </div>
+
+
+            <div class="catbar">
+
+              <i
+                style="width:${pct}%"
+              ></i>
+
+            </div>
+
+          </div>
+
+        `;
+
+      })
+      .join("");
+
+}
+
+
+/* =========================================
+   СЧЕТА
+========================================= */
+
+function renderAccounts(){
+
+  const asset =
+    state.accounts
+      .filter(
+        a =>
+          a.include &&
+          a.type !== "credit"
+      )
+      .reduce(
+        (s,a) =>
+          s + a.balance,
+        0
+      );
+
+
+  $("accounts").innerHTML =
+
+    state.accounts
+      .map(a => `
+
+        <div
+          class="account"
+          style="
+            padding:11px 0;
+            border-bottom:1px solid var(--line)
+          "
+        >
+
+          <div class="ico">
+            ${a.icon}
+          </div>
+
+          <div>
+
+            <b>
+              ${esc(a.name)}
+            </b>
+
+            <div class="muted">
+
+              ${
+                a.type === "credit"
+                ? "Кредитный счёт"
+                : a.include
+                  ? "В общем балансе"
+                  : "Не включён в баланс"
+              }
+
+            </div>
+
+          </div>
+
+          <div class="amount">
+            ${fmt(a.balance)}
+          </div>
+
+        </div>
+
+      `)
+      .join("")
+
+    +
+
+    `
+
+      <div class="line"></div>
+
+      <div class="row">
+
+        <b>
+          Общий баланс
+        </b>
+
+        <b>
+          ${fmt(asset)}
+        </b>
+
+      </div>
+
+    `;
+
+}
+
+
+/* =========================================
+   ДОЛГИ
+========================================= */
+
+function renderDebts(){
+
+  const total =
+
+    state.obligations.reduce(
+      (s,o) =>
+        s + o.amount,
+      0
+    )
+
+    +
+
+    state.accounts
+      .filter(
+        a =>
+          a.type === "credit"
+      )
+      .reduce(
+        (s,a) =>
+          s + Math.max(0,-a.balance),
+        0
+      );
+
+
+  $("debtTotal").textContent =
+    fmt(total);
+
+
+  $("debtList").innerHTML =
+    state.obligations
+      .map(o => `
+
+        <div class="op">
+
+          <div class="row">
+
+            <div>
+
+              <b>
+                ${esc(o.name)}
+              </b>
+
+              <div class="muted">
+                ${o.date || "дата не указана"}
+              </div>
+
+            </div>
+
+            <b>
+              ${fmt(o.amount)}
+            </b>
+
+          </div>
+
+        </div>
+
+      `)
+      .join("");
+
+}
+
+
+/* =========================================
+   БЫСТРАЯ ТРАТА
+========================================= */
+
+function openExpense(){
+
+  $("sheet").innerHTML = `
+
+    <h2>
+      Быстрая запись
+    </h2>
+
+
+    <div class="field">
+
+      <label>
+        Сколько?
+      </label>
+
+      <input
+        id="expAmount"
+        type="number"
+        inputmode="decimal"
+        placeholder="500"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        На что?
+      </label>
+
+      <input
+        id="expCat"
+        placeholder="Например, продукты"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        С какого счёта?
+      </label>
+
+      <select id="expAcc">
+
+        ${
+          state.accounts
+            .filter(
+              a =>
+                a.type !== "credit"
+            )
+            .map(
+              a =>
+                `<option>${esc(a.name)}</option>`
+            )
+            .join("")
+        }
+
+      </select>
+
+    </div>
+
+
+    <button
+      class="primary"
+      onclick="addExpense()"
+    >
+      Записать
+    </button>
+
+  `;
+
+
+  $("modal")
+    .classList
+    .add("show");
+
+
+  setTimeout(
+    () =>
+      $("expAmount").focus(),
+    100
+  );
+
+}
+
+
+/* =========================================
+   ДОБАВЛЕНИЕ ТРАТЫ
+========================================= */
+
+function addExpense(){
+
+  const n =
     Number(
-      document.getElementById("amount").value
-    ) || 0;
+      $("expAmount").value
+    );
 
-  const categoryName =
-    document.getElementById("categorySelect").value;
 
-  if (amount <= 0) {
+  const cat =
+    $("expCat")
+      .value
+      .trim()
+      ||
+      "Прочее";
 
-    alert("Введи сумму");
+
+  const accName =
+    $("expAcc").value;
+
+
+  if(!n || n < 0){
+
+    toast(
+      "Введи сумму"
+    );
 
     return;
 
   }
 
 
-  const category =
-    getCategory(categoryName);
+  const acc =
+    state.accounts.find(
+      a =>
+        a.name === accName
+    );
 
 
-  /*
-    Реально меняем факт категории.
-  */
-
-  category.fact += amount;
+  if(acc)
+    acc.balance -= n;
 
 
-  transactions.push({
-    amount,
-    category: categoryName
+  state.todaySpent += n;
+
+
+  state.ops.push({
+
+    text:cat,
+
+    amount:-n,
+
+    date:"сегодня"
+
   });
 
 
-  closeExpense();
+  persist();
 
-  renderCategories();
 
-  updateHome();
+  $("modal")
+    .classList
+    .remove("show");
 
-  alert(
-    `Записано: ${money(amount)}\n` +
-    `${categoryName}`
+
+  render();
+
+
+  toast(
+    "Трата записана"
   );
 
 }
 
 
-/* =========================================================
-   ГЛАВНЫЙ ЭКРАН
-========================================================= */
+/* =========================================
+   СЦЕНАРИЙ
+========================================= */
 
-function updateHome() {
+function scenario(){
 
-  const spent =
-    getMonthSpent();
+  $("sheet").innerHTML = `
 
-  const left =
-    monthlyBudget - spent;
+    <h2>
+      🔮 Хочу потратить
+    </h2>
 
-
-  document.getElementById(
-    "monthSpent"
-  ).textContent = money(spent);
-
-
-  document.getElementById(
-    "monthLeft"
-  ).textContent = money(left);
+    <div class="muted">
+      Проверим покупку,
+      ничего пока не изменяя.
+    </div>
 
 
-  /*
-    Пока используем 4 200 ₽ как тестовый
-    текущий дневной лимит.
+    <div class="field">
 
-    Следующим шагом сюда подключаем
-    полноценную cash-flow модель:
-    аванс → основная зарплата →
-    обязательства → накопления →
-    свободные деньги → дни.
-  */
+      <label>
+        Сумма покупки
+      </label>
 
-  const dailyLimit = 4200;
+      <input
+        id="scAmount"
+        type="number"
+        inputmode="decimal"
+        placeholder="8 000"
+      >
 
-
-  document.getElementById(
-    "dailyLimit"
-  ).textContent = money(dailyLimit);
+    </div>
 
 
-  document.getElementById(
-    "todayLeft"
-  ).textContent = money(dailyLimit);
+    <div class="field">
+
+      <label>
+        Категория
+      </label>
+
+      <input
+        id="scCat"
+        placeholder="Например, одежда"
+      >
+
+    </div>
 
 
-  /*
-    Прогресс месяца.
-  */
+    <button
+      class="primary"
+      onclick="runScenario()"
+    >
+      Показать последствия
+    </button>
 
-  const progress =
-    Math.min(
-      100,
-      Math.max(
-        0,
-        spent / monthlyBudget * 100
-      )
+  `;
+
+
+  $("modal")
+    .classList
+    .add("show");
+
+}
+
+
+/* =========================================
+   РАСЧЕТ СЦЕНАРИЯ
+========================================= */
+
+function runScenario(){
+
+  const n =
+    Number(
+      $("scAmount").value
     );
 
 
-  document.getElementById(
-    "monthProgress"
-  ).style.width =
-    progress + "%";
+  if(!n || n < 0){
+
+    toast(
+      "Введи сумму"
+    );
+
+    return;
+
+  }
+
+
+  const c = calc();
+
+
+  const days =
+    Math.max(
+      1,
+      state.salaryDate -
+      new Date().getDate()
+    );
+
+
+  const after =
+    Math.max(
+      0,
+      (
+        c.free -
+        state.todaySpent -
+        n
+      ) / days
+    );
+
+
+  const budgetLeft =
+    Math.max(
+      0,
+      state.monthlyBudget -
+      c.monthSpent -
+      n
+    );
+
+
+  $("sheet").innerHTML = `
+
+    <h2>
+      Если потратить ${fmt(n)}
+    </h2>
+
+
+    <div class="scenario">
+
+      <div class="row">
+
+        <span>
+          Ориентир до зарплаты
+        </span>
+
+        <b>
+          ${fmt(after)}/день
+        </b>
+
+      </div>
+
+
+      <div class="line"></div>
+
+
+      <div class="row">
+
+        <span>
+          Бюджет месяца после покупки
+        </span>
+
+        <b>
+          ${fmt(budgetLeft)}
+        </b>
+
+      </div>
+
+
+      <div class="line"></div>
+
+
+      <div class="muted">
+        Это только сценарий.
+        Баланс и бюджет пока не изменились.
+      </div>
+
+    </div>
+
+
+    <button
+      class="primary"
+      style="margin-top:12px"
+      onclick="closeModal()"
+    >
+      Понятно
+    </button>
+
+  `;
 
 }
 
 
-/* =========================================================
-   НАВИГАЦИЯ
-========================================================= */
+/* =========================================
+   МОДАЛЬНОЕ ОКНО
+========================================= */
 
-function showScreen(screenName, button) {
+function closeModal(){
 
-  document
-    .querySelectorAll(".screen")
-    .forEach(screen => {
-
-      screen.classList.remove("active");
-
-    });
-
-
-  document
-    .getElementById(screenName)
-    .classList.add("active");
-
-
-  document
-    .querySelectorAll(".nav button")
-    .forEach(btn => {
-
-      btn.classList.remove("active");
-
-    });
-
-
-  button.classList.add("active");
+  $("modal")
+    .classList
+    .remove("show");
 
 }
 
 
-/* =========================================================
-   СТАРТ
-========================================================= */
+$("modal")
+  .addEventListener(
+    "click",
+    e => {
 
-renderCategories();
+      if(
+        e.target.id === "modal"
+      )
+        closeModal();
 
-updateHome();
+    }
+  );
+
+
+/* =========================================
+   НАСТРОЙКИ
+========================================= */
+
+function loadSettings(){
+
+  $("setAdvance").value =
+    state.advance;
+
+  $("setDate").value =
+    state.salaryDate;
+
+  $("setSave").value =
+    state.savePct;
+
+  $("setBudget").value =
+    state.monthlyBudget;
+
+}
+
+
+function saveSettings(){
+
+  state.advance =
+    Number(
+      $("setAdvance").value
+    ) ||
+    state.advance;
+
+
+  state.salaryDate =
+    Number(
+      $("setDate").value
+    ) ||
+    15;
+
+
+  state.savePct =
+    Number(
+      $("setSave").value
+    ) ||
+    20;
+
+
+  state.monthlyBudget =
+    Number(
+      $("setBudget").value
+    ) ||
+    state.monthlyBudget;
+
+
+  persist();
+
+
+  show("home");
+
+
+  toast(
+    "Настройки сохранены"
+  );
+
+}
+
+
+/* =========================================
+   ДОБАВИТЬ СЧЕТ
+========================================= */
+
+function addAccount(){
+
+  const name =
+    prompt(
+      "Название счёта"
+    );
+
+
+  if(!name)
+    return;
+
+
+  const bal =
+    Number(
+      prompt(
+        "Текущий баланс",
+        "0"
+      )
+    ) || 0;
+
+
+  state.accounts.push({
+
+    name:name,
+
+    balance:bal,
+
+    type:"debit",
+
+    include:true,
+
+    icon:"🏦"
+
+  });
+
+
+  persist();
+
+
+  renderAccounts();
+
+
+  toast(
+    "Счёт добавлен"
+  );
+
+}
+
+
+/* =========================================
+   УВЕДОМЛЕНИЕ
+========================================= */
+
+function toast(t){
+
+  $("toast").textContent =
+    t;
+
+  $("toast").style.display =
+    "block";
+
+
+  setTimeout(
+    () =>
+      $("toast").style.display =
+        "none",
+    1800
+  );
+
+}
+
+
+/* =========================================
+   ЗАПУСК
+========================================= */
+
+render();
 
 </script>
 
