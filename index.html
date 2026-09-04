@@ -192,6 +192,24 @@ h1, h2, h3, p {
   flex-shrink: 0;
 }
 
+.clear-limits-button {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--danger);
+  padding: 13px;
+  border-radius: 15px;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.clear-limits-button:active {
+  transform: scale(.98);
+  background: var(--pink-pale);
+}
+
 /* CATEGORY */
 
 .category-row {
@@ -449,6 +467,18 @@ h1, h2, h3, p {
   margin: 8px 0 14px;
 }
 
+.section-heading-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 14px;
+}
+
+.section-heading-row .section-heading {
+  margin: 0;
+}
+
 .small-note {
   color: var(--muted);
   font-size: 12px;
@@ -519,18 +549,6 @@ h1, h2, h3, p {
 .edit-value {
   font-size: 28px;
   text-align: center;
-}
-
-.danger-button {
-  width: 100%;
-  border: 0;
-  background: #f5dfe2;
-  color: var(--danger);
-  padding: 14px;
-  border-radius: 15px;
-  font-size: 15px;
-  font-weight: 650;
-  margin-top: 10px;
 }
 </style>
 </head>
@@ -612,7 +630,9 @@ h1, h2, h3, p {
   <!-- BUDGET -->
   <section id="budget" class="screen">
 
-    <div class="section-heading">Бюджет</div>
+    <div class="section-heading">
+      Бюджет
+    </div>
 
     <div class="card">
 
@@ -633,7 +653,19 @@ h1, h2, h3, p {
 
     </div>
 
-    <div class="section-heading">Категории</div>
+    <div class="section-heading-row">
+      <div class="section-heading">
+        Категории
+      </div>
+    </div>
+
+    <!-- НОВАЯ КНОПКА -->
+    <button
+      class="clear-limits-button"
+      id="clearAllLimitsButton"
+      type="button">
+      Стереть все лимиты
+    </button>
 
     <div class="card" id="categoryList"></div>
 
@@ -840,8 +872,7 @@ h1, h2, h3, p {
       class="primary"
       id="saveCategoryLimitButton"
       type="button"
-      style="margin-top:15px"
-    >
+      style="margin-top:15px">
       Сохранить лимит
     </button>
 
@@ -895,8 +926,7 @@ h1, h2, h3, p {
       class="primary"
       id="saveAccountButton"
       type="button"
-      style="margin-top:18px"
-    >
+      style="margin-top:18px">
       Добавить счёт
     </button>
 
@@ -950,10 +980,8 @@ h1, h2, h3, p {
 const budgetYear = 2026;
 const budgetMonth = 8; // сентябрь
 
-
 const salary = 140000;
 const savingsGoal = salary * 0.20;
-
 
 const TRANSACTIONS_KEY =
   "babki_september_2026_transactions";
@@ -971,32 +999,32 @@ const ACCOUNTS_KEY =
 
 const categories = [
 
-  { name: "Еда вне дома", plan: 25000, fact: 0 },
-  { name: "Транспорт (общ.)", plan: 6000, fact: 0 },
-  { name: "Дом", plan: 5000, fact: 0 },
-  { name: "Одежда", plan: 7000, fact: 0 },
-  { name: "Здоровье", plan: 3000, fact: 0 },
-  { name: "Кредиты | Долги", plan: 29096, fact: 0 },
-  { name: "Подарки", plan: 8700, fact: 0 },
-  { name: "Подписки", plan: 2500, fact: 0 },
-  { name: "Досуг", plan: 35000, fact: 0 },
-  { name: "Продукты", plan: 19000, fact: 0 },
-  { name: "Книги", plan: 0, fact: 0 },
-  { name: "Канцелярия", plan: 500, fact: 0 },
-  { name: "Бьюти", plan: 4200, fact: 0 },
-  { name: "Путешествия", plan: 0, fact: 0 },
-  { name: "Аксессуары", plan: 0, fact: 0 },
-  { name: "Проценты", plan: 500, fact: 0 },
-  { name: "Комиссии/обслуживание карт", plan: 350, fact: 0 },
-  { name: "Гигиена", plan: 500, fact: 0 },
-  { name: "Коммунальные платежи", plan: 6000, fact: 0 },
-  { name: "Налоги", plan: 0, fact: 0 },
-  { name: "Транспорт (такси)", plan: 12000, fact: 0 },
-  { name: "Мобильная связь", plan: 350, fact: 0 },
-  { name: "Техника", plan: 0, fact: 0 },
-  { name: "Прочие", plan: 2300, fact: 0 },
-  { name: "Благотворительность", plan: 1200, fact: 0 },
-  { name: "Хобби", plan: 0, fact: 0 }
+  { name: "Еда вне дома", plan: 25000 },
+  { name: "Транспорт (общ.)", plan: 6000 },
+  { name: "Дом", plan: 5000 },
+  { name: "Одежда", plan: 7000 },
+  { name: "Здоровье", plan: 3000 },
+  { name: "Кредиты | Долги", plan: 29096 },
+  { name: "Подарки", plan: 8700 },
+  { name: "Подписки", plan: 2500 },
+  { name: "Досуг", plan: 35000 },
+  { name: "Продукты", plan: 19000 },
+  { name: "Книги", plan: 0 },
+  { name: "Канцелярия", plan: 500 },
+  { name: "Бьюти", plan: 4200 },
+  { name: "Путешествия", plan: 0 },
+  { name: "Аксессуары", plan: 0 },
+  { name: "Проценты", plan: 500 },
+  { name: "Комиссии/обслуживание карт", plan: 350 },
+  { name: "Гигиена", plan: 500 },
+  { name: "Коммунальные платежи", plan: 6000 },
+  { name: "Налоги", plan: 0 },
+  { name: "Транспорт (такси)", plan: 12000 },
+  { name: "Мобильная связь", plan: 350 },
+  { name: "Техника", plan: 0 },
+  { name: "Прочие", plan: 2300 },
+  { name: "Благотворительность", plan: 1200 },
+  { name: "Хобби", plan: 0 }
 
 ];
 
@@ -1028,9 +1056,7 @@ function loadData() {
     }
 
   } catch (error) {
-
     transactions = [];
-
   }
 
 
@@ -1071,16 +1097,12 @@ function loadData() {
       localStorage.getItem(ACCOUNTS_KEY);
 
     if (savedAccounts) {
-
       accounts =
         JSON.parse(savedAccounts);
-
     }
 
   } catch (error) {
-
     accounts = [];
-
   }
 
 }
@@ -1101,10 +1123,7 @@ function saveCategoryPlans() {
   const plans = {};
 
   categories.forEach(category => {
-
-    plans[category.name] =
-      category.plan;
-
+    plans[category.name] = category.plan;
   });
 
   localStorage.setItem(
@@ -1149,7 +1168,6 @@ function money(value) {
 function escapeHtml(value) {
 
   return String(value)
-
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -1171,8 +1189,7 @@ function getCategory(name) {
 
 function getTodayKey() {
 
-  const now =
-    new Date();
+  const now = new Date();
 
   const year =
     now.getFullYear();
@@ -1219,12 +1236,10 @@ function getMonthSpent() {
 function getCategorySpent(categoryName) {
 
   return transactions
-
     .filter(
       transaction =>
         transaction.category === categoryName
     )
-
     .reduce(
       (sum, transaction) =>
         sum + Number(transaction.amount || 0),
@@ -1236,16 +1251,13 @@ function getCategorySpent(categoryName) {
 
 function getTodaySpent() {
 
-  const today =
-    getTodayKey();
+  const today = getTodayKey();
 
   return transactions
-
     .filter(
       transaction =>
         transaction.date === today
     )
-
     .reduce(
       (sum, transaction) =>
         sum + Number(transaction.amount || 0),
@@ -1264,46 +1276,28 @@ function showScreen(screenId, button) {
   document
     .querySelectorAll(".screen")
     .forEach(screen => {
-
-      screen.classList.remove(
-        "active"
-      );
-
+      screen.classList.remove("active");
     });
 
 
   const screen =
-    document.getElementById(
-      screenId
-    );
+    document.getElementById(screenId);
 
 
   if (screen) {
-
-    screen.classList.add(
-      "active"
-    );
-
+    screen.classList.add("active");
   }
 
 
   document
     .querySelectorAll(".nav button")
     .forEach(navButton => {
-
-      navButton.classList.remove(
-        "active"
-      );
-
+      navButton.classList.remove("active");
     });
 
 
   if (button) {
-
-    button.classList.add(
-      "active"
-    );
-
+    button.classList.add("active");
   }
 
 
@@ -1311,16 +1305,12 @@ function showScreen(screenId, button) {
 
 
   if (screenId === "budget") {
-
     renderCategories();
-
   }
 
 
   if (screenId === "accounts") {
-
     renderAccounts();
-
   }
 
 
@@ -1336,13 +1326,9 @@ function showScreen(screenId, button) {
 function renderCategories() {
 
   const container =
-    document.getElementById(
-      "categoryList"
-    );
-
+    document.getElementById("categoryList");
 
   if (!container) return;
-
 
   container.innerHTML = "";
 
@@ -1351,40 +1337,27 @@ function renderCategories() {
     (category, index) => {
 
       const spent =
-        getCategorySpent(
-          category.name
-        );
-
+        getCategorySpent(category.name);
 
       const remaining =
-        Number(category.plan) -
-        spent;
-
+        Number(category.plan) - spent;
 
       const percentage =
         category.plan > 0
-
           ? Math.min(
               100,
               Math.max(
                 0,
-                spent /
-                category.plan *
-                100
+                spent / category.plan * 100
               )
             )
-
           : 0;
 
 
       const row =
-        document.createElement(
-          "div"
-        );
+        document.createElement("div");
 
-
-      row.className =
-        "category-row";
+      row.className = "category-row";
 
 
       row.innerHTML = `
@@ -1406,9 +1379,7 @@ function renderCategories() {
           <div class="category-actions">
 
             <div class="category-remaining ${
-              remaining < 0
-                ? "negative"
-                : ""
+              remaining < 0 ? "negative" : ""
             }">
 
               ${
@@ -1417,9 +1388,7 @@ function renderCategories() {
                   : "перерасход "
               }
 
-              ${money(
-                Math.abs(remaining)
-              )}
+              ${money(Math.abs(remaining))}
 
             </div>
 
@@ -1428,9 +1397,7 @@ function renderCategories() {
               type="button"
               data-category-index="${index}"
               aria-label="Изменить лимит">
-
               ✎
-
             </button>
 
           </div>
@@ -1474,16 +1441,47 @@ function renderCategories() {
 
 
 /* =========================================================
+   СТЕРЕТЬ ВСЕ ЛИМИТЫ
+========================================================= */
+
+function clearAllLimits() {
+
+  const confirmed =
+    confirm(
+      "Стереть все лимиты?\n\n" +
+      "Месячные лимиты всех категорий " +
+      "будут установлены в 0 ₽.\n\n" +
+      "Уже внесённые траты не удалятся."
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  categories.forEach(category => {
+    category.plan = 0;
+  });
+
+
+  saveCategoryPlans();
+
+  renderCategories();
+
+  updateHome();
+
+}
+
+
+/* =========================================================
    РЕДАКТИРОВАНИЕ ЛИМИТА
 ========================================================= */
 
-function openCategoryEdit(
-  categoryName
-) {
+function openCategoryEdit(categoryName) {
 
   const category =
     getCategory(categoryName);
-
 
   if (!category) return;
 
@@ -1528,13 +1526,9 @@ function closeCategoryEdit() {
 
   document.getElementById(
     "categoryEditOverlay"
-  ).classList.remove(
-    "open"
-  );
+  ).classList.remove("open");
 
-
-  editingCategory =
-    null;
+  editingCategory = null;
 
 }
 
@@ -1571,9 +1565,7 @@ function saveCategoryLimit() {
 
 
   editingCategory.plan =
-    Math.round(
-      value * 100
-    ) / 100;
+    Math.round(value * 100) / 100;
 
 
   saveCategoryPlans();
@@ -1598,33 +1590,23 @@ function populateCategories() {
       "categorySelect"
     );
 
-
   select.innerHTML = "";
 
 
-  categories.forEach(
-    category => {
+  categories.forEach(category => {
 
-      const option =
-        document.createElement(
-          "option"
-        );
+    const option =
+      document.createElement("option");
 
+    option.value =
+      category.name;
 
-      option.value =
-        category.name;
+    option.textContent =
+      category.name;
 
+    select.appendChild(option);
 
-      option.textContent =
-        category.name;
-
-
-      select.appendChild(
-        option
-      );
-
-    }
-  );
+  });
 
 }
 
@@ -1636,7 +1618,6 @@ function openExpense() {
       "expenseOverlay"
     );
 
-
   const amount =
     document.getElementById(
       "amount"
@@ -1645,22 +1626,15 @@ function openExpense() {
 
   populateCategories();
 
-
   amount.value = "";
 
-
-  overlay.classList.add(
-    "open"
-  );
-
+  overlay.classList.add("open");
 
   calculateExpense();
 
 
   setTimeout(() => {
-
     amount.focus();
-
   }, 100);
 
 }
@@ -1670,9 +1644,7 @@ function closeExpense() {
 
   document.getElementById(
     "expenseOverlay"
-  ).classList.remove(
-    "open"
-  );
+  ).classList.remove("open");
 
 }
 
@@ -1681,9 +1653,7 @@ function calculateExpense() {
 
   const amount =
     Number(
-      document.getElementById(
-        "amount"
-      ).value
+      document.getElementById("amount").value
     ) || 0;
 
 
@@ -1694,9 +1664,7 @@ function calculateExpense() {
 
 
   const category =
-    getCategory(
-      categoryName
-    );
+    getCategory(categoryName);
 
 
   if (!category) {
@@ -1705,19 +1673,15 @@ function calculateExpense() {
 
 
   const spent =
-    getCategorySpent(
-      category.name
-    );
+    getCategorySpent(category.name);
 
 
   const remainingBefore =
-    category.plan -
-    spent;
+    category.plan - spent;
 
 
   const remainingAfter =
-    remainingBefore -
-    amount;
+    remainingBefore - amount;
 
 
   const remainingElement =
@@ -1737,32 +1701,22 @@ function calculateExpense() {
     remainingElement.textContent =
       money(remainingBefore);
 
-
     remainingElement.className =
       "category-info-main" +
-      (
-        remainingBefore < 0
-          ? " danger"
-          : ""
-      );
-
+      (remainingBefore < 0 ? " danger" : "");
 
     consequence.innerHTML =
       "Введи сумму — я покажу, что произойдёт.";
 
   }
 
-  else if (
-    remainingAfter >= 0
-  ) {
+  else if (remainingAfter >= 0) {
 
     remainingElement.textContent =
       money(remainingBefore);
 
-
     remainingElement.className =
       "category-info-main";
-
 
     consequence.innerHTML = `
       После покупки в категории останется
@@ -1778,17 +1732,13 @@ function calculateExpense() {
     remainingElement.textContent =
       money(remainingBefore);
 
-
     remainingElement.className =
       "category-info-main danger";
-
 
     consequence.innerHTML = `
       После покупки будет перерасход
       <strong>
-        ${money(
-          Math.abs(remainingAfter)
-        )}
+        ${money(Math.abs(remainingAfter))}
       </strong>.
     `;
 
@@ -1798,15 +1748,11 @@ function calculateExpense() {
   const monthSpent =
     getMonthSpent();
 
-
   const monthLeft =
-    getMonthlyBudget() -
-    monthSpent;
-
+    getMonthlyBudget() - monthSpent;
 
   const monthAfter =
-    monthLeft -
-    amount;
+    monthLeft - amount;
 
 
   const monthElement =
@@ -1818,14 +1764,9 @@ function calculateExpense() {
   monthElement.textContent =
     money(monthAfter);
 
-
   monthElement.className =
     "category-info-main" +
-    (
-      monthAfter < 0
-        ? " danger"
-        : ""
-    );
+    (monthAfter < 0 ? " danger" : "");
 
 }
 
@@ -1834,9 +1775,7 @@ function saveExpense() {
 
   const amount =
     Number(
-      document.getElementById(
-        "amount"
-      ).value
+      document.getElementById("amount").value
     ) || 0;
 
 
@@ -1848,9 +1787,7 @@ function saveExpense() {
 
   if (amount <= 0) {
 
-    alert(
-      "Введи сумму"
-    );
+    alert("Введи сумму");
 
     return;
 
@@ -1859,9 +1796,7 @@ function saveExpense() {
 
   if (!categoryName) {
 
-    alert(
-      "Выбери категорию"
-    );
+    alert("Выбери категорию");
 
     return;
 
@@ -1873,9 +1808,7 @@ function saveExpense() {
     id: Date.now(),
 
     amount:
-      Math.round(
-        amount * 100
-      ) / 100,
+      Math.round(amount * 100) / 100,
 
     category:
       categoryName,
@@ -1888,19 +1821,11 @@ function saveExpense() {
 
   saveTransactions();
 
-
   closeExpense();
-
 
   renderCategories();
 
-
   updateHome();
-
-
-  alert(
-    `Записано: ${money(amount)}\n${categoryName}`
-  );
 
 }
 
@@ -1936,17 +1861,12 @@ function getDaysLeftInBudgetMonth() {
 
 
   if (now < firstDay) {
-
-    currentDay =
-      firstDay;
-
+    currentDay = firstDay;
   }
 
 
   if (now > lastDay) {
-
     return 1;
-
   }
 
 
@@ -1978,17 +1898,14 @@ function calculateDailyLimit() {
   const budget =
     getMonthlyBudget();
 
-
   const spent =
     getMonthSpent();
-
 
   const left =
     Math.max(
       0,
       budget - spent
     );
-
 
   const days =
     getDaysLeftInBudgetMonth();
@@ -2008,28 +1925,22 @@ function updateHome() {
   const budget =
     getMonthlyBudget();
 
-
   const spent =
     getMonthSpent();
-
 
   const left =
     budget - spent;
 
-
   const todaySpent =
     getTodaySpent();
-
 
   const dailyLimit =
     calculateDailyLimit();
 
-
   const todayLeft =
     Math.max(
       0,
-      dailyLimit -
-      todaySpent
+      dailyLimit - todaySpent
     );
 
 
@@ -2073,25 +1984,14 @@ function updateHome() {
     getDaysLeftInBudgetMonth();
 
 
-  let dayWord =
-    "дней";
+  let dayWord = "дней";
 
 
   if (days === 1) {
-
-    dayWord =
-      "день";
-
+    dayWord = "день";
   }
-
-  else if (
-    days >= 2 &&
-    days <= 4
-  ) {
-
-    dayWord =
-      "дня";
-
+  else if (days >= 2 && days <= 4) {
+    dayWord = "дня";
   }
 
 
@@ -2103,17 +2003,13 @@ function updateHome() {
 
   const progress =
     budget > 0
-
       ? Math.min(
           100,
           Math.max(
             0,
-            spent /
-            budget *
-            100
+            spent / budget * 100
           )
         )
-
       : 0;
 
 
@@ -2146,9 +2042,7 @@ function renderAccounts() {
   container.innerHTML = "";
 
 
-  if (
-    accounts.length === 0
-  ) {
+  if (accounts.length === 0) {
 
     container.innerHTML = `
       <div class="empty-state">
@@ -2164,10 +2058,7 @@ function renderAccounts() {
       (account, index) => {
 
         const row =
-          document.createElement(
-            "div"
-          );
-
+          document.createElement("div");
 
         row.className =
           "account-row";
@@ -2178,9 +2069,7 @@ function renderAccounts() {
           <div>
 
             <div class="account-name">
-              ${escapeHtml(
-                account.name
-              )}
+              ${escapeHtml(account.name)}
             </div>
 
             <div class="small-note">
@@ -2192,9 +2081,7 @@ function renderAccounts() {
           <div class="account-actions">
 
             <div class="account-balance">
-              ${money(
-                account.balance
-              )}
+              ${money(account.balance)}
             </div>
 
             <button
@@ -2202,9 +2089,7 @@ function renderAccounts() {
               type="button"
               data-account-index="${index}"
               aria-label="Изменить счёт">
-
               ✎
-
             </button>
 
           </div>
@@ -2212,9 +2097,7 @@ function renderAccounts() {
         `;
 
 
-        container.appendChild(
-          row
-        );
+        container.appendChild(row);
 
       }
     );
@@ -2226,9 +2109,7 @@ function renderAccounts() {
     accounts.reduce(
       (sum, account) =>
         sum +
-        Number(
-          account.balance || 0
-        ),
+        Number(account.balance || 0),
       0
     );
 
@@ -2247,8 +2128,7 @@ function renderAccounts() {
 
 function openAccountModal() {
 
-  editingAccountIndex =
-    null;
+  editingAccountIndex = null;
 
 
   document.getElementById(
@@ -2275,9 +2155,7 @@ function openAccountModal() {
 
   document.getElementById(
     "accountOverlay"
-  ).classList.add(
-    "open"
-  );
+  ).classList.add("open");
 
 
   setTimeout(() => {
@@ -2332,9 +2210,7 @@ function editAccount(index) {
 
   document.getElementById(
     "accountOverlay"
-  ).classList.add(
-    "open"
-  );
+  ).classList.add("open");
 
 }
 
@@ -2343,13 +2219,10 @@ function closeAccountModal() {
 
   document.getElementById(
     "accountOverlay"
-  ).classList.remove(
-    "open"
-  );
+  ).classList.remove("open");
 
 
-  editingAccountIndex =
-    null;
+  editingAccountIndex = null;
 
 }
 
@@ -2372,22 +2245,16 @@ function saveAccount() {
 
   if (!name) {
 
-    alert(
-      "Введи название счёта"
-    );
+    alert("Введи название счёта");
 
     return;
 
   }
 
 
-  if (
-    !Number.isFinite(balance)
-  ) {
+  if (!Number.isFinite(balance)) {
 
-    alert(
-      "Введи корректный остаток"
-    );
+    alert("Введи корректный остаток");
 
     return;
 
@@ -2396,13 +2263,10 @@ function saveAccount() {
 
   const account = {
 
-    name:
-      name,
+    name: name,
 
     balance:
-      Math.round(
-        balance * 100
-      ) / 100
+      Math.round(balance * 100) / 100
 
   };
 
@@ -2411,9 +2275,7 @@ function saveAccount() {
     editingAccountIndex === null
   ) {
 
-    accounts.push(
-      account
-    );
+    accounts.push(account);
 
   }
 
@@ -2428,9 +2290,7 @@ function saveAccount() {
 
   saveAccounts();
 
-
   closeAccountModal();
-
 
   renderAccounts();
 
@@ -2446,9 +2306,7 @@ function initButtons() {
   /* Нижняя навигация */
 
   document
-    .querySelectorAll(
-      ".nav button"
-    )
+    .querySelectorAll(".nav button")
     .forEach(button => {
 
       button.addEventListener(
@@ -2498,13 +2356,8 @@ function initButtons() {
       "click",
       function(event) {
 
-        if (
-          event.target ===
-          this
-        ) {
-
+        if (event.target === this) {
           closeExpense();
-
         }
 
       }
@@ -2526,9 +2379,7 @@ function initButtons() {
   /* Расчёт траты */
 
   document
-    .getElementById(
-      "amount"
-    )
+    .getElementById("amount")
     .addEventListener(
       "input",
       calculateExpense
@@ -2536,9 +2387,7 @@ function initButtons() {
 
 
   document
-    .getElementById(
-      "categorySelect"
-    )
+    .getElementById("categorySelect")
     .addEventListener(
       "change",
       calculateExpense
@@ -2548,9 +2397,7 @@ function initButtons() {
   /* Редактирование категорий */
 
   document
-    .getElementById(
-      "categoryList"
-    )
+    .getElementById("categoryList")
     .addEventListener(
       "click",
       function(event) {
@@ -2577,14 +2424,24 @@ function initButtons() {
 
 
         if (category) {
-
           openCategoryEdit(
             category.name
           );
-
         }
 
       }
+    );
+
+
+  /* СТЕРЕТЬ ВСЕ ЛИМИТЫ */
+
+  document
+    .getElementById(
+      "clearAllLimitsButton"
+    )
+    .addEventListener(
+      "click",
+      clearAllLimits
     );
 
 
@@ -2608,13 +2465,8 @@ function initButtons() {
       "click",
       function(event) {
 
-        if (
-          event.target ===
-          this
-        ) {
-
+        if (event.target === this) {
           closeCategoryEdit();
-
         }
 
       }
@@ -2665,13 +2517,8 @@ function initButtons() {
       "click",
       function(event) {
 
-        if (
-          event.target ===
-          this
-        ) {
-
+        if (event.target === this) {
           closeAccountModal();
-
         }
 
       }
@@ -2723,19 +2570,15 @@ function initButtons() {
     );
 
 
-  /* Enter в сумме траты */
+  /* Enter в сумме */
 
   document
-    .getElementById(
-      "amount"
-    )
+    .getElementById("amount")
     .addEventListener(
       "keydown",
       function(event) {
 
-        if (
-          event.key === "Enter"
-        ) {
+        if (event.key === "Enter") {
 
           event.preventDefault();
 
@@ -2757,9 +2600,7 @@ function initButtons() {
       "keydown",
       function(event) {
 
-        if (
-          event.key === "Enter"
-        ) {
+        if (event.key === "Enter") {
 
           event.preventDefault();
 
@@ -2781,9 +2622,7 @@ function initButtons() {
       "keydown",
       function(event) {
 
-        if (
-          event.key === "Enter"
-        ) {
+        if (event.key === "Enter") {
 
           event.preventDefault();
 
