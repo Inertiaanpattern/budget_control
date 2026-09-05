@@ -1,81 +1,437 @@
-<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><title>Babki</title><link rel="icon" type="image/png" href="money_pouch_icon.png"><link rel="apple-touch-icon" href="money_pouch_icon.png"><style>
-:root{--bg:#f8f2f1;--card:#fffafa;--text:#292526;--muted:#8c8181;--pink:#c98f9d;--pl:#f1dfe3;--pp:#f8ecee;--danger:#b85f68;--border:#eadedf;--dark:#302b2c}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Arial,sans-serif}button,input,select{font:inherit}button{appearance:none}.app{max-width:480px;margin:auto;padding:18px 16px 100px}.header{margin-bottom:18px}.header-title{font-size:27px;font-weight:750}.month{color:var(--muted);font-size:14px}.hero{background:var(--dark);color:#fff;border-radius:28px;padding:24px;margin-bottom:14px}.hero-label{font-size:14px;opacity:.7}.hero-number{font-size:43px;font-weight:800;margin-top:8px}.hero-sub{margin-top:8px;font-size:14px;opacity:.72}.progress{height:7px;background:#ffffff24;border-radius:10px;margin-top:20px}.progress-inner{height:100%;background:#e5b9c3;border-radius:10px}.card{background:var(--card);border:1px solid var(--border);border-radius:23px;padding:19px;margin-bottom:12px}.card-title{font-size:15px;font-weight:700;margin-bottom:14px}.stat-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:14px}.stat-row>span:first-child{color:var(--muted)}.stat-value{font-weight:700}.primary,.secondary{width:100%;border:0;padding:15px;border-radius:17px;font-weight:700;cursor:pointer}.primary{background:var(--pink);color:white}.secondary{background:var(--pl);color:#64484f}.small-button{border:0;background:var(--pp);color:#64484f;width:34px;height:34px;border-radius:11px;font-size:17px}.clear-limits-button{width:100%;border:1px solid var(--border);background:transparent;color:var(--danger);padding:13px;border-radius:15px;margin-bottom:12px}.section-heading{font-size:21px;font-weight:750;margin:8px 0 14px}.section-heading-row{margin:8px 0 14px}.small-note{color:var(--muted);font-size:12px;line-height:1.4;margin-top:10px}.screen{display:none}.screen.active{display:block}.category-row,.account-row{padding:13px 0;border-bottom:1px solid var(--border)}.category-row:last-child,.account-row:last-child{border:0}.category-top,.account-row{display:flex;justify-content:space-between;align-items:center;gap:12px}.category-left{flex:1;min-width:0}.category-name,.account-name{font-size:14px;font-weight:650}.category-limit{color:var(--muted);font-size:12px;margin-top:4px}.category-actions,.account-actions{display:flex;align-items:center;gap:8px}.category-remaining,.account-balance{font-weight:750}.negative,.danger{color:var(--danger)}.category-meta{color:var(--muted);font-size:12px;margin-top:5px}.category-bar{height:5px;background:#eee4e4;border-radius:10px;margin-top:8px}.category-bar-inner{height:100%;background:var(--pink);border-radius:10px}.total-card{background:var(--dark);color:#fff}.total-card .stat-row>span:first-child{color:#ffffffa6}.overlay{display:none;position:fixed;inset:0;background:#28232461;z-index:10;align-items:flex-end;justify-content:center}.overlay.open{display:flex}.modal{width:100%;max-width:480px;background:#fffafa;border-radius:28px 28px 0 0;padding:20px 17px 30px;max-height:90vh;overflow:auto}.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.modal-title{font-size:21px;font-weight:750}.close{width:34px;height:34px;border:0;border-radius:50%;background:var(--pp);font-size:20px}.field-label{color:var(--muted);font-size:12px;margin:14px 0 7px}.amount,.text-input,.select{width:100%;border:1px solid var(--border);background:#fff;border-radius:15px;padding:14px;outline:0}.amount{background:var(--pp);border:0;font-size:36px;text-align:center;font-weight:750;margin-bottom:15px}.edit-value{font-size:28px;text-align:center}.category-info{margin-top:12px;background:var(--pp);border-radius:17px;padding:14px}.category-info-title{font-size:13px;color:var(--muted);margin-bottom:7px}.category-info-main{font-size:21px;font-weight:800}.consequence{margin-top:10px;padding:13px;border-radius:15px;background:#fff;border:1px solid var(--border);font-size:13px}.modal-button{margin-top:18px}.nav{position:fixed;bottom:0;left:0;right:0;background:#fffafaF0;backdrop-filter:blur(15px);border-top:1px solid var(--border);z-index:5}.nav-inner{max-width:480px;margin:auto;display:flex;justify-content:space-around;padding:9px 8px 11px}.nav button{border:0;background:none;color:var(--muted);font-size:11px;padding:0 8px}.nav button.active{color:var(--pink);font-weight:750}.nav-icon{font-size:20px;display:block;margin-bottom:2px}
-</style></head><body><div class="app">
-<section id="home" class="screen active"><div class="header"><div class="header-title">Контроль трат</div><div class="month" id="monthTitle">Сентябрь 2026</div></div><div class="hero"><div class="hero-label">Сегодня можно потратить</div><div class="hero-number" id="dailyLimit">0 ₽</div><div class="hero-sub" id="dailyDescription">Расчёт на основе бюджета и текущих трат</div><div class="progress"><div class="progress-inner" id="monthProgress"></div></div></div><div class="card"><div class="card-title">Сегодня</div><div class="stat-row"><span>Потрачено</span><span class="stat-value" id="todaySpent">0 ₽</span></div><div class="stat-row"><span>Осталось сегодня</span><span class="stat-value" id="todayLeft">0 ₽</span></div></div><button class="primary" id="quickExpenseButton">＋ Быстро записать</button><div style="height:18px"></div><div class="card"><div class="card-title">Сентябрь</div><div class="stat-row"><span>План расходов</span><span class="stat-value" id="monthPlan">0 ₽</span></div><div class="stat-row"><span>Потрачено</span><span class="stat-value" id="monthSpent">0 ₽</span></div><div class="stat-row"><span>Осталось</span><span class="stat-value" id="monthLeft">0 ₽</span></div></div></section>
-<section id="budget" class="screen"><div class="section-heading">Бюджет</div><div class="card"><div class="stat-row"><span>Доход</span><span class="stat-value" id="budgetSalary">0 ₽</span></div><div class="stat-row"><span>План расходов</span><span class="stat-value" id="budgetTotal">0 ₽</span></div><div class="stat-row"><span>Цель накоплений</span><span class="stat-value" id="budgetSavings">0 ₽</span></div></div><div class="section-heading">Категории</div><button class="clear-limits-button" id="clearAllLimitsButton">Стереть все лимиты</button><div class="card" id="categoryList"></div></section>
-<section id="accounts" class="screen"><div class="section-heading">Счета</div><div class="card total-card"><div class="stat-row"><span>Общий баланс</span><span class="stat-value" id="accountsTotal">0 ₽</span></div></div><div class="card" id="accountsList"></div><button class="secondary" id="addAccountButton">＋ Добавить счёт</button><div class="small-note">Здесь будут только твои реальные счета. Начинаем с нулевых остатков и постепенно заносим реальные цифры.</div></section>
-<section id="debts" class="screen"><div class="section-heading">Долги и обязательства</div><div class="card"><div class="card-title">Пока не внесены</div><div class="empty-state" style="text-align:center;color:var(--muted)">Сюда позже занесём реальные обязательства и платежи.</div></div></section>
-<section id="settings" class="screen"><div class="section-heading">Настройки</div><div class="card"><div class="stat-row"><span>Общий доход</span><div class="category-actions"><span class="stat-value" id="salaryDisplay"></span><button class="small-button" id="editSalaryButton">✎</button></div></div><div class="stat-row"><span>Аванс</span><div class="category-actions"><span class="stat-value" id="advanceDisplay"></span><button class="small-button" id="editAdvanceButton">✎</button></div></div><div class="stat-row"><span>Дата аванса</span><div class="category-actions"><span class="stat-value" id="advanceDateDisplay"></span><button class="small-button" id="editAdvanceDateButton">✎</button></div></div><div class="stat-row"><span>Основная зарплата</span><span class="stat-value" id="mainSalaryDisplay"></span></div><div class="stat-row"><span>Дата основной зарплаты</span><div class="category-actions"><span class="stat-value" id="mainSalaryDateDisplay"></span><button class="small-button" id="editMainSalaryDateButton">✎</button></div></div><div class="stat-row"><span>Цель накоплений</span><span class="stat-value">20%</span></div></div></section></div>
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Babki</title>
+<link rel="icon" type="image/png" href="money_pouch_icon.png">
+<link rel="apple-touch-icon" href="money_pouch_icon.png">
+<style>
+:root{--bg:#f8f2f1;--card:#fffafa;--text:#292526;--muted:#8c8181;--pink:#c98f9d;--pl:#f1dfe3;--pp:#f8ecee;--danger:#b85f68;--border:#eadedf;--dark:#302b2c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Arial,sans-serif}
+button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}.app{max-width:480px;margin:auto;padding:18px 16px 105px}
+.header{margin-bottom:18px}.header-title{font-size:27px;font-weight:800}.month{color:var(--muted);font-size:14px}
+.hero{background:var(--dark);color:#fff;border-radius:28px;padding:24px;margin-bottom:14px}.hero-label{font-size:14px;opacity:.7}.hero-number{font-size:43px;font-weight:800;margin-top:8px}.hero-sub{margin-top:8px;font-size:14px;opacity:.72}.progress{height:7px;background:#ffffff24;border-radius:10px;margin-top:20px}.progress-inner{height:100%;background:#e5b9c3;border-radius:10px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:23px;padding:19px;margin-bottom:12px}.card-title{font-size:15px;font-weight:750;margin-bottom:14px}
+.stat-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;font-size:14px}.stat-row>span:first-child{color:var(--muted)}.stat-value{font-weight:750}
+.primary,.secondary{width:100%;border:0;padding:15px;border-radius:17px;font-weight:750}.primary{background:var(--pink);color:#fff}.secondary{background:var(--pl);color:#64484f}
+.small-button{border:0;background:var(--pp);color:#64484f;width:34px;height:34px;border-radius:11px;font-size:17px}.clear-limits-button{width:100%;border:1px solid var(--border);background:transparent;color:var(--danger);padding:13px;border-radius:15px;margin-bottom:12px}
+.section-heading{font-size:21px;font-weight:800;margin:8px 0 14px}.section-heading-row{display:flex;justify-content:space-between;align-items:center;margin:8px 0 14px}.section-heading-row .section-heading{margin:0}
+.small-note{color:var(--muted);font-size:12px;line-height:1.4;margin-top:10px}.screen{display:none}.screen.active{display:block}
+.category-row,.account-row,.debt-row,.goal-row{padding:13px 0;border-bottom:1px solid var(--border)}.category-row:last-child,.account-row:last-child,.debt-row:last-child,.goal-row:last-child{border:0}
+.category-top,.account-row,.debt-top,.goal-top{display:flex;justify-content:space-between;align-items:center;gap:12px}.category-left,.account-left,.debt-left,.goal-left{flex:1;min-width:0}.category-name,.account-name,.debt-name,.goal-name{font-size:14px;font-weight:700}.category-limit{color:var(--muted);font-size:12px;margin-top:4px}.category-actions,.account-actions{display:flex;align-items:center;gap:8px}.category-remaining,.account-balance{font-weight:800}.negative,.danger{color:var(--danger)}.category-meta{color:var(--muted);font-size:12px;margin-top:5px}.category-bar{height:5px;background:#eee4e4;border-radius:10px;margin-top:8px}.category-bar-inner{height:100%;background:var(--pink);border-radius:10px}
+.total-card{background:var(--dark);color:#fff}.total-card .stat-row>span:first-child{color:#ffffffa6}
+.account-main{display:flex;align-items:center;gap:12px}.bank-logo{width:42px;height:42px;border-radius:13px;object-fit:cover;background:#eee}.bank-fallback{display:flex;align-items:center;justify-content:center;font-weight:800;background:var(--pp);color:#64484f}.account-type{font-size:11px;color:var(--muted);margin-top:3px}
+.chip{display:inline-block;padding:5px 9px;border-radius:10px;background:var(--pp);font-size:11px;color:#64484f}.chip.danger{background:#f5dddd}
+.debt-amount,.goal-amount{font-weight:800}.debt-meta,.goal-meta{font-size:12px;color:var(--muted);margin-top:5px}.goal-progress{height:6px;background:#eee4e4;border-radius:10px;margin-top:9px}.goal-progress-inner{height:100%;background:var(--pink);border-radius:10px}
+.overlay{display:none;position:fixed;inset:0;background:#28232461;z-index:20;align-items:flex-end;justify-content:center}.overlay.open{display:flex}.modal{width:100%;max-width:480px;background:#fffafa;border-radius:28px 28px 0 0;padding:20px 17px 30px;max-height:92vh;overflow:auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.modal-title{font-size:21px;font-weight:800}.close{width:34px;height:34px;border:0;border-radius:50%;background:var(--pp);font-size:20px}
+.field-label{color:var(--muted);font-size:12px;margin:14px 0 7px}.amount,.text-input,.select,.textarea{width:100%;border:1px solid var(--border);background:#fff;border-radius:15px;padding:14px;outline:0}.amount{background:var(--pp);border:0;font-size:36px;text-align:center;font-weight:800;margin-bottom:15px}.edit-value{font-size:28px;text-align:center}
+.category-info{margin-top:12px;background:var(--pp);border-radius:17px;padding:14px}.category-info-title{font-size:13px;color:var(--muted);margin-bottom:7px}.category-info-main{font-size:21px;font-weight:800}.consequence{margin-top:10px;padding:13px;border-radius:15px;background:#fff;border:1px solid var(--border);font-size:13px}.modal-button{margin-top:18px}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fffafaF0;backdrop-filter:blur(15px);border-top:1px solid var(--border);z-index:10}.nav-inner{max-width:480px;margin:auto;display:flex;justify-content:space-around;padding:9px 5px 11px}.nav button{border:0;background:none;color:var(--muted);font-size:10px;padding:0 5px}.nav button.active{color:var(--pink);font-weight:800}.nav-icon{font-size:20px;display:block;margin-bottom:2px}
+.inline-button{border:0;background:var(--pp);color:#64484f;border-radius:12px;padding:9px 11px;font-size:12px;font-weight:700}.danger-button{border:0;background:#f5dddd;color:var(--danger);border-radius:12px;padding:9px 11px;font-size:12px;font-weight:700}
+.actions-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.empty{text-align:center;color:var(--muted);padding:18px 4px;font-size:13px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+</style>
+</head>
+<body>
+<div class="app">
 
-<div class="overlay" id="expenseOverlay"><div class="modal"><div class="modal-header"><div class="modal-title">Новая трата</div><button class="close" id="closeExpenseButton">×</button></div><input id="amount" class="amount" type="number" inputmode="decimal" placeholder="0 ₽"><div class="field-label">Категория</div><select id="categorySelect" class="select"></select><div class="category-info"><div class="category-info-title">Осталось в категории</div><div class="category-info-main" id="categoryRemaining">—</div><div class="consequence" id="categoryConsequence">Введи сумму — я покажу, что произойдёт.</div></div><div class="category-info"><div class="category-info-title">Общий бюджет после покупки</div><div class="category-info-main" id="monthRemainingAfter">—</div></div><div class="modal-button"><button class="primary" id="saveExpenseButton">Записать трату</button></div></div></div>
-<div class="overlay" id="categoryEditOverlay"><div class="modal"><div class="modal-header"><div class="modal-title">Лимит категории</div><button class="close" id="closeCategoryEditButton">×</button></div><div class="field-label" id="editingCategoryName"></div><input id="categoryLimitInput" class="text-input edit-value" type="number" inputmode="decimal"><button class="primary" id="saveCategoryLimitButton" style="margin-top:15px">Сохранить лимит</button></div></div>
-<div class="overlay" id="accountOverlay"><div class="modal"><div class="modal-header"><div class="modal-title" id="accountModalTitle">Новый счёт</div><button class="close" id="closeAccountButton">×</button></div><div class="field-label">Название счёта</div><input id="accountNameInput" class="text-input" placeholder="Например, Т-Банк"><div class="field-label">Реальный остаток</div><input id="accountBalanceInput" class="text-input" type="number" inputmode="decimal"><button class="primary" id="saveAccountButton" style="margin-top:18px">Добавить счёт</button></div></div>
-<div class="overlay" id="financeOverlay"><div class="modal"><div class="modal-header"><div class="modal-title" id="financeTitle">Изменить</div><button class="close" id="closeFinanceButton">×</button></div><div class="field-label" id="financeLabel"></div><input id="financeInput" class="text-input edit-value" type="number" inputmode="decimal"><button class="primary" id="saveFinanceButton" style="margin-top:15px">Сохранить</button></div></div>
-<div class="overlay" id="dateOverlay"><div class="modal"><div class="modal-header"><div class="modal-title" id="dateTitle">Дата выплаты</div><button class="close" id="closeDateButton">×</button></div><div class="field-label">День месяца</div><input id="dateInput" class="text-input edit-value" type="number" min="1" max="31" inputmode="numeric"><button class="primary" id="saveDateButton" style="margin-top:15px">Сохранить</button></div></div>
-<div class="nav"><div class="nav-inner"><button class="active" data-screen="home"><span class="nav-icon">⌂</span>Сегодня</button><button data-screen="budget"><span class="nav-icon">▤</span>Бюджет</button><button data-screen="accounts"><span class="nav-icon">◉</span>Счета</button><button data-screen="debts"><span class="nav-icon">₽</span>Долги</button><button data-screen="settings"><span class="nav-icon">⚙</span>Ещё</button></div></div>
+<section id="home" class="screen active">
+  <div class="header"><div class="header-title">Контроль трат</div><div class="month">Сентябрь 2026</div></div>
+  <div class="hero">
+    <div class="hero-label">Сегодня можно потратить</div>
+    <div class="hero-number" id="dailyLimit">0 ₽</div>
+    <div class="hero-sub" id="dailyDescription">Учитываю реальные деньги и ближайшую выплату</div>
+    <div class="progress"><div class="progress-inner" id="monthProgress"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Сегодня</div>
+    <div class="stat-row"><span>Потрачено</span><span class="stat-value" id="todaySpent">0 ₽</span></div>
+    <div class="stat-row"><span>Осталось сегодня</span><span class="stat-value" id="todayLeft">0 ₽</span></div>
+  </div>
+  <button class="primary" id="quickExpenseButton">＋ Быстро записать</button>
+  <div style="height:18px"></div>
+  <div class="card">
+    <div class="card-title">Сентябрь</div>
+    <div class="stat-row"><span>План расходов</span><span class="stat-value" id="monthPlan">0 ₽</span></div>
+    <div class="stat-row"><span>Потрачено</span><span class="stat-value" id="monthSpent">0 ₽</span></div>
+    <div class="stat-row"><span>Осталось</span><span class="stat-value" id="monthLeft">0 ₽</span></div>
+  </div>
+</section>
+
+<section id="budget" class="screen">
+  <div class="section-heading">Бюджет</div>
+  <div class="card">
+    <div class="stat-row"><span>Доход</span><span class="stat-value" id="budgetSalary">0 ₽</span></div>
+    <div class="stat-row"><span>План расходов</span><span class="stat-value" id="budgetTotal">0 ₽</span></div>
+    <div class="stat-row"><span>Цель накоплений</span><span class="stat-value" id="budgetSavings">0 ₽</span></div>
+  </div>
+  <div class="section-heading">Категории</div>
+  <button class="clear-limits-button" id="clearAllLimitsButton">Стереть все лимиты</button>
+  <div class="card" id="categoryList"></div>
+</section>
+
+<section id="accounts" class="screen">
+  <div class="section-heading-row"><div class="section-heading">Счета</div><button class="inline-button" id="transferButton">⇄ Перевести</button></div>
+  <div class="card total-card">
+    <div class="stat-row"><span>Общий баланс</span><span class="stat-value" id="accountsTotal">0 ₽</span></div>
+    <div class="stat-row"><span>Доступно для трат</span><span class="stat-value" id="spendableTotal">0 ₽</span></div>
+  </div>
+  <div class="card" id="accountsList"></div>
+  <button class="secondary" id="addAccountButton">＋ Добавить счёт</button>
+  <div class="small-note">Дебетовые карты и наличные входят в доступный баланс. Кредитные карты — нет: их задолженность показывается отдельно.</div>
+</section>
+
+<section id="debts" class="screen">
+  <div class="section-heading-row"><div class="section-heading">Долги</div><button class="inline-button" id="addDebtButton">＋ Добавить долг</button></div>
+  <div class="card" id="debtsList"></div>
+</section>
+
+<section id="goals" class="screen">
+  <div class="section-heading-row"><div class="section-heading">Цели</div><button class="inline-button" id="addGoalButton">＋ Добавить</button></div>
+  <div class="card" id="goalsList"></div>
+</section>
+
+<section id="settings" class="screen">
+  <div class="section-heading">Настройки</div>
+  <div class="card">
+    <div class="stat-row"><span>Общий доход</span><div class="category-actions"><span class="stat-value" id="salaryDisplay"></span><button class="small-button" id="editSalaryButton">✎</button></div></div>
+    <div class="stat-row"><span>Аванс</span><div class="category-actions"><span class="stat-value" id="advanceDisplay"></span><button class="small-button" id="editAdvanceButton">✎</button></div></div>
+    <div class="stat-row"><span>Дата аванса</span><div class="category-actions"><span class="stat-value" id="advanceDateDisplay"></span><button class="small-button" id="editAdvanceDateButton">✎</button></div></div>
+    <div class="stat-row"><span>Основная зарплата</span><span class="stat-value" id="mainSalaryDisplay"></span></div>
+    <div class="stat-row"><span>Дата основной зарплаты</span><div class="category-actions"><span class="stat-value" id="mainSalaryDateDisplay"></span><button class="small-button" id="editMainSalaryDateButton">✎</button></div></div>
+    <div class="stat-row"><span>Цель накоплений</span><div class="category-actions"><span class="stat-value" id="savingsPercentDisplay"></span><button class="small-button" id="editSavingsButton">✎</button></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Что учитывает приложение</div>
+    <div class="small-note">Дневной лимит смотрит на реальные деньги на дебетовых счетах и количество дней до следующей выплаты. Кредитные карты не увеличивают доступный баланс. Долги и цели показываются отдельно, чтобы не путать их с уже потраченными деньгами.</div>
+  </div>
+</section>
+</div>
+
+<div class="overlay" id="expenseOverlay"><div class="modal">
+  <div class="modal-header"><div class="modal-title">Новая операция</div><button class="close" id="closeExpenseButton">×</button></div>
+  <div class="field-label">Тип</div>
+  <select id="operationType" class="select"><option value="expense">Трата</option><option value="debt">Новый долг</option></select>
+  <div id="expenseFields">
+    <input id="amount" class="amount" type="number" inputmode="decimal" placeholder="0 ₽">
+    <div class="field-label">Категория</div><select id="categorySelect" class="select"></select>
+    <div class="category-info"><div class="category-info-title">Осталось в категории</div><div class="category-info-main" id="categoryRemaining">—</div><div class="consequence" id="categoryConsequence">Введи сумму — я покажу, что произойдёт.</div></div>
+    <div class="category-info"><div class="category-info-title">Общий бюджет после покупки</div><div class="category-info-main" id="monthRemainingAfter">—</div></div>
+  </div>
+  <div id="debtFields" style="display:none">
+    <div class="field-label">Сумма долга</div><input id="debtAmount" class="text-input edit-value" type="number" inputmode="decimal" placeholder="0">
+    <div class="field-label">Кому / что</div><input id="debtName" class="text-input" placeholder="Например, долг человеку">
+    <div class="field-label">Срок возврата</div><input id="debtDueDate" class="text-input" type="date">
+  </div>
+  <div class="modal-button"><button class="primary" id="saveExpenseButton">Записать</button></div>
+</div></div>
+
+<div class="overlay" id="categoryEditOverlay"><div class="modal">
+  <div class="modal-header"><div class="modal-title">Лимит категории</div><button class="close" id="closeCategoryEditButton">×</button></div>
+  <div class="field-label" id="editingCategoryName"></div><input id="categoryLimitInput" class="text-input edit-value" type="number" inputmode="decimal">
+  <button class="primary" id="saveCategoryLimitButton" style="margin-top:15px">Сохранить лимит</button>
+</div></div>
+
+<div class="overlay" id="accountOverlay"><div class="modal">
+  <div class="modal-header"><div class="modal-title" id="accountModalTitle">Новый счёт</div><button class="close" id="closeAccountButton">×</button></div>
+  <div class="field-label">Тип</div><select id="accountTypeInput" class="select"><option value="debit">Дебетовая карта</option><option value="credit">Кредитная карта</option><option value="cash">Наличные</option></select>
+  <div class="field-label">Банк / название</div><input id="accountNameInput" class="text-input" placeholder="Например, Сбер">
+  <div class="field-label">Реальный остаток</div><input id="accountBalanceInput" class="text-input" type="number" inputmode="decimal">
+  <div id="creditFields" style="display:none"><div class="field-label">Кредитный лимит</div><input id="creditLimitInput" class="text-input" type="number" inputmode="decimal"></div>
+  <div class="small-note">Для кредитной карты отрицательный остаток — это текущая задолженность. Она автоматически попадает в раздел «Долги» и не увеличивает доступные деньги.</div>
+  <button class="primary" id="saveAccountButton" style="margin-top:18px">Добавить счёт</button>
+</div></div>
+
+<div class="overlay" id="financeOverlay"><div class="modal">
+  <div class="modal-header"><div class="modal-title" id="financeTitle">Изменить</div><button class="close" id="closeFinanceButton">×</button></div>
+  <div class="field-label" id="financeLabel"></div><input id="financeInput" class="text-input edit-value" type="number" inputmode="decimal">
+  <button class="primary" id="saveFinanceButton" style="margin-top:15px">Сохранить</button>
+</div></div>
+
+<div class="overlay" id="dateOverlay"><div class="modal">
+  <div class="modal-header"><div class="modal-title" id="dateTitle">Дата выплаты</div><button class="close" id="closeDateButton">×</button></div>
+  <div class="field-label">День месяца</div><input id="dateInput" class="text-input edit-value" type="number" min="1" max="31" inputmode="numeric">
+  <button class="primary" id="saveDateButton" style="margin-top:15px">Сохранить</button>
+</div></div>
+
+<div class="overlay" id="transferOverlay"><div class="modal">
+  <div class="modal-header"><div class="modal-title">Перевод между своими счетами</div><button class="close" id="closeTransferButton">×</button></div>
+  <div class="field-label">Откуда</div><select id="transferFrom" class="select"></select>
+  <div class="field-label">Куда</div><select id="transferTo" class="select"></select>
+  <div class="field-label">Сумма</div><input id="transferAmount" class="text-input edit-value" type="number" inputmode="decimal" placeholder="0">
+  <button class="primary" id="saveTransferButton" style="margin-top:18px">Перевести</button>
+</div></div>
+
+<div class="overlay" id="goalOverlay"><div class="modal">
+  <div class="modal-header"><div class="modal-title" id="goalModalTitle">Новая цель</div><button class="close" id="closeGoalButton">×</button></div>
+  <div class="field-label">Название / что купить</div><input id="goalName" class="text-input" placeholder="Например, кроссовки">
+  <div class="field-label">Ссылка (необязательно)</div><input id="goalLink" class="text-input" placeholder="Вставь ссылку на товар">
+  <div class="field-label">Цена / сумма цели</div><input id="goalTarget" class="text-input" type="number" inputmode="decimal" placeholder="0">
+  <div class="field-label">Уже накоплено</div><input id="goalSaved" class="text-input" type="number" inputmode="decimal" placeholder="0">
+  <div class="field-label">Желаемая дата</div><input id="goalDate" class="text-input" type="date">
+  <div class="modal-button"><button class="primary" id="saveGoalButton">Сохранить цель</button></div>
+</div></div>
+
+<div class="overlay" id="debtOverlay"><div class="modal">
+  <div class="modal-header"><div class="modal-title">Долг</div><button class="close" id="closeDebtButton">×</button></div>
+  <div class="field-label">Кому / что</div><input id="manualDebtName" class="text-input" placeholder="Например, долг человеку">
+  <div class="field-label">Сумма</div><input id="manualDebtAmount" class="text-input edit-value" type="number" inputmode="decimal">
+  <div class="field-label">Срок возврата</div><input id="manualDebtDueDate" class="text-input" type="date">
+  <button class="primary" id="saveDebtButton" style="margin-top:18px">Сохранить долг</button>
+</div></div>
+
+<div class="nav"><div class="nav-inner">
+  <button class="active" data-screen="home"><span class="nav-icon">⌂</span>Сегодня</button>
+  <button data-screen="budget"><span class="nav-icon">▤</span>Бюджет</button>
+  <button data-screen="accounts"><span class="nav-icon">▱</span>Счета</button>
+  <button data-screen="debts"><span class="nav-icon">↺</span>Долги</button>
+  <button data-screen="goals"><span class="nav-icon">♡</span>Цели</button>
+  <button data-screen="settings"><span class="nav-icon">⚙</span>Ещё</button>
+</div></div>
+
 <script>
-const TY="babki_september_2026_transactions",CK="babki_september_2026_categories",AK="babki_accounts_real_v1",FK="babki_finance_settings_v1";let salary=140000,advance=26000,advanceDate=null,mainSalaryDate=15,transactions=[],accounts=[],editingCategory=null,editingAccount=null,financeType=null,dateType=null;
-const categories=[["Еда вне дома",25000],["Транспорт (общ.)",6000],["Дом",5000],["Одежда",7000],["Здоровье",3000],["Кредиты | Долги",29096],["Подарки",8700],["Подписки",2500],["Досуг",35000],["Продукты",19000],["Книги",0],["Канцелярия",500],["Бьюти",4200],["Путешествия",0],["Аксессуары",0],["Проценты",500],["Комиссии/обслуживание карт",350],["Гигиена",500],["Коммунальные платежи",6000],["Налоги",0],["Транспорт (такси)",12000],["Мобильная связь",350],["Техника",0],["Прочие",2300],["Благотворительность",1200],["Хобби",0]].map(x=>({name:x[0],plan:x[1]}));
-const money=v=>new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(Math.round((Number(v)||0)*100)/100)+" ₽",cat=n=>categories.find(x=>x.name===n),today=()=>{let d=new Date;return d.toISOString().slice(0,10)},spent=()=>transactions.reduce((s,x)=>s+Number(x.amount||0),0),catSpent=n=>transactions.filter(x=>x.category===n).reduce((s,x)=>s+Number(x.amount||0),0),budget=()=>categories.reduce((s,x)=>s+Number(x.plan||0),0);
-function load(){try{transactions=JSON.parse(localStorage.getItem(TY)||"[]")}catch(e){}try{let p=JSON.parse(localStorage.getItem(CK)||"{}");categories.forEach(c=>{if(c.name in p)c.plan=Number(p[c.name])||0})}catch(e){}try{accounts=JSON.parse(localStorage.getItem(AK)||"[]")}catch(e){}try{let p=JSON.parse(localStorage.getItem(FK)||"{}");if(Number.isFinite(+p.salary))salary=+p.salary;if(Number.isFinite(+p.advance))advance=+p.advance;if(Number.isFinite(+p.advanceDate)&&+p.advanceDate>=1)advanceDate=+p.advanceDate;if(Number.isFinite(+p.mainSalaryDate)&&+p.mainSalaryDate>=1)mainSalaryDate=+p.mainSalaryDate}catch(e){}}
-function save(k,v){localStorage.setItem(k,JSON.stringify(v))}function updateFinance(){salaryDisplay.textContent=money(salary);advanceDisplay.textContent=money(advance);advanceDateDisplay.textContent=advanceDate?advanceDate+" числа":"не указана";mainSalaryDisplay.textContent=money(Math.max(0,salary-advance));mainSalaryDateDisplay.textContent=mainSalaryDate+" числа";budgetSalary.textContent=money(salary);budgetSavings.textContent=money(salary*.2)}
-function renderCats(){categoryList.innerHTML="";categories.forEach((c,i)=>{let s=catSpent(c.name),r=c.plan-s,p=c.plan?Math.min(100,Math.max(0,s/c.plan*100)):0,row=document.createElement("div");row.className="category-row";row.innerHTML=`<div class="category-top"><div class="category-left"><div class="category-name">${c.name}</div><div class="category-limit">Лимит: ${money(c.plan)}</div></div><div class="category-actions"><div class="category-remaining ${r<0?"negative":""}">${r>=0?"осталось ":"перерасход "}${money(Math.abs(r))}</div><button class="small-button" data-ci="${i}">✎</button></div></div><div class="category-meta">${money(s)} из ${money(c.plan)}</div><div class="category-bar"><div class="category-bar-inner" style="width:${p}%"></div></div>`;categoryList.appendChild(row)});budgetTotal.textContent=money(budget());updateFinance()}
-function getDateForDay(day){
-  const now=new Date();
-  return new Date(now.getFullYear(),now.getMonth(),day);
+const TY="babki_september_2026_transactions",CK="babki_september_2026_categories",AK="babki_accounts_real_v1",FK="babki_finance_settings_v1";
+const SK="babki_savings_goal_percent_v1",GK="babki_goals_v1",DK="babki_personal_debts_v1";
+const budgetYear=2026,budgetMonth=8;
+let salary=140000,advance=26000,advanceDate=null,mainSalaryDate=15,savingsPercent=20;
+let transactions=[],accounts=[],goals=[],debts=[];
+let editingCategory=null,editingAccount=null,editingGoal=null,financeType=null,dateType=null;
+
+const categories=[
+["Еда вне дома",25000],["Транспорт (общ.)",6000],["Дом",5000],["Одежда",7000],["Здоровье",3000],
+["Кредиты | Долги",29096],["Подарки",8700],["Подписки",2500],["Досуг",35000],["Продукты",19000],
+["Книги",0],["Канцелярия",500],["Бьюти",4200],["Путешествия",0],["Аксессуары",0],["Проценты",500],
+["Комиссии/обслуживание карт",350],["Гигиена",500],["Коммунальные платежи",6000],["Налоги",0],
+["Транспорт (такси)",12000],["Мобильная связь",350],["Техника",0],["Прочие",2300],["Благотворительность",1200],["Хобби",0]
+].map(x=>({name:x[0],plan:x[1]}));
+
+const money=v=>new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(Math.round((Number(v)||0)*100)/100)+" ₽";
+const cat=n=>categories.find(x=>x.name===n);
+const today=()=>{let d=new Date;return d.toISOString().slice(0,10)};
+const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const read=(k,f)=>{try{const v=JSON.parse(localStorage.getItem(k));return v===null?f:v}catch(e){return f}};
+const spent=()=>transactions.filter(x=>x.type!=="debt").reduce((s,x)=>s+Number(x.amount||0),0);
+const catSpent=n=>transactions.filter(x=>x.type!=="debt"&&x.category===n).reduce((s,x)=>s+Number(x.amount||0),0);
+const budget=()=>categories.reduce((s,x)=>s+Number(x.plan||0),0);
+
+function load(){
+  const t=read(TY,null); if(Array.isArray(t)) transactions=t;
+  const p=read(CK,null);
+  if(p&&typeof p==="object") categories.forEach(c=>{if(Object.prototype.hasOwnProperty.call(p,c.name))c.plan=Number(p[c.name])||0});
+  const a=read(AK,null);
+  if(Array.isArray(a)) accounts=a.map(x=>({...x,type:x.type||"debit",creditLimit:Number(x.creditLimit||0),bank:x.bank||x.name||""}));
+  const f=read(FK,null);
+  if(f&&typeof f==="object"){
+    if(Number.isFinite(+f.salary))salary=+f.salary;
+    if(Number.isFinite(+f.advance))advance=+f.advance;
+    if(Number.isFinite(+f.advanceDate)&&+f.advanceDate>=1)advanceDate=+f.advanceDate;
+    if(Number.isFinite(+f.mainSalaryDate)&&+f.mainSalaryDate>=1)mainSalaryDate=+f.mainSalaryDate;
+  }
+  const sp=read(SK,null); if(Number.isFinite(+sp))savingsPercent=Math.min(100,Math.max(0,+sp));
+  const g=read(GK,[]); if(Array.isArray(g))goals=g;
+  const d=read(DK,[]); if(Array.isArray(d))debts=d;
 }
 
-function availableCash(){
-  if(!Array.isArray(accounts)) accounts=[];
-  return accounts.reduce((sum,a)=>{
-    if(!a) return sum;
-    if(String(a.type||"debit").toLowerCase()==="credit") return sum;
-    return sum+Number(a.balance||0);
-  },0);
+function updateFinance(){
+  salaryDisplay.textContent=money(salary);
+  advanceDisplay.textContent=money(advance);
+  advanceDateDisplay.textContent=advanceDate?advanceDate+" числа":"не указана";
+  mainSalaryDisplay.textContent=money(Math.max(0,salary-advance));
+  mainSalaryDateDisplay.textContent=mainSalaryDate+" числа";
+  savingsPercentDisplay.textContent=savingsPercent+"%";
+  budgetSalary.textContent=money(salary);
+  budgetSavings.textContent=money(salary*savingsPercent/100);
+  budgetTotal.textContent=money(budget());
+}
+
+function renderCats(){
+  categoryList.innerHTML="";
+  categories.forEach((c,i)=>{
+    const s=catSpent(c.name),r=c.plan-s,p=c.plan?Math.min(100,Math.max(0,s/c.plan*100)):0;
+    const row=document.createElement("div");row.className="category-row";
+    row.innerHTML=`<div class="category-top"><div class="category-left"><div class="category-name">${c.name}</div><div class="category-limit">Лимит: ${money(c.plan)}</div></div><div class="category-actions"><div class="category-remaining ${r<0?"negative":""}">${r>=0?"осталось ":"перерасход "}${money(Math.abs(r))}</div><button class="small-button" data-ci="${i}">✎</button></div></div><div class="category-meta">${money(s)} из ${money(c.plan)}</div><div class="category-bar"><div class="category-bar-inner" style="width:${p}%"></div></div>`;
+    categoryList.appendChild(row);
+  });updateFinance();
+}
+
+function logoFor(a){
+  const name=(a.bank||a.name||"").toLowerCase();
+  const domains={sber:"sberbank.ru","сбер":"sberbank.ru","т-банк":"tbank.ru","тинькофф":"tbank.ru",tinkoff:"tbank.ru",альфа:"alfabank.ru",alfa:"alfabank.ru",втб:"vtb.ru",vtb:"vtb.ru",дебанк:"debank.com",debank:"debank.com",озон:"ozon.ru",ozon:"ozon.ru"};
+  const d=Object.keys(domains).find(k=>name.includes(k));
+  if(d)return `<img class="bank-logo" src="https://www.google.com/s2/favicons?domain=${domains[d]}&sz=128" alt="">`;
+  return `<div class="bank-logo bank-fallback">${(a.name||"С").slice(0,1).toUpperCase()}</div>`;
+}
+
+function renderAccounts(){
+  if(!Array.isArray(accounts))accounts=[];
+  accountsList.innerHTML=accounts.length?accounts.map((a,i)=>{
+    const type=a.type==="credit"?"Кредитная карта":a.type==="cash"?"Наличные":"Дебетовая карта";
+    const debt=a.type==="credit"?Math.max(0,-Number(a.balance||0)):0;
+    return `<div class="account-row"><div class="account-main"><div>${logoFor(a)}</div><div class="account-left"><div class="account-name">${a.name||"Счёт"}</div><div class="account-type">${type}${a.type==="credit"&&a.creditLimit?` · лимит ${money(a.creditLimit)}`:""}</div></div></div><div class="account-actions"><div class="account-balance ${debt?"negative":""}">${money(a.balance||0)}</div><button class="small-button" data-ai="${i}">✎</button></div></div>`;
+  }).join(""):'<div class="empty">Пока нет добавленных счетов.</div>';
+  const total=accounts.reduce((s,a)=>s+Number(a.balance||0),0);
+  const spendable=accounts.filter(a=>a.type!=="credit").reduce((s,a)=>s+Number(a.balance||0),0);
+  accountsTotal.textContent=money(total);spendableTotal.textContent=money(spendable);
+}
+
+function renderDebts(){
+  const cards=accounts.filter(a=>a.type==="credit"&&Number(a.balance||0)<0).map(a=>({id:"card_"+a.name,name:a.name+" — кредитная карта",amount:Math.max(0,-Number(a.balance)),dueDate:null,kind:"credit"}));
+  const all=cards.concat(debts);
+  debtsList.innerHTML=all.length?all.map((d,i)=>{
+    const due=d.dueDate?new Date(d.dueDate+"T00:00:00").toLocaleDateString("ru-RU"):"";
+    const days=d.dueDate?Math.max(1,Math.ceil((new Date(d.dueDate+"T00:00:00")-new Date())/86400000)):null;
+    const monthly=days?d.amount/Math.max(1,Math.ceil(days/30)):d.amount;
+    return `<div class="debt-row"><div class="debt-top"><div class="debt-left"><div class="debt-name">${d.name}</div><div class="debt-meta">${d.kind==="credit"?"Задолженность по кредитной карте":(due?"Вернуть до "+due:"Личный долг")}</div>${due?`<div class="debt-meta">Ориентир откладывать: ${money(monthly)} в месяц</div>`:""}</div><div><div class="debt-amount negative">${money(d.amount)}</div>${d.kind!=="credit"?`<button class="danger-button" data-di="${i}">Удалить</button>`:""}</div></div></div>`;
+  }).join(""):'<div class="empty">Пока нет долгов и обязательств.</div>';
+}
+
+function renderGoals(){
+  goalsList.innerHTML=goals.length?goals.map((g,i)=>{
+    const target=Number(g.target)||0,saved=Number(g.saved)||0,left=Math.max(0,target-saved),p=target?Math.min(100,saved/target*100):0;
+    let monthly=left;
+    if(g.date){const days=Math.max(1,Math.ceil((new Date(g.date+"T00:00:00")-new Date())/86400000));monthly=left/Math.max(1,Math.ceil(days/30))}
+    return `<div class="goal-row"><div class="goal-top"><div class="goal-left"><div class="goal-name">${g.name||"Цель"}</div><div class="goal-meta">${g.link?`🔗 ${g.link}`:""}${g.date?` · до ${new Date(g.date+"T00:00:00").toLocaleDateString("ru-RU")}`:""}</div></div><div><div class="goal-amount">${money(left)}</div><div class="goal-meta">осталось</div></div></div><div class="goal-meta">Накоплено ${money(saved)} из ${money(target)} · откладывать ${money(monthly)} в месяц</div><div class="goal-progress"><div class="goal-progress-inner" style="width:${p}%"></div></div><div class="actions-row"><button class="inline-button" data-gi="${i}">✎ Изменить</button><button class="danger-button" data-gd="${i}">Удалить</button></div></div>`;
+  }).join(""):'<div class="empty">Добавь цель — например, кроссовки, поездку или покупку по ссылке.</div>';
+}
+
+function nextPaymentInfo(){
+  const now=new Date(),day=now.getDate(),m=now.getMonth(),y=now.getFullYear(),md=Math.min(31,Math.max(1,Number(mainSalaryDate)||15));
+  let next;
+  if(y===budgetYear&&m===budgetMonth&&day<md)next=new Date(y,m,md);
+  else next=new Date(y,m+1,md);
+  const days=Math.max(1,Math.ceil((next-new Date(y,m,day))/86400000));
+  return {date:next,days};
 }
 
 function periodDailyLimit(){
-  try{
-    const now=new Date();
-    const currentDay=now.getDate();
-    const currentMonth=now.getMonth();
-    const currentYear=now.getFullYear();
-    const cash=Math.max(0,availableCash());
-    const mainDate=Math.min(31,Math.max(1,Number(mainSalaryDate)||15));
-    let nextPaymentDate;
-    if(currentYear===budgetYear && currentMonth===budgetMonth && currentDay<mainDate){
-      nextPaymentDate=new Date(currentYear,currentMonth,mainDate);
-    }else{
-      nextPaymentDate=new Date(currentYear,currentMonth+1,mainDate);
-    }
-    const msPerDay=24*60*60*1000;
-    const todayStart=new Date(currentYear,currentMonth,currentDay);
-    const daysUntilPayment=Math.max(1,Math.ceil((nextPaymentDate-todayStart)/msPerDay));
-    return cash/daysUntilPayment;
-  }catch(e){
-    return 0;
-  }
+  const cash=accounts.filter(a=>a.type!=="credit").reduce((s,a)=>s+Number(a.balance||0),0);
+  const info=nextPaymentInfo();
+  return Math.max(0,cash/info.days);
 }
-function home(){let b=budget(),s=spent(),d=periodDailyLimit(),ts=transactions.filter(x=>x.date===today()).reduce((a,x)=>a+Number(x.amount||0),0);monthPlan.textContent=money(b);monthSpent.textContent=money(s);monthLeft.textContent=money(b-s);dailyLimit.textContent=money(d);todaySpent.textContent=money(ts);todayLeft.textContent=money(Math.max(0,d-ts));monthProgress.style.width=(b?Math.min(100,s/b*100):0)+"%";dailyDescription.textContent=`Сейчас учитывается период до ближайшей выплаты`;updateFinance()}
-function days(){let n=new Date,y=new Date(2026,8,30),x=new Date(n.getFullYear(),n.getMonth(),n.getDate());if(n<new Date(2026,8,1))x=new Date(2026,8,1);return Math.max(1,Math.ceil((y-x)/86400000)+1)}
-function screen(id,b){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");if(id==="budget")renderCats();if(id==="accounts")renderAccounts();home()}
-function renderAccounts(){
-  if(!Array.isArray(accounts)) accounts=[];
-  accountsList.innerHTML=accounts.length?accounts.map((a,i)=>`<div class="account-row"><div><div class="account-name">${a?.name||"Счёт"}</div><div class="small-note">Реальный остаток</div></div><div class="account-actions"><div class="account-balance">${money(a?.balance||0)}</div><button class="small-button" data-ai="${i}">✎</button></div></div>`).join(""):'<div style="text-align:center;color:var(--muted);padding:15px">Пока нет добавленных счетов.</div>';
-  accountsTotal.textContent=money(accounts.reduce((s,a)=>s+Number(a?.balance||0),0));
+
+function home(){
+  const b=budget(),s=spent(),d=periodDailyLimit(),ts=transactions.filter(x=>x.date===today()&&x.type!=="debt").reduce((a,x)=>a+Number(x.amount||0),0);
+  monthPlan.textContent=money(b);monthSpent.textContent=money(s);monthLeft.textContent=money(b-s);
+  dailyLimit.textContent=money(d);todaySpent.textContent=money(ts);todayLeft.textContent=money(Math.max(0,d-ts));
+  monthProgress.style.width=(b?Math.min(100,s/b*100):0)+"%";
+  const info=nextPaymentInfo();
+  dailyDescription.textContent=`До следующей выплаты ${info.days} ${info.days===1?"день":info.days<5?"дня":"дней"} · реальные деньги на счетах`;
+  updateFinance();
 }
-function open(id){document.getElementById(id).classList.add("open")}function close(id){document.getElementById(id).classList.remove("open")}
+
+function screen(id,b){
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  if(id==="budget")renderCats();if(id==="accounts")renderAccounts();if(id==="debts")renderDebts();if(id==="goals")renderGoals();home();
+}
+function open(id){document.getElementById(id).classList.add("open")}
+function close(id){document.getElementById(id).classList.remove("open")}
 function populate(){categorySelect.innerHTML=categories.map(c=>`<option>${c.name}</option>`).join("")}
-function calc(){let a=+amount.value||0,c=cat(categorySelect.value),r=c.plan-catSpent(c.name);categoryRemaining.textContent=money(r);categoryRemaining.className="category-info-main"+(r<0?" danger":"");categoryConsequence.innerHTML=a?(r-a>=0?`После покупки в категории останется <strong>${money(r-a)}</strong>.`:`После покупки будет перерасход <strong>${money(a-r)}</strong>.`):"Введи сумму — я покажу, что произойдёт.";let m=budget()-spent()-a;monthRemainingAfter.textContent=money(m);monthRemainingAfter.className="category-info-main"+(m<0?" danger":"")}
+function calc(){
+  const a=+amount.value||0,c=cat(categorySelect.value),r=c?c.plan-catSpent(c.name):0;
+  categoryRemaining.textContent=money(r);categoryRemaining.className="category-info-main"+(r<0?" danger":"");
+  categoryConsequence.innerHTML=a?(r-a>=0?`После покупки в категории останется <strong>${money(r-a)}</strong>.`:`После покупки будет перерасход <strong>${money(a-r)}</strong>.`):"Введи сумму — я покажу, что произойдёт.";
+  const m=budget()-spent()-a;monthRemainingAfter.textContent=money(m);monthRemainingAfter.className="category-info-main"+(m<0?" danger":"");
+}
 function editFin(t){financeType=t;financeTitle.textContent=t==="salary"?"Общий доход":"Аванс";financeLabel.textContent=t==="salary"?"Сумма общего дохода":"Сумма аванса";financeInput.value=t==="salary"?salary:advance;open("financeOverlay");setTimeout(()=>financeInput.select(),80)}
 function editDate(t){dateType=t;dateTitle.textContent=t==="advance"?"Дата аванса":"Дата основной зарплаты";dateInput.value=t==="advance"?(advanceDate||""):(mainSalaryDate||15);open("dateOverlay");setTimeout(()=>dateInput.select(),80)}
-load();populate();renderCats();renderAccounts();home();
+
+load();populate();renderCats();renderAccounts();renderDebts();renderGoals();home();
+
 document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>screen(b.dataset.screen,b));
-quickExpenseButton.onclick=()=>{populate();amount.value="";open("expenseOverlay");calc();setTimeout(()=>amount.focus(),80)};closeExpenseButton.onclick=()=>close("expenseOverlay");amount.oninput=calc;categorySelect.onchange=calc;
-saveExpenseButton.onclick=()=>{let a=+amount.value||0;if(a<=0)return alert("Введи сумму");transactions.push({id:Date.now(),amount:a,category:categorySelect.value,date:today()});save(TY,transactions);close("expenseOverlay");renderCats();home()};
-categoryList.onclick=e=>{let b=e.target.closest("[data-ci]");if(!b)return;editingCategory=categories[+b.dataset.ci];editingCategoryName.textContent=editingCategory.name;categoryLimitInput.value=editingCategory.plan;open("categoryEditOverlay")};closeCategoryEditButton.onclick=()=>close("categoryEditOverlay");saveCategoryLimitButton.onclick=()=>{let v=+categoryLimitInput.value;if(!Number.isFinite(v)||v<0)return alert("Введи корректный лимит");editingCategory.plan=v;save(CK,Object.fromEntries(categories.map(c=>[c.name,c.plan])));close("categoryEditOverlay");renderCats();home()};clearAllLimitsButton.onclick=()=>{if(confirm("Стереть все лимиты?\n\nМесячные лимиты всех категорий будут установлены в 0 ₽.\n\nУже внесённые траты не удалятся.")){categories.forEach(c=>c.plan=0);save(CK,Object.fromEntries(categories.map(c=>[c.name,c.plan])));renderCats();home()}};
-addAccountButton.onclick=()=>{editingAccount=null;accountModalTitle.textContent="Новый счёт";saveAccountButton.textContent="Добавить счёт";accountNameInput.value="";accountBalanceInput.value="";open("accountOverlay")};accountsList.onclick=e=>{let b=e.target.closest("[data-ai]");if(!b)return;editingAccount=+b.dataset.ai;let a=accounts[editingAccount];accountModalTitle.textContent="Изменить счёт";saveAccountButton.textContent="Сохранить";accountNameInput.value=a.name;accountBalanceInput.value=a.balance;open("accountOverlay")};closeAccountButton.onclick=()=>close("accountOverlay");saveAccountButton.onclick=()=>{let n=accountNameInput.value.trim(),b=+accountBalanceInput.value;if(!n)return alert("Введи название счёта");if(!Number.isFinite(b))return alert("Введи корректный остаток");let a={name:n,balance:b};if(editingAccount===null)accounts.push(a);else accounts[editingAccount]=a;save(AK,accounts);close("accountOverlay");renderAccounts()};
-editSalaryButton.onclick=()=>editFin("salary");editAdvanceButton.onclick=()=>editFin("advance");closeFinanceButton.onclick=()=>close("financeOverlay");saveFinanceButton.onclick=()=>{let v=+financeInput.value;if(!Number.isFinite(v)||v<0)return alert("Введи корректную сумму");if(financeType==="salary")salary=v;else{if(v>salary)return alert("Аванс не может быть больше общего дохода");advance=v}save(FK,{salary,advance,advanceDate,mainSalaryDate});close("financeOverlay");home()};
-editAdvanceDateButton.onclick=()=>editDate("advance");editMainSalaryDateButton.onclick=()=>editDate("main");closeDateButton.onclick=()=>close("dateOverlay");saveDateButton.onclick=()=>{let v=+dateInput.value;if(!Number.isInteger(v)||v<1||v>31)return alert("Введи день от 1 до 31");if(dateType==="advance")advanceDate=v;else mainSalaryDate=v;save(FK,{salary,advance,advanceDate,mainSalaryDate});close("dateOverlay");updateFinance()};
+
+quickExpenseButton.onclick=()=>{populate();operationType.value="expense";expenseFields.style.display="block";debtFields.style.display="none";amount.value="";open("expenseOverlay");calc();setTimeout(()=>amount.focus(),80)};
+closeExpenseButton.onclick=()=>close("expenseOverlay");
+operationType.onchange=()=>{const d=operationType.value==="debt";expenseFields.style.display=d?"none":"block";debtFields.style.display=d?"block":"none"};
+amount.oninput=calc;categorySelect.onchange=calc;
+
+saveExpenseButton.onclick=()=>{
+  if(operationType.value==="debt"){
+    const a=+debtAmount.value||0,n=debtName.value.trim(),due=debtDueDate.value;
+    if(a<=0||!n||!due)return alert("Заполни сумму, кому и срок возврата");
+    debts.push({id:Date.now(),name:n,amount:a,dueDate:due,kind:"personal"});save(DK,debts);close("expenseOverlay");renderDebts();return;
+  }
+  const a=+amount.value||0;if(a<=0)return alert("Введи сумму");
+  transactions.push({id:Date.now(),amount:a,category:categorySelect.value,date:today(),type:"expense"});
+  save(TY,transactions);close("expenseOverlay");renderCats();home();
+};
+
+categoryList.onclick=e=>{const b=e.target.closest("[data-ci]");if(!b)return;editingCategory=categories[+b.dataset.ci];editingCategoryName.textContent=editingCategory.name;categoryLimitInput.value=editingCategory.plan;open("categoryEditOverlay")};
+closeCategoryEditButton.onclick=()=>close("categoryEditOverlay");
+saveCategoryLimitButton.onclick=()=>{const v=+categoryLimitInput.value;if(!Number.isFinite(v)||v<0)return alert("Введи корректный лимит");editingCategory.plan=v;save(CK,Object.fromEntries(categories.map(c=>[c.name,c.plan])));close("categoryEditOverlay");renderCats();home()};
+clearAllLimitsButton.onclick=()=>{if(confirm("Стереть все лимиты?\n\nМесячные лимиты всех категорий будут установлены в 0 ₽.\n\nТраты не удалятся.")){categories.forEach(c=>c.plan=0);save(CK,Object.fromEntries(categories.map(c=>[c.name,c.plan])));renderCats();home()}};
+
+function updateCreditFields(){creditFields.style.display=accountTypeInput.value==="credit"?"block":"none"}
+accountTypeInput.onchange=updateCreditFields;
+addAccountButton.onclick=()=>{editingAccount=null;accountModalTitle.textContent="Новый счёт";saveAccountButton.textContent="Добавить счёт";accountTypeInput.value="debit";accountNameInput.value="";accountBalanceInput.value="";creditLimitInput.value="";updateCreditFields();open("accountOverlay")};
+accountsList.onclick=e=>{const b=e.target.closest("[data-ai]");if(!b)return;editingAccount=+b.dataset.ai;const a=accounts[editingAccount];accountModalTitle.textContent="Изменить счёт";saveAccountButton.textContent="Сохранить";accountTypeInput.value=a.type||"debit";accountNameInput.value=a.name||"";accountBalanceInput.value=a.balance||0;creditLimitInput.value=a.creditLimit||0;updateCreditFields();open("accountOverlay")};
+closeAccountButton.onclick=()=>close("accountOverlay");
+saveAccountButton.onclick=()=>{
+  const n=accountNameInput.value.trim(),b=+accountBalanceInput.value,t=accountTypeInput.value,cl=+creditLimitInput.value||0;
+  if(!n)return alert("Введи название счёта");if(!Number.isFinite(b))return alert("Введи корректный остаток");
+  const a={name:n,balance:b,type:t,creditLimit:cl,bank:n};
+  if(editingAccount===null)accounts.push(a);else accounts[editingAccount]=a;
+  save(AK,accounts);close("accountOverlay");renderAccounts();renderDebts();home();
+};
+
+transferButton.onclick=()=>{
+  if(accounts.length<2)return alert("Для перевода нужно минимум два счёта.");
+  transferFrom.innerHTML=accounts.map((a,i)=>`<option value="${i}">${a.name}</option>`).join("");
+  transferTo.innerHTML=accounts.map((a,i)=>`<option value="${i}">${a.name}</option>`).join("");
+  if(accounts.length>1)transferTo.value="1";
+  transferAmount.value="";open("transferOverlay");
+};
+closeTransferButton.onclick=()=>close("transferOverlay");
+saveTransferButton.onclick=()=>{
+  const fi=+transferFrom.value,ti=+transferTo.value,a=+transferAmount.value;
+  if(fi===ti)return alert("Выбери разные счета");if(!Number.isFinite(a)||a<=0)return alert("Введи сумму");
+  if(Number(accounts[fi].balance||0)<a&&accounts[fi].type!=="credit")return alert("На счёте недостаточно денег");
+  accounts[fi].balance=Number(accounts[fi].balance||0)-a;accounts[ti].balance=Number(accounts[ti].balance||0)+a;
+  save(AK,accounts);close("transferOverlay");renderAccounts();renderDebts();home();
+};
+
+editSalaryButton.onclick=()=>editFin("salary");editAdvanceButton.onclick=()=>editFin("advance");
+editSavingsButton.onclick=()=>{financeType="savings";financeTitle.textContent="Цель накоплений";financeLabel.textContent="Процент от дохода";financeInput.value=savingsPercent;open("financeOverlay");setTimeout(()=>financeInput.select(),80)};
+closeFinanceButton.onclick=()=>close("financeOverlay");
+saveFinanceButton.onclick=()=>{
+  const v=+financeInput.value;if(!Number.isFinite(v)||v<0)return alert("Введи корректную сумму");
+  if(financeType==="salary")salary=v;
+  else if(financeType==="advance"){if(v>salary)return alert("Аванс не может быть больше общего дохода");advance=v}
+  else savingsPercent=Math.min(100,v);
+  save(FK,{salary,advance,advanceDate,mainSalaryDate});save(SK,savingsPercent);close("financeOverlay");home();
+};
+editAdvanceDateButton.onclick=()=>editDate("advance");editMainSalaryDateButton.onclick=()=>editDate("main");
+closeDateButton.onclick=()=>close("dateOverlay");
+saveDateButton.onclick=()=>{const v=+dateInput.value;if(!Number.isInteger(v)||v<1||v>31)return alert("Введи день от 1 до 31");if(dateType==="advance")advanceDate=v;else mainSalaryDate=v;save(FK,{salary,advance,advanceDate,mainSalaryDate});close("dateOverlay");home()};
+
+addDebtButton.onclick=()=>{manualDebtName.value="";manualDebtAmount.value="";manualDebtDueDate.value="";open("debtOverlay")};
+closeDebtButton.onclick=()=>close("debtOverlay");
+saveDebtButton.onclick=()=>{const n=manualDebtName.value.trim(),a=+manualDebtAmount.value,d=manualDebtDueDate.value;if(!n||a<=0||!d)return alert("Заполни все поля");debts.push({id:Date.now(),name:n,amount:a,dueDate:d,kind:"personal"});save(DK,debts);close("debtOverlay");renderDebts()};
+debtsList.onclick=e=>{const b=e.target.closest("[data-di]");if(!b)return;const i=+b.dataset.di;if(confirm("Удалить этот долг?")){debts.splice(i,1);save(DK,debts);renderDebts()}};
+
+function resetGoalForm(g){
+  goalName.value=g?.name||"";goalLink.value=g?.link||"";goalTarget.value=g?.target||"";goalSaved.value=g?.saved||0;goalDate.value=g?.date||"";
+}
+addGoalButton.onclick=()=>{editingGoal=null;goalModalTitle.textContent="Новая цель";resetGoalForm();open("goalOverlay")};
+closeGoalButton.onclick=()=>close("goalOverlay");
+saveGoalButton.onclick=()=>{
+  const n=goalName.value.trim(),target=+goalTarget.value,saved=+goalSaved.value||0,date=goalDate.value,link=goalLink.value.trim();
+  if(!n||target<=0)return alert("Укажи название и сумму цели");
+  const g={id:editingGoal===null?Date.now():goals[editingGoal].id,name:n,target,saved:Math.min(saved,target),date,link};
+  if(editingGoal===null)goals.push(g);else goals[editingGoal]=g;
+  save(GK,goals);close("goalOverlay");renderGoals();
+};
+goalsList.onclick=e=>{
+  const edit=e.target.closest("[data-gi]"),del=e.target.closest("[data-gd]");
+  if(edit){editingGoal=+edit.dataset.gi;goalModalTitle.textContent="Изменить цель";resetGoalForm(goals[editingGoal]);open("goalOverlay")}
+  if(del){const i=+del.dataset.gd;if(confirm("Удалить цель?")){goals.splice(i,1);save(GK,goals);renderGoals()}}
+};
+
 document.querySelectorAll(".overlay").forEach(o=>o.onclick=e=>{if(e.target===o)o.classList.remove("open")});
-</script></body></html>
+</script>
+</body>
+</html>
