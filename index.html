@@ -50,7 +50,10 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
     <div class="stat-row"><span>Потрачено</span><span class="stat-value" id="todaySpent">0 ₽</span></div>
     <div class="stat-row"><span>Осталось сегодня</span><span class="stat-value" id="todayLeft">0 ₽</span></div>
   </div>
-  <button class="primary" id="quickExpenseButton">＋ Быстро записать</button>
+  <div class="grid2">
+<button class="primary" id="quickIncomeButton">＋</button>
+<button class="secondary" id="quickExpenseButton">−</button>
+</div>
   <div style="height:18px"></div>
   <div class="card">
     <div class="card-title">Сентябрь</div>
@@ -111,9 +114,14 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
 </div>
 
 <div class="overlay" id="expenseOverlay"><div class="modal">
-  <div class="modal-header"><div class="modal-title">Новая операция</div><button class="close" id="closeExpenseButton">×</button></div>
-  <div class="field-label">Тип</div>
-  <select id="operationType" class="select"><option value="expense">Трата</option><option value="debt">Новый долг</option></select>
+  <div class="modal-header"><div class="modal-title" id="operationModalTitle">Расход</div><button class="close" id="closeExpenseButton">×</button></div>
+  <div id="incomeFields" style="display:none">
+    <input id="incomeAmount" class="amount" type="number" inputmode="decimal" placeholder="0 ₽">
+    <div class="field-label">Источник дохода</div>
+    <input id="incomeName" class="text-input" placeholder="Например, зарплата">
+    <div class="field-label">Счёт, куда пришли деньги</div>
+    <select id="incomeAccount" class="select"></select>
+  </div>
   <div id="expenseFields">
     <input id="amount" class="amount" type="number" inputmode="decimal" placeholder="0 ₽">
     <div class="field-label">Категория</div><select id="categorySelect" class="select"></select>
@@ -217,9 +225,14 @@ const catSpent=n=>transactions.filter(x=>x.type!=="debt"&&x.category===n).reduce
 const budget=()=>categories.reduce((s,x)=>s+Number(x.plan||0),0);
 
 function load(){
-  const t=read(TY,null); if(Array.isArray(t)) transactions=t;
+  const t=read(TY,null); if(Array.isArray(t)) transactions=t.map(x=>({...x,type:x.type||"expense"}));
   const p=read(CK,null);
-  if(p&&typeof p==="object") categories.forEach(c=>{if(Object.prototype.hasOwnProperty.call(p,c.name))c.plan=Number(p[c.name])||0});
+  if(Array.isArray(p)){
+    p.forEach(saved=>{const c=categories.find(x=>x.name===saved?.name);if(c&&Object.prototype.hasOwnProperty.call(saved,"plan"))c.plan=Math.max(0,Number(saved.plan)||0)});
+  }else if(p&&typeof p==="object"){
+    const plans=p.plans&&typeof p.plans==="object"?p.plans:p;
+    categories.forEach(c=>{if(Object.prototype.hasOwnProperty.call(plans,c.name))c.plan=Math.max(0,Number(plans[c.name])||0)});
+  }
   const a=read(AK,null);
   if(Array.isArray(a)) accounts=a.map(x=>({...x,type:x.type||"debit",creditLimit:Number(x.creditLimit||0),bank:x.bank||x.name||""}));
   const f=read(FK,null);
@@ -344,16 +357,29 @@ load();populate();renderCats();renderAccounts();renderDebts();renderGoals();home
 
 document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>screen(b.dataset.screen,b));
 
-quickExpenseButton.onclick=()=>{populate();operationType.value="expense";expenseFields.style.display="block";debtFields.style.display="none";amount.value="";open("expenseOverlay");calc();setTimeout(()=>amount.focus(),80)};
+function openExpenseModal(){
+  operationModalTitle.textContent="Расход";incomeFields.style.display="none";expenseFields.style.display="block";
+  saveExpenseButton.textContent="Записать расход";amount.value="";populate();open("expenseOverlay");calc();setTimeout(()=>amount.focus(),80);
+}
+function openIncomeModal(){
+  operationModalTitle.textContent="Доход";incomeFields.style.display="block";expenseFields.style.display="none";
+  saveExpenseButton.textContent="Записать доход";incomeAmount.value="";incomeName.value="";
+  incomeAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}">${a.name||"Счёт"}</option>`).join("");
+  if(!accounts.length)incomeAccount.innerHTML='<option value="">Сначала добавь счёт</option>';
+  open("expenseOverlay");setTimeout(()=>incomeAmount.focus(),80);
+}
+quickExpenseButton.onclick=openExpenseModal;
+quickIncomeButton.onclick=openIncomeModal;
 closeExpenseButton.onclick=()=>close("expenseOverlay");
-operationType.onchange=()=>{const d=operationType.value==="debt";expenseFields.style.display=d?"none":"block";debtFields.style.display=d?"block":"none"};
 amount.oninput=calc;categorySelect.onchange=calc;
-
 saveExpenseButton.onclick=()=>{
-  if(operationType.value==="debt"){
-    const a=+debtAmount.value||0,n=debtName.value.trim(),due=debtDueDate.value;
-    if(a<=0||!n||!due)return alert("Заполни сумму, кому и срок возврата");
-    debts.push({id:Date.now(),name:n,amount:a,dueDate:due,kind:"personal"});save(DK,debts);close("expenseOverlay");renderDebts();return;
+  if(incomeFields.style.display!=="none"){
+    const a=+incomeAmount.value||0,n=incomeName.value.trim()||"Доход",ai=+incomeAccount.value;
+    if(a<=0)return alert("Введи сумму дохода");
+    if(!accounts.length||!accounts[ai])return alert("Сначала добавь счёт, на который пришёл доход");
+    accounts[ai].balance=Number(accounts[ai].balance||0)+a;save(AK,accounts);
+    transactions.push({id:Date.now(),amount:a,name:n,account:accounts[ai].name,date:today(),type:"income"});
+    save(TY,transactions);close("expenseOverlay");renderAccounts();renderDebts();home();return;
   }
   const a=+amount.value||0;if(a<=0)return alert("Введи сумму");
   transactions.push({id:Date.now(),amount:a,category:categorySelect.value,date:today(),type:"expense"});
@@ -362,8 +388,8 @@ saveExpenseButton.onclick=()=>{
 
 categoryList.onclick=e=>{const b=e.target.closest("[data-ci]");if(!b)return;editingCategory=categories[+b.dataset.ci];editingCategoryName.textContent=editingCategory.name;categoryLimitInput.value=editingCategory.plan;open("categoryEditOverlay")};
 closeCategoryEditButton.onclick=()=>close("categoryEditOverlay");
-saveCategoryLimitButton.onclick=()=>{const v=+categoryLimitInput.value;if(!Number.isFinite(v)||v<0)return alert("Введи корректный лимит");editingCategory.plan=v;save(CK,Object.fromEntries(categories.map(c=>[c.name,c.plan])));close("categoryEditOverlay");renderCats();home()};
-clearAllLimitsButton.onclick=()=>{if(confirm("Стереть все лимиты?\n\nМесячные лимиты всех категорий будут установлены в 0 ₽.\n\nТраты не удалятся.")){categories.forEach(c=>c.plan=0);save(CK,Object.fromEntries(categories.map(c=>[c.name,c.plan])));renderCats();home()}};
+saveCategoryLimitButton.onclick=()=>{const v=+categoryLimitInput.value;if(!Number.isFinite(v)||v<0)return alert("Введи корректный лимит");editingCategory.plan=v;save(CK,{version:2,plans:Object.fromEntries(categories.map(c=>[c.name,c.plan]))});close("categoryEditOverlay");renderCats();home()};
+clearAllLimitsButton.onclick=()=>{if(confirm("Стереть все лимиты?\n\nМесячные лимиты всех категорий будут установлены в 0 ₽.\n\nТраты не удалятся.")){categories.forEach(c=>c.plan=0);save(CK,{version:2,plans:Object.fromEntries(categories.map(c=>[c.name,c.plan]))});renderCats();home()}};
 
 function updateCreditFields(){creditFields.style.display=accountTypeInput.value==="credit"?"block":"none"}
 accountTypeInput.onchange=updateCreditFields;
