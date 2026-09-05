@@ -11,8 +11,8 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Arial,sans-serif}
 button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}.app{max-width:480px;margin:auto;padding:18px 16px 105px}
-.header{margin-bottom:18px}.month{color:var(--muted);font-size:14px;font-weight:650}.history-link{width:100%;border:0;background:none;text-align:left;padding:0;color:inherit}.history-link .card-title{display:flex;justify-content:space-between;align-items:center}.history-arrow{color:var(--muted)}
-.hero{background:var(--dark);color:#fff;border-radius:28px;padding:24px;margin-bottom:14px}.hero .hero-number{letter-spacing:-.03em}.hero-label{font-size:14px;opacity:.7}.hero-number{font-size:43px;font-weight:800;margin-top:8px}.hero-sub{margin-top:8px;font-size:14px;opacity:.72}.progress{height:7px;background:#ffffff24;border-radius:10px;margin-top:20px}.progress-inner{height:100%;background:#e5b9c3;border-radius:10px}
+.header{margin-bottom:18px}.header-title{font-size:27px;font-weight:800}.month{color:var(--muted);font-size:14px}
+.hero{background:var(--dark);color:#fff;border-radius:28px;padding:24px;margin-bottom:14px}.hero-label{font-size:14px;opacity:.7}.hero-number{font-size:43px;font-weight:800;margin-top:8px}.hero-sub{margin-top:8px;font-size:14px;opacity:.72}.progress{height:7px;background:#ffffff24;border-radius:10px;margin-top:20px}.progress-inner{height:100%;background:#e5b9c3;border-radius:10px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:23px;padding:19px;margin-bottom:12px}.card-title{font-size:15px;font-weight:750;margin-bottom:14px}
 .stat-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;font-size:14px}.stat-row>span:first-child{color:var(--muted)}.stat-value{font-weight:750}
 .primary,.secondary{width:100%;border:0;padding:15px;border-radius:17px;font-weight:750}.primary{background:var(--pink);color:#fff}.secondary{background:var(--pl);color:#64484f}
@@ -22,7 +22,7 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
 .category-row,.account-row,.debt-row,.goal-row{padding:13px 0;border-bottom:1px solid var(--border)}.category-row:last-child,.account-row:last-child,.debt-row:last-child,.goal-row:last-child{border:0}
 .category-top,.account-row,.debt-top,.goal-top{display:flex;justify-content:space-between;align-items:center;gap:12px}.category-left,.account-left,.debt-left,.goal-left{flex:1;min-width:0}.category-name,.account-name,.debt-name,.goal-name{font-size:14px;font-weight:700}.category-limit{color:var(--muted);font-size:12px;margin-top:4px}.category-actions,.account-actions{display:flex;align-items:center;gap:8px}.category-remaining,.account-balance{font-weight:800}.negative,.danger{color:var(--danger)}.category-meta{color:var(--muted);font-size:12px;margin-top:5px}.category-bar{height:5px;background:#eee4e4;border-radius:10px;margin-top:8px}.category-bar-inner{height:100%;background:var(--pink);border-radius:10px}
 .total-card{background:var(--dark);color:#fff}.total-card .stat-row>span:first-child{color:#ffffffa6}
-.account-main{display:flex;align-items:center;gap:12px}.bank-logo{width:42px;height:42px;border-radius:13px;background:var(--pp);color:#64484f;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:800;flex:none}.bank-fallback{background:var(--pp);color:#64484f}.account-bank{font-size:11px;color:var(--muted);margin-top:3px}.drag-hint{font-size:11px;color:var(--muted);margin-top:6px}.account-row.drag-target{background:var(--pp);border-radius:16px;padding-left:10px;padding-right:10px}.account-row.dragging{opacity:.55}.account-type{font-size:11px;color:var(--muted);margin-top:3px}
+.account-main{display:flex;align-items:center;gap:12px}.bank-logo{width:42px;height:42px;border-radius:13px;object-fit:cover;background:#eee}.bank-fallback{display:flex;align-items:center;justify-content:center;font-weight:800;background:var(--pp);color:#64484f}.account-type{font-size:11px;color:var(--muted);margin-top:3px}
 .chip{display:inline-block;padding:5px 9px;border-radius:10px;background:var(--pp);font-size:11px;color:#64484f}.chip.danger{background:#f5dddd}
 .debt-amount,.goal-amount{font-weight:800}.debt-meta,.goal-meta{font-size:12px;color:var(--muted);margin-top:5px}.goal-progress{height:6px;background:#eee4e4;border-radius:10px;margin-top:9px}.goal-progress-inner{height:100%;background:var(--pink);border-radius:10px}
 .overlay{display:none;position:fixed;inset:0;background:#28232461;z-index:20;align-items:flex-end;justify-content:center}.overlay.open{display:flex}.modal{width:100%;max-width:480px;background:#fffafa;border-radius:28px 28px 0 0;padding:20px 17px 30px;max-height:92vh;overflow:auto}
@@ -31,14 +31,14 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
 .category-info{margin-top:12px;background:var(--pp);border-radius:17px;padding:14px}.category-info-title{font-size:13px;color:var(--muted);margin-bottom:7px}.category-info-main{font-size:21px;font-weight:800}.consequence{margin-top:10px;padding:13px;border-radius:15px;background:#fff;border:1px solid var(--border);font-size:13px}.modal-button{margin-top:18px}
 .nav{position:fixed;bottom:0;left:0;right:0;background:#fffafaF0;backdrop-filter:blur(15px);border-top:1px solid var(--border);z-index:10}.nav-inner{max-width:480px;margin:auto;display:flex;justify-content:space-around;padding:9px 5px 11px}.nav button{border:0;background:none;color:var(--muted);font-size:10px;padding:0 5px}.nav button.active{color:var(--pink);font-weight:800}.nav-icon{font-size:20px;display:block;margin-bottom:2px}
 .inline-button{border:0;background:var(--pp);color:#64484f;border-radius:12px;padding:9px 11px;font-size:12px;font-weight:700}.danger-button{border:0;background:#f5dddd;color:var(--danger);border-radius:12px;padding:9px 11px;font-size:12px;font-weight:700}
-.actions-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.history-row{padding:12px 0;border-bottom:1px solid var(--border)}.history-row:last-child{border:0}.history-top{display:flex;justify-content:space-between;gap:12px}.history-name{font-weight:700;font-size:14px}.history-meta{font-size:11px;color:var(--muted);margin-top:4px}.history-income{color:#46745d}.history-expense{color:var(--danger)}.history-transfer{color:#64484f}.history-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.calculator{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.calculator button{border:0;border-radius:13px;padding:13px;background:var(--pp);color:#64484f;font-weight:750}.calc-display{width:100%;border:1px solid var(--border);border-radius:15px;padding:14px;font-size:25px;font-weight:750;text-align:right;background:#fff}.goal-summary{background:var(--pp);border-radius:17px;padding:14px;margin-bottom:12px}.empty{text-align:center;color:var(--muted);padding:18px 4px;font-size:13px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.empty{text-align:center;color:var(--muted);padding:18px 4px;font-size:13px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 </style>
 </head>
 <body>
 <div class="app">
 
 <section id="home" class="screen active">
-  <div class="header"><div class="month">Сентябрь 2026</div></div>
+  <div class="header"><div class="header-title">Контроль трат</div><div class="month">Сентябрь 2026</div></div>
   <div class="hero">
     <div class="hero-label">Сегодня можно потратить</div>
     <div class="hero-number" id="dailyLimit">0 ₽</div>
@@ -48,26 +48,19 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
   <div class="card">
     <div class="card-title">Сегодня</div>
     <div class="stat-row"><span>Потрачено</span><span class="stat-value" id="todaySpent">0 ₽</span></div>
+    <div class="stat-row"><span>Осталось сегодня</span><span class="stat-value" id="todayLeft">0 ₽</span></div>
   </div>
   <div class="grid2">
 <button class="primary" id="quickIncomeButton">＋</button>
 <button class="secondary" id="quickExpenseButton">−</button>
 </div>
   <div style="height:18px"></div>
-  <button class="history-link" id="monthHistoryButton">
-    <div class="card">
-      <div class="card-title"><span>Сентябрь</span><span class="history-arrow">История →</span></div>
-      <div class="stat-row"><span>План расходов</span><span class="stat-value" id="monthPlan">0 ₽</span></div>
-      <div class="stat-row"><span>Потрачено</span><span class="stat-value" id="monthSpent">0 ₽</span></div>
-      <div class="stat-row"><span>Осталось</span><span class="stat-value" id="monthLeft">0 ₽</span></div>
-    </div>
-  </button>
-</section>
-
-<section id="history" class="screen">
-  <div class="section-heading-row"><div class="section-heading">История</div><button class="inline-button" id="closeHistoryButton">Сегодня</button></div>
-  <div class="history-filters"><select id="historyAccount" class="select"><option value="">Все счета</option></select><select id="historyType" class="select"><option value="">Все операции</option><option value="expense">Расходы</option><option value="income">Доходы</option><option value="transfer">Переводы</option></select></div>
-  <div class="card" id="historyList"></div>
+  <div class="card">
+    <div class="card-title">Сентябрь</div>
+    <div class="stat-row"><span>План расходов</span><span class="stat-value" id="monthPlan">0 ₽</span></div>
+    <div class="stat-row"><span>Потрачено</span><span class="stat-value" id="monthSpent">0 ₽</span></div>
+    <div class="stat-row"><span>Осталось</span><span class="stat-value" id="monthLeft">0 ₽</span></div>
+  </div>
 </section>
 
 <section id="budget" class="screen">
@@ -75,9 +68,8 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
   <div class="card">
     <div class="stat-row"><span>Доход</span><span class="stat-value" id="budgetSalary">0 ₽</span></div>
     <div class="stat-row"><span>План расходов</span><span class="stat-value" id="budgetTotal">0 ₽</span></div>
-    <div class="stat-row"><span>План накоплений</span><span class="stat-value" id="budgetSavings">0 ₽</span></div><div class="stat-row"><span>Фактически накоплено</span><span class="stat-value" id="budgetSavingsActual">0 ₽</span></div>
+    <div class="stat-row"><span>Цель накоплений</span><span class="stat-value" id="budgetSavings">0 ₽</span></div>
   </div>
-  <div class="category-info"><div class="category-info-title">Бюджет после плановых накоплений</div><div class="category-info-main" id="budgetAfterSavings">0 ₽</div><div class="small-note">Это ориентир: если фактически отложишь меньше, свободных денег будет больше.</div></div>
   <div class="section-heading">Категории</div>
   <button class="clear-limits-button" id="clearAllLimitsButton">Стереть все лимиты</button>
   <div class="card" id="categoryList"></div>
@@ -87,13 +79,11 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
   <div class="section-heading-row"><div class="section-heading">Счета</div><button class="inline-button" id="transferButton">⇄ Перевести</button></div>
   <div class="card total-card">
     <div class="stat-row"><span>Общий баланс</span><span class="stat-value" id="accountsTotal">0 ₽</span></div>
-    <div class="stat-row"><span>Накоплено</span><span class="stat-value" id="savingsActualDisplay">0 ₽</span></div>
-    <div class="stat-row"><span>Свободно для трат</span><span class="stat-value" id="spendableTotal">0 ₽</span></div>
-    <div class="stat-row"><span>Кредитный лимит</span><span class="stat-value" id="creditLimitTotal">0 ₽</span></div>
+    <div class="stat-row"><span>Доступно для трат</span><span class="stat-value" id="spendableTotal">0 ₽</span></div>
   </div>
   <div class="card" id="accountsList"></div>
   <button class="secondary" id="addAccountButton">＋ Добавить счёт</button>
-  <div class="small-note">Свободно для трат = деньги на дебетовых счетах и наличных − реально накопленная сумма. Кредитный лимит не вычитается: это не ваши деньги. Чтобы перевести деньги, зажми и перетащи иконку одного счёта на другой.</div>
+  <div class="small-note">Дебетовые карты и наличные входят в доступный баланс. Кредитные карты — нет: их задолженность показывается отдельно.</div>
 </section>
 
 <section id="debts" class="screen">
@@ -102,7 +92,6 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
 </section>
 
 <section id="goals" class="screen">
-  <div class="goal-summary"><div class="card-title">Накопления</div><div class="stat-row"><span>План на месяц</span><span class="stat-value" id="goalSavingsPlan">0 ₽</span></div><div class="stat-row"><span>Фактически накоплено</span><span class="stat-value" id="goalSavingsActual">0 ₽</span></div><div class="small-note">План — ориентир. Babki не считает, что вы обязаны отложить его целиком.</div></div>
   <div class="section-heading-row"><div class="section-heading">Цели</div><button class="inline-button" id="addGoalButton">＋ Добавить</button></div>
   <div class="card" id="goalsList"></div>
 </section>
@@ -124,7 +113,6 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
     <div class="settings-group">
       <div class="settings-group-title">Накопления</div>
       <div class="stat-row"><span>Цель накоплений</span><div class="category-actions"><span class="stat-value" id="savingsPercentDisplay"></span><button class="small-button" id="editSavingsButton">✎</button></div></div>
-      <div class="stat-row"><span>Фактически накоплено</span><div class="category-actions"><span class="stat-value" id="savingsActualSettingsDisplay"></span><button class="small-button" id="editSavingsActualButton">✎</button></div></div>
     </div>
   </div>
   <div class="card">
@@ -138,7 +126,6 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
   <div class="modal-header"><div class="modal-title" id="operationModalTitle">Расход</div><button class="close" id="closeExpenseButton">×</button></div>
   <div id="incomeFields" style="display:none">
     <input id="incomeAmount" class="amount" type="number" inputmode="decimal" placeholder="0 ₽">
-    <button class="inline-button" id="incomeCalcButton" type="button">⌨︎ Калькулятор</button>
     <div class="field-label">Источник дохода</div>
     <input id="incomeName" class="text-input" placeholder="Например, зарплата">
     <div class="field-label">Счёт, куда пришли деньги</div>
@@ -146,8 +133,6 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
   </div>
   <div id="expenseFields">
     <input id="amount" class="amount" type="number" inputmode="decimal" placeholder="0 ₽">
-    <button class="inline-button" id="expenseCalcButton" type="button">⌨︎ Калькулятор</button>
-    <div class="field-label">Счёт списания</div><select id="expenseAccount" class="select"></select>
     <div class="field-label">Категория</div><select id="categorySelect" class="select"></select>
     <div class="category-info"><div class="category-info-title">Осталось в категории</div><div class="category-info-main" id="categoryRemaining">—</div><div class="consequence" id="categoryConsequence">Введи сумму — я покажу, что произойдёт.</div></div>
     <div class="category-info"><div class="category-info-title">Общий бюджет после покупки</div><div class="category-info-main" id="monthRemainingAfter">—</div></div>
@@ -168,10 +153,8 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
 
 <div class="overlay" id="accountOverlay"><div class="modal">
   <div class="modal-header"><div class="modal-title" id="accountModalTitle">Новый счёт</div><button class="close" id="closeAccountButton">×</button></div>
-  <div class="field-label">Название счёта</div><input id="accountNameInput" class="text-input" placeholder="Например, Основная карта">
-  <div class="field-label">Банк</div><input id="accountBankInput" class="text-input" placeholder="Например, Сбер">
-  <div class="field-label">Тип</div><select id="accountTypeInput" class="select"><option value="debit">Дебетовый</option><option value="credit">Кредитный</option><option value="cash">Наличные</option></select>
-  <div class="field-label">Иконка банка</div><div class="grid2"><button type="button" class="secondary" id="bankIconPresetButton">Выбрать</button><input id="bankIconInput" class="text-input" maxlength="3" placeholder="С"></div>
+  <div class="field-label">Тип</div><select id="accountTypeInput" class="select"><option value="debit">Дебетовая карта</option><option value="credit">Кредитная карта</option><option value="cash">Наличные</option></select>
+  <div class="field-label">Банк / название</div><input id="accountNameInput" class="text-input" placeholder="Например, Сбер">
   <div class="field-label">Реальный остаток / задолженность</div>
   <div id="creditBalanceMode" style="display:none" class="grid2">
     <button type="button" class="secondary" id="balancePositiveButton">＋ Остаток</button>
@@ -214,40 +197,29 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
 </div></div>
 
 <div class="overlay" id="debtOverlay"><div class="modal">
-  <div class="modal-header"><div class="modal-title" id="debtModalTitle">Долг</div><button class="close" id="closeDebtButton">×</button></div>
+  <div class="modal-header"><div class="modal-title">Долг</div><button class="close" id="closeDebtButton">×</button></div>
   <div class="field-label">Кому / что</div><input id="manualDebtName" class="text-input" placeholder="Например, долг человеку">
   <div class="field-label">Сумма</div><input id="manualDebtAmount" class="text-input edit-value" type="number" inputmode="decimal">
   <div class="field-label">Срок возврата</div><input id="manualDebtDueDate" class="text-input" type="date">
   <button class="primary" id="saveDebtButton" style="margin-top:18px">Сохранить долг</button>
 </div></div>
 
-<div class="overlay" id="calculatorOverlay"><div class="modal">
-  <div class="modal-header"><div class="modal-title">Калькулятор</div><button class="close" id="closeCalculatorButton">×</button></div>
-  <input id="calcDisplay" class="calc-display" type="text" inputmode="decimal" placeholder="0">
-  <div class="calculator">
-    <button type="button" data-calc="7">7</button><button type="button" data-calc="8">8</button><button type="button" data-calc="9">9</button><button type="button" data-calc="/">÷</button>
-    <button type="button" data-calc="4">4</button><button type="button" data-calc="5">5</button><button type="button" data-calc="6">6</button><button type="button" data-calc="*">×</button>
-    <button type="button" data-calc="1">1</button><button type="button" data-calc="2">2</button><button type="button" data-calc="3">3</button><button type="button" data-calc="-">−</button>
-    <button type="button" data-calc="0">0</button><button type="button" data-calc=".">.</button><button type="button" data-calc="C">C</button><button type="button" data-calc="+">+</button>
-  </div><button class="primary" id="applyCalculatorButton" style="margin-top:12px">Подставить сумму</button>
-</div></div>
-
 <div class="nav"><div class="nav-inner">
-  <button class="active" data-screen="home"><span class="nav-icon">◷</span>Сегодня</button>
-  <button data-screen="budget"><span class="nav-icon">▦</span>Бюджет</button>
-  <button data-screen="accounts"><span class="nav-icon">▣</span>Счета</button>
-  <button data-screen="debts"><span class="nav-icon">↔</span>Долги</button>
-  <button data-screen="goals"><span class="nav-icon">◎</span>Цели</button>
-  <button data-screen="settings"><span class="nav-icon">☷</span>Настройки</button>
+  <button class="active" data-screen="home"><span class="nav-icon">⌂</span>Сегодня</button>
+  <button data-screen="budget"><span class="nav-icon">▤</span>Бюджет</button>
+  <button data-screen="accounts"><span class="nav-icon">▱</span>Счета</button>
+  <button data-screen="debts"><span class="nav-icon">↺</span>Долги</button>
+  <button data-screen="goals"><span class="nav-icon">♡</span>Цели</button>
+  <button data-screen="settings"><span class="nav-icon">⚙</span>Настройки</button>
 </div></div>
 
 <script>
 const TY="babki_september_2026_transactions",CK="babki_september_2026_categories",AK="babki_accounts_real_v1",FK="babki_finance_settings_v1";
 const SK="babki_savings_goal_percent_v1",GK="babki_goals_v1",DK="babki_personal_debts_v1";
 const budgetYear=2026,budgetMonth=8;
-let salary=140000,advance=26000,advanceDate=null,mainSalaryDate=15,savingsPercent=20,savingsActual=0;
+let salary=140000,advance=26000,advanceDate=null,mainSalaryDate=15,savingsPercent=20;
 let transactions=[],accounts=[],goals=[],debts=[];
-let editingCategory=null,editingAccount=null,editingGoal=null,editingDebt=null,financeType=null,dateType=null,calcTarget="expense",dragSource=null,dragTimer=null,dragging=false;
+let editingCategory=null,editingAccount=null,editingGoal=null,financeType=null,dateType=null;
 
 const categories=[
 ["Еда вне дома",25000],["Транспорт (общ.)",6000],["Дом",5000],["Одежда",7000],["Здоровье",3000],
@@ -262,8 +234,8 @@ const cat=n=>categories.find(x=>x.name===n);
 const today=()=>{let d=new Date;return d.toISOString().slice(0,10)};
 const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 const read=(k,f)=>{try{const v=JSON.parse(localStorage.getItem(k));return v===null?f:v}catch(e){return f}};
-const spent=()=>transactions.filter(x=>x.type!=="debt"&&x.type!=="income"&&x.type!=="transfer").reduce((s,x)=>s+Number(x.amount||0),0);
-const catSpent=n=>transactions.filter(x=>x.type!=="debt"&&x.type!=="income"&&x.type!=="transfer"&&x.category===n).reduce((s,x)=>s+Number(x.amount||0),0);
+const spent=()=>transactions.filter(x=>x.type!=="debt").reduce((s,x)=>s+Number(x.amount||0),0);
+const catSpent=n=>transactions.filter(x=>x.type!=="debt"&&x.category===n).reduce((s,x)=>s+Number(x.amount||0),0);
 const budget=()=>categories.reduce((s,x)=>s+Number(x.plan||0),0);
 
 function load(){
@@ -276,14 +248,13 @@ function load(){
     categories.forEach(c=>{if(Object.prototype.hasOwnProperty.call(plans,c.name))c.plan=Math.max(0,Number(plans[c.name])||0)});
   }
   const a=read(AK,null);
-  if(Array.isArray(a)) accounts=a.map((x,i)=>({...x,id:x.id||(`acc_${i}_${Date.now()}`),type:x.type||"debit",creditLimit:Number(x.creditLimit||0),bank:x.bank||x.name||"",icon:x.icon||((x.bank||x.name||"С").slice(0,1))}));
+  if(Array.isArray(a)) accounts=a.map(x=>({...x,type:x.type||"debit",creditLimit:Number(x.creditLimit||0),bank:x.bank||x.name||""}));
   const f=read(FK,null);
   if(f&&typeof f==="object"){
     if(Number.isFinite(+f.salary))salary=+f.salary;
     if(Number.isFinite(+f.advance))advance=+f.advance;
     if(Number.isFinite(+f.advanceDate)&&+f.advanceDate>=1)advanceDate=+f.advanceDate;
     if(Number.isFinite(+f.mainSalaryDate)&&+f.mainSalaryDate>=1)mainSalaryDate=+f.mainSalaryDate;
-    if(Number.isFinite(+f.savingsActual)&&+f.savingsActual>=0)savingsActual=+f.savingsActual;
   }
   const sp=read(SK,null); if(Number.isFinite(+sp))savingsPercent=Math.min(100,Math.max(0,+sp));
   const g=read(GK,[]); if(Array.isArray(g))goals=g;
@@ -297,15 +268,9 @@ function updateFinance(){
   mainSalaryDisplay.textContent=money(Math.max(0,salary-advance));
   mainSalaryDateDisplay.textContent=mainSalaryDate+" числа";
   savingsPercentDisplay.textContent=savingsPercent+"%";
-  savingsActualSettingsDisplay.textContent=money(savingsActual);
-  savingsActualDisplay.textContent=money(savingsActual);
-  goalSavingsPlan.textContent=money(salary*savingsPercent/100);
-  goalSavingsActual.textContent=money(savingsActual);
-  budgetSavingsActual.textContent=money(savingsActual);
   budgetSalary.textContent=money(salary);
   budgetSavings.textContent=money(salary*savingsPercent/100);
   budgetTotal.textContent=money(budget());
-  budgetAfterSavings.textContent=money(Math.max(0,budget()-salary*savingsPercent/100));
 }
 
 function renderCats(){
@@ -319,23 +284,23 @@ function renderCats(){
 }
 
 function logoFor(a){
-  const icon=(a.icon||a.bank||a.name||"С").trim();
-  return `<div class="bank-logo bank-fallback">${icon.slice(0,3)}</div>`;
+  const name=(a.bank||a.name||"").toLowerCase();
+  const domains={sber:"sberbank.ru","сбер":"sberbank.ru","т-банк":"tbank.ru","тинькофф":"tbank.ru",tinkoff:"tbank.ru",альфа:"alfabank.ru",alfa:"alfabank.ru",втб:"vtb.ru",vtb:"vtb.ru",дебанк:"debank.com",debank:"debank.com",озон:"ozon.ru",ozon:"ozon.ru"};
+  const d=Object.keys(domains).find(k=>name.includes(k));
+  if(d)return `<img class="bank-logo" src="https://www.google.com/s2/favicons?domain=${domains[d]}&sz=128" alt="">`;
+  return `<div class="bank-logo bank-fallback">${(a.name||"С").slice(0,1).toUpperCase()}</div>`;
 }
 
 function renderAccounts(){
   if(!Array.isArray(accounts))accounts=[];
   accountsList.innerHTML=accounts.length?accounts.map((a,i)=>{
-    const type=a.type==="credit"?"Кредитный":a.type==="cash"?"Наличные":"Дебетовый";
+    const type=a.type==="credit"?"Кредитная карта":a.type==="cash"?"Наличные":"Дебетовая карта";
     const debt=a.type==="credit"?Math.max(0,-Number(a.balance||0)):0;
-    return `<div class="account-row" data-account-row="${i}"><div class="account-main"><div class="account-drag" data-drag="${i}" title="Зажми и перетащи для перевода">${logoFor(a)}</div><div class="account-left"><div class="account-name">${a.name||"Счёт"}</div><div class="account-bank">${a.bank||a.name||""}</div><div class="account-type">${type}${a.type==="credit"&&a.creditLimit?` · лимит ${money(a.creditLimit)}`:""}</div></div></div><div class="account-actions"><div class="account-balance ${debt?"negative":""}">${money(a.balance||0)}</div><button class="small-button" data-ai="${i}">✎</button></div></div>`;
+    return `<div class="account-row"><div class="account-main"><div>${logoFor(a)}</div><div class="account-left"><div class="account-name">${a.name||"Счёт"}</div><div class="account-type">${type}${a.type==="credit"&&a.creditLimit?` · лимит ${money(a.creditLimit)}`:""}</div></div></div><div class="account-actions"><div class="account-balance ${debt?"negative":""}">${money(a.balance||0)}</div><button class="small-button" data-ai="${i}">✎</button></div></div>`;
   }).join(""):'<div class="empty">Пока нет добавленных счетов.</div>';
   const total=accounts.reduce((s,a)=>s+Number(a.balance||0),0);
-  const cash=accounts.filter(a=>a.type!=="credit").reduce((s,a)=>s+Number(a.balance||0),0);
-  const spendable=cash-savingsActual;
-  const creditLimit=accounts.filter(a=>a.type==="credit").reduce((s,a)=>s+Math.max(0,Number(a.creditLimit||0)),0);
-  accountsTotal.textContent=money(total);spendableTotal.textContent=money(spendable);creditLimitTotal.textContent=money(creditLimit);
-  updateFinance();
+  const spendable=accounts.filter(a=>a.type!=="credit").reduce((s,a)=>s+Number(a.balance||0),0);
+  accountsTotal.textContent=money(total);spendableTotal.textContent=money(spendable);
 }
 
 function renderDebts(){
@@ -345,7 +310,7 @@ function renderDebts(){
     const due=d.dueDate?new Date(d.dueDate+"T00:00:00").toLocaleDateString("ru-RU"):"";
     const days=d.dueDate?Math.max(1,Math.ceil((new Date(d.dueDate+"T00:00:00")-new Date())/86400000)):null;
     const monthly=days?d.amount/Math.max(1,Math.ceil(days/30)):d.amount;
-    return `<div class="debt-row"><div class="debt-top"><div class="debt-left"><div class="debt-name">${d.name}</div><div class="debt-meta">${d.kind==="credit"?"Задолженность по кредитной карте":(due?"Вернуть до "+due:"Личный долг")}</div>${due?`<div class="debt-meta">Ориентир откладывать: ${money(monthly)} в месяц</div>`:""}</div><div><div class="debt-amount negative">${money(d.amount)}</div>${d.kind!=="credit"?`<div class="actions-row"><button class="inline-button" data-de="${i}">✎ Изменить</button><button class="primary" style="width:auto;padding:9px 11px" data-pay="${i}">Погасить</button><button class="danger-button" data-di="${i}">Удалить</button></div>`:""}</div></div></div>`;
+    return `<div class="debt-row"><div class="debt-top"><div class="debt-left"><div class="debt-name">${d.name}</div><div class="debt-meta">${d.kind==="credit"?"Задолженность по кредитной карте":(due?"Вернуть до "+due:"Личный долг")}</div>${due?`<div class="debt-meta">Ориентир откладывать: ${money(monthly)} в месяц</div>`:""}</div><div><div class="debt-amount negative">${money(d.amount)}</div>${d.kind!=="credit"?`<button class="danger-button" data-di="${i}">Удалить</button>`:""}</div></div></div>`;
   }).join(""):'<div class="empty">Пока нет долгов и обязательств.</div>';
 }
 
@@ -373,25 +338,10 @@ function periodDailyLimit(){
   return Math.max(0,cash/info.days);
 }
 
-function renderHistory(){
-  const af=historyAccount.value; const tf=historyType.value;
-  historyAccount.innerHTML='<option value="">Все счета</option>'+accounts.map((a,i)=>`<option value="${i}">${a.name}</option>`).join("");
-  historyAccount.value=af;
-  let list=transactions.filter(x=>x.date&&(!af||String(accounts.findIndex(a=>a.name===x.account))===af||x.fromAccount===accounts[+af]?.name||x.toAccount===accounts[+af]?.name));
-  if(tf)list=list.filter(x=>x.type===tf|| (tf==="expense"&&x.type==="creditInterest"));
-  list=[...list].sort((a,b)=>String(b.date).localeCompare(String(a.date))||(Number(b.id)||0)-(Number(a.id)||0));
-  historyList.innerHTML=list.length?list.map(x=>{
-    const isIncome=x.type==="income",isTransfer=x.type==="transfer",isInterest=x.type==="creditInterest";
-    const label=isTransfer?`Перевод: ${x.fromAccount||""} → ${x.toAccount||""}`:(isIncome?(x.name||"Доход"):(isInterest?"Проценты":(x.category||"Расход")));
-    const meta=[new Date(x.date+"T00:00:00").toLocaleDateString("ru-RU"),x.account?`Счёт: ${x.account}`:"Счёт не указан"].join(" · ");
-    return `<div class="history-row"><div class="history-top"><div><div class="history-name">${label}</div><div class="history-meta">${meta}</div></div><div class="stat-value ${isIncome?"history-income":isTransfer?"history-transfer":"history-expense"}">${isIncome?"+":"−"}${money(x.amount)}</div></div></div>`;
-  }).join(""):'<div class="empty">Операций пока нет.</div>';
-}
-
 function home(){
-  const b=budget(),s=spent(),d=periodDailyLimit(),ts=transactions.filter(x=>x.date===today()&&x.type!=="debt"&&x.type!=="income"&&x.type!=="transfer").reduce((a,x)=>a+Number(x.amount||0),0);
+  const b=budget(),s=spent(),d=periodDailyLimit(),ts=transactions.filter(x=>x.date===today()&&x.type!=="debt").reduce((a,x)=>a+Number(x.amount||0),0);
   monthPlan.textContent=money(b);monthSpent.textContent=money(s);monthLeft.textContent=money(b-s);
-  dailyLimit.textContent=money(Math.max(0,d-ts));todaySpent.textContent=money(ts);todayLeft.textContent=money(Math.max(0,d-ts));
+  dailyLimit.textContent=money(d);todaySpent.textContent=money(ts);todayLeft.textContent=money(Math.max(0,d-ts));
   monthProgress.style.width=(b?Math.min(100,s/b*100):0)+"%";
   const info=nextPaymentInfo();
   dailyDescription.textContent=`До следующей выплаты ${info.days} ${info.days===1?"день":info.days<5?"дня":"дней"} · реальные деньги на счетах`;
@@ -403,7 +353,7 @@ function screen(id,b){
   document.getElementById(id).classList.add("active");
   document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));
   b.classList.add("active");
-  if(id==="budget")renderCats();if(id==="accounts")renderAccounts();if(id==="debts")renderDebts();if(id==="goals")renderGoals();if(id==="history")renderHistory();home();
+  if(id==="budget")renderCats();if(id==="accounts")renderAccounts();if(id==="debts")renderDebts();if(id==="goals")renderGoals();home();
 }
 function open(id){document.getElementById(id).classList.add("open")}
 function close(id){document.getElementById(id).classList.remove("open")}
@@ -417,33 +367,19 @@ function calc(){
 function editFin(t){financeType=t;financeTitle.textContent=t==="salary"?"Общий доход":"Аванс";financeLabel.textContent=t==="salary"?"Сумма общего дохода":"Сумма аванса";financeInput.value=t==="salary"?salary:advance;open("financeOverlay");setTimeout(()=>financeInput.select(),80)}
 function editDate(t){dateType=t;dateTitle.textContent=t==="advance"?"Дата аванса":"Дата основной зарплаты";dateInput.value=t==="advance"?(advanceDate||""):(mainSalaryDate||15);open("dateOverlay");setTimeout(()=>dateInput.select(),80)}
 
-load();populate();renderCats();renderAccounts();renderDebts();renderGoals();renderHistory();home();
+load();populate();renderCats();renderAccounts();renderDebts();renderGoals();home();
 
 document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>screen(b.dataset.screen,b));
-monthHistoryButton.onclick=()=>{const b=document.querySelector('.nav button[data-screen="home"]');screen("history",b)};
-closeHistoryButton.onclick=()=>{const b=document.querySelector('.nav button[data-screen="home"]');screen("home",b)};
-historyAccount.onchange=renderHistory;historyType.onchange=renderHistory;
-
-function populateAccountSelects(){
-  const opts=accounts.map((a,i)=>`<option value="${i}">${a.name||"Счёт"}</option>`).join("");
-  expenseAccount.innerHTML=opts||'<option value="">Сначала добавь счёт</option>';
-  incomeAccount.innerHTML=opts||'<option value="">Сначала добавь счёт</option>';
-}
-
-function openCalculator(target){calcTarget=target;calcDisplay.value=target==="income"?(incomeAmount.value||""):(amount.value||"");open("calculatorOverlay");}
-closeCalculatorButton.onclick=()=>close("calculatorOverlay");
-expenseCalcButton.onclick=()=>openCalculator("expense");incomeCalcButton.onclick=()=>openCalculator("income");
-document.querySelectorAll("[data-calc]").forEach(b=>b.onclick=()=>{const v=b.dataset.calc;if(v==="C")calcDisplay.value="";else calcDisplay.value+=(v||"")});
-applyCalculatorButton.onclick=()=>{const expr=calcDisplay.value.replace(/,/g,".").replace(/[^0-9+\-*/(). ]/g,"");if(!expr)return;if(!/^[0-9+\-*/(). ]+$/.test(expr))return alert("Некорректное выражение");try{const result=Function("return ("+expr+")")();if(!Number.isFinite(result))throw 0;if(calcTarget==="income")incomeAmount.value=Math.round(result*100)/100;else{amount.value=Math.round(result*100)/100;calc()}close("calculatorOverlay")}catch(e){alert("Не удалось посчитать выражение")}};
 
 function openExpenseModal(){
   operationModalTitle.textContent="Расход";incomeFields.style.display="none";expenseFields.style.display="block";
-  saveExpenseButton.textContent="Записать расход";amount.value="";populate();populateAccountSelects();open("expenseOverlay");calc();setTimeout(()=>amount.focus(),80);
+  saveExpenseButton.textContent="Записать расход";amount.value="";populate();open("expenseOverlay");calc();setTimeout(()=>amount.focus(),80);
 }
 function openIncomeModal(){
   operationModalTitle.textContent="Доход";incomeFields.style.display="block";expenseFields.style.display="none";
   saveExpenseButton.textContent="Записать доход";incomeAmount.value="";incomeName.value="";
-  populateAccountSelects();
+  incomeAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}">${a.name||"Счёт"}</option>`).join("");
+  if(!accounts.length)incomeAccount.innerHTML='<option value="">Сначала добавь счёт</option>';
   open("expenseOverlay");setTimeout(()=>incomeAmount.focus(),80);
 }
 quickExpenseButton.onclick=openExpenseModal;
@@ -457,16 +393,11 @@ saveExpenseButton.onclick=()=>{
     if(!accounts.length||!accounts[ai])return alert("Сначала добавь счёт, на который пришёл доход");
     accounts[ai].balance=Number(accounts[ai].balance||0)+a;save(AK,accounts);
     transactions.push({id:Date.now(),amount:a,name:n,account:accounts[ai].name,date:today(),type:"income"});
-    save(TY,transactions);close("expenseOverlay");renderAccounts();renderDebts();renderHistory();home();return;
+    save(TY,transactions);close("expenseOverlay");renderAccounts();renderDebts();home();return;
   }
-  const a=+amount.value||0,ai=+expenseAccount.value;if(a<=0)return alert("Введи сумму");
-  if(!accounts.length||!accounts[ai])return alert("Сначала добавь счёт списания");
-  const acc=accounts[ai];
-  if(acc.type!=="credit"&&Number(acc.balance||0)<a)return alert("На выбранном счёте недостаточно денег");
-  acc.balance=Number(acc.balance||0)-a;
-  if(acc.type==="credit")acc.balance=Number(acc.balance||0);
-  transactions.push({id:Date.now(),amount:a,category:categorySelect.value,account:acc.name,date:today(),type:"expense"});
-  syncCreditInterest(acc);save(AK,accounts);save(TY,transactions);close("expenseOverlay");renderCats();renderAccounts();renderDebts();renderHistory();home();
+  const a=+amount.value||0;if(a<=0)return alert("Введи сумму");
+  transactions.push({id:Date.now(),amount:a,category:categorySelect.value,date:today(),type:"expense"});
+  save(TY,transactions);close("expenseOverlay");renderCats();home();
 };
 
 categoryList.onclick=e=>{const b=e.target.closest("[data-ci]");if(!b)return;editingCategory=categories[+b.dataset.ci];editingCategoryName.textContent=editingCategory.name;categoryLimitInput.value=editingCategory.plan;open("categoryEditOverlay")};
@@ -500,22 +431,19 @@ balanceNegativeButton.onclick=()=>setCreditBalanceMode(true);
 addAccountButton.onclick=()=>{
   editingAccount=null;creditBalanceNegative=false;
   accountModalTitle.textContent="Новый счёт";saveAccountButton.textContent="Добавить счёт";
-  accountTypeInput.value="debit";accountNameInput.value="";accountBankInput.value="";bankIconInput.value="";accountBalanceInput.value="";
+  accountTypeInput.value="debit";accountNameInput.value="";accountBalanceInput.value="";
   creditLimitInput.value="";updateCreditFields();open("accountOverlay")
 };
 accountsList.onclick=e=>{
   const b=e.target.closest("[data-ai]");if(!b)return;
   editingAccount=+b.dataset.ai;const a=accounts[editingAccount];
   accountModalTitle.textContent="Изменить счёт";saveAccountButton.textContent="Сохранить";
-  accountTypeInput.value=a.type||"debit";accountNameInput.value=a.name||"";accountBankInput.value=a.bank||a.name||"";bankIconInput.value=a.icon||((a.bank||a.name||"С").slice(0,1));
+  accountTypeInput.value=a.type||"debit";accountNameInput.value=a.name||"";
   creditBalanceNegative=(a.type==="credit"&&Number(a.balance||0)<0);
   accountBalanceInput.value=Math.abs(Number(a.balance||0));
   creditLimitInput.value=a.creditLimit||0;updateCreditFields();open("accountOverlay")
 };
 closeAccountButton.onclick=()=>close("accountOverlay");
-const bankIconPresets=["С","Т","А","В","О","💳","🏦","₽"];
-bankIconPresetButton.onclick=()=>{const current=bankIconInput.value||"";const next=bankIconPresets[(bankIconPresets.indexOf(current)+1)%bankIconPresets.length];bankIconInput.value=next;};
-
 
 function syncCreditInterest(account){
   if(account.type!=="credit")return;
@@ -523,7 +451,7 @@ function syncCreditInterest(account){
   const limit=Math.max(0,Number(account.creditLimit||0));
   const target=Math.max(0,debt-limit);
   const existing=transactions
-    .filter(x=>x.type==="creditInterest"&&(x.creditAccountId===account.id||(!x.creditAccountId&&x.creditAccount===account.name)))
+    .filter(x=>x.type==="creditInterest"&&x.creditAccount===account.name)
     .reduce((s,x)=>s+Number(x.amount||0),0);
   const add=Math.max(0,target-existing);
   if(add>0){
@@ -533,7 +461,6 @@ function syncCreditInterest(account){
       category:"Проценты",
       date:today(),
       type:"creditInterest",
-      creditAccountId:account.id,
       creditAccount:account.name
     });
     save(TY,transactions);
@@ -544,10 +471,10 @@ saveAccountButton.onclick=()=>{
   const raw=Math.abs(+accountBalanceInput.value||0);
   const t=accountTypeInput.value,cl=+creditLimitInput.value||0;
   const b=t==="credit"&&creditBalanceNegative?-raw:raw;
-  const n=accountNameInput.value.trim(),bank=accountBankInput.value.trim()||n,icon=(bankIconInput.value.trim()||bank.slice(0,1)).slice(0,3);
+  const n=accountNameInput.value.trim();
   if(!n)return alert("Введи название счёта");
   if(!Number.isFinite(b))return alert("Введи корректный остаток");
-  const old=editingAccount===null?null:accounts[editingAccount];const a={...(old||{}),id:old?.id||(`acc_${Date.now()}_${Math.random().toString(36).slice(2,7)}`),name:n,balance:b,type:t,creditLimit:cl,bank,icon};
+  const a={name:n,balance:b,type:t,creditLimit:cl,bank:n};
   if(editingAccount===null)accounts.push(a);else accounts[editingAccount]=a;
   syncCreditInterest(a);
   save(AK,accounts);close("accountOverlay");renderAccounts();renderDebts();renderCats();home();
@@ -566,43 +493,27 @@ saveTransferButton.onclick=()=>{
   if(fi===ti)return alert("Выбери разные счета");if(!Number.isFinite(a)||a<=0)return alert("Введи сумму");
   if(Number(accounts[fi].balance||0)<a&&accounts[fi].type!=="credit")return alert("На счёте недостаточно денег");
   accounts[fi].balance=Number(accounts[fi].balance||0)-a;accounts[ti].balance=Number(accounts[ti].balance||0)+a;
-  transactions.push({id:Date.now(),amount:a,fromAccount:accounts[fi].name,toAccount:accounts[ti].name,date:today(),type:"transfer"});
-  save(AK,accounts);save(TY,transactions);close("transferOverlay");renderAccounts();renderDebts();renderHistory();home();
+  save(AK,accounts);close("transferOverlay");renderAccounts();renderDebts();home();
 };
 
-function startDrag(i){dragSource=i;dragging=false;clearTimeout(dragTimer);dragTimer=setTimeout(()=>{dragging=true;document.querySelector(`[data-account-row="${i}"]`)?.classList.add("dragging")},550)}
-function endDrag(target){clearTimeout(dragTimer);if(!dragging){dragSource=null;return}document.querySelectorAll(".account-row").forEach(x=>x.classList.remove("dragging","drag-target"));const fi=dragSource;dragSource=null;dragging=false;if(target==null||target===fi)return;const a=prompt(`Перевести со счёта «${accounts[fi].name}» на «${accounts[target].name}»\nСумма:`);const amount=Number(a);if(!Number.isFinite(amount)||amount<=0)return;if(accounts[fi].type!=="credit"&&Number(accounts[fi].balance||0)<amount)return alert("На счёте недостаточно денег");accounts[fi].balance-=amount;accounts[target].balance=Number(accounts[target].balance||0)+amount;transactions.push({id:Date.now(),amount,fromAccount:accounts[fi].name,toAccount:accounts[target].name,date:today(),type:"transfer"});save(AK,accounts);save(TY,transactions);renderAccounts();renderHistory();home()}
-accountsList.addEventListener("pointerdown",e=>{const h=e.target.closest("[data-drag]");if(!h)return;startDrag(+h.dataset.drag)});
-accountsList.addEventListener("pointermove",e=>{if(!dragging)return;const row=e.target.closest("[data-account-row]");document.querySelectorAll(".account-row").forEach(x=>x.classList.remove("drag-target"));if(row&&+row.dataset.accountRow!==dragSource)row.classList.add("drag-target")});
-accountsList.addEventListener("pointerup",e=>{const row=e.target.closest("[data-account-row]");endDrag(row?+row.dataset.accountRow:null)});
-accountsList.addEventListener("pointercancel",()=>endDrag(null));
-
 editSalaryButton.onclick=()=>editFin("salary");editAdvanceButton.onclick=()=>editFin("advance");
-editSavingsActualButton.onclick=()=>{financeType="savingsActual";financeTitle.textContent="Фактически накоплено";financeLabel.textContent="Сколько реально отложено";financeInput.value=savingsActual;open("financeOverlay");setTimeout(()=>financeInput.select(),80)};
 editSavingsButton.onclick=()=>{financeType="savings";financeTitle.textContent="Цель накоплений";financeLabel.textContent="Процент от дохода";financeInput.value=savingsPercent;open("financeOverlay");setTimeout(()=>financeInput.select(),80)};
 closeFinanceButton.onclick=()=>close("financeOverlay");
 saveFinanceButton.onclick=()=>{
   const v=+financeInput.value;if(!Number.isFinite(v)||v<0)return alert("Введи корректную сумму");
   if(financeType==="salary")salary=v;
   else if(financeType==="advance"){if(v>salary)return alert("Аванс не может быть больше общего дохода");advance=v}
-  else if(financeType==="savingsActual")savingsActual=v;
   else savingsPercent=Math.min(100,v);
-  save(FK,{salary,advance,advanceDate,mainSalaryDate,savingsActual});save(SK,savingsPercent);close("financeOverlay");home();
+  save(FK,{salary,advance,advanceDate,mainSalaryDate});save(SK,savingsPercent);close("financeOverlay");home();
 };
 editAdvanceDateButton.onclick=()=>editDate("advance");editMainSalaryDateButton.onclick=()=>editDate("main");
 closeDateButton.onclick=()=>close("dateOverlay");
-saveDateButton.onclick=()=>{const v=+dateInput.value;if(!Number.isInteger(v)||v<1||v>31)return alert("Введи день от 1 до 31");if(dateType==="advance")advanceDate=v;else mainSalaryDate=v;save(FK,{salary,advance,advanceDate,mainSalaryDate,savingsActual});close("dateOverlay");home()};
+saveDateButton.onclick=()=>{const v=+dateInput.value;if(!Number.isInteger(v)||v<1||v>31)return alert("Введи день от 1 до 31");if(dateType==="advance")advanceDate=v;else mainSalaryDate=v;save(FK,{salary,advance,advanceDate,mainSalaryDate});close("dateOverlay");home()};
 
-addDebtButton.onclick=()=>{editingDebt=null;debtModalTitle.textContent="Новый долг";saveDebtButton.textContent="Сохранить долг";manualDebtName.value="";manualDebtAmount.value="";manualDebtDueDate.value="";open("debtOverlay")};
+addDebtButton.onclick=()=>{manualDebtName.value="";manualDebtAmount.value="";manualDebtDueDate.value="";open("debtOverlay")};
 closeDebtButton.onclick=()=>close("debtOverlay");
-saveDebtButton.onclick=()=>{const n=manualDebtName.value.trim(),a=+manualDebtAmount.value,d=manualDebtDueDate.value;if(!n||a<=0||!d)return alert("Заполни все поля");const item={id:editingDebt===null?Date.now():debts[editingDebt].id,name:n,amount:a,dueDate:d,kind:"personal"};if(editingDebt===null)debts.push(item);else debts[editingDebt]=item;save(DK,debts);close("debtOverlay");renderDebts()};
-debtsList.onclick=e=>{
-  const del=e.target.closest("[data-di]"),edit=e.target.closest("[data-de]"),pay=e.target.closest("[data-pay]");
-  if(del){const i=+del.dataset.di;if(confirm("Удалить этот долг?")){debts.splice(i,1);save(DK,debts);renderDebts()}return}
-  if(edit){editingDebt=+edit.dataset.de;const d=debts[editingDebt];debtModalTitle.textContent="Изменить долг";saveDebtButton.textContent="Сохранить изменения";manualDebtName.value=d.name;manualDebtAmount.value=d.amount;manualDebtDueDate.value=d.dueDate;open("debtOverlay");return}
-  if(pay){const i=+pay.dataset.pay,d=debts[i];const opts=accounts.filter(a=>a.type!=="credit").map((a,j)=>`${j+1}. ${a.name}`).join("\n");if(!accounts.some(a=>a.type!=="credit"))return alert("Добавь дебетовый счёт или наличные, чтобы вернуть долг.");const choice=prompt(`Сколько вернуть из долга ${d.name}?\nОстаток: ${money(d.amount)}\n\nВведи сумму:`,String(d.amount));const amount=Number(choice);if(!Number.isFinite(amount)||amount<=0)return;if(amount>d.amount)return alert("Сумма больше остатка долга");const names=accounts.filter(a=>a.type!=="credit");const selected=prompt(`С какого счёта списать?\n${opts}\n\nВведи номер счёта:`,`1`);const ai=Number(selected)-1;if(!names[ai])return;const acc=names[ai];if(Number(acc.balance||0)<amount)return alert("На счёте недостаточно денег");acc.balance-=amount;d.amount-=amount;transactions.push({id:Date.now(),amount,category:"Кредиты | Долги",account:acc.name,name:`Возврат: ${d.name}`,date:today(),type:"expense"});if(d.amount<=0)debts.splice(i,1);save(DK,debts);save(AK,accounts);save(TY,transactions);renderDebts();renderAccounts();renderCats();renderHistory();home()}
-};
-
+saveDebtButton.onclick=()=>{const n=manualDebtName.value.trim(),a=+manualDebtAmount.value,d=manualDebtDueDate.value;if(!n||a<=0||!d)return alert("Заполни все поля");debts.push({id:Date.now(),name:n,amount:a,dueDate:d,kind:"personal"});save(DK,debts);close("debtOverlay");renderDebts()};
+debtsList.onclick=e=>{const b=e.target.closest("[data-di]");if(!b)return;const i=+b.dataset.di;if(confirm("Удалить этот долг?")){debts.splice(i,1);save(DK,debts);renderDebts()}};
 
 function resetGoalForm(g){
   goalName.value=g?.name||"";goalLink.value=g?.link||"";goalTarget.value=g?.target||"";goalSaved.value=g?.saved||0;goalDate.value=g?.date||"";
