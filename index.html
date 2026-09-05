@@ -56,7 +56,6 @@ function periodDailyLimit(){
     return 0;
   }
 }
-
 function home(){let b=budget(),s=spent(),d=periodDailyLimit(),ts=transactions.filter(x=>x.date===today()).reduce((a,x)=>a+Number(x.amount||0),0);monthPlan.textContent=money(b);monthSpent.textContent=money(s);monthLeft.textContent=money(b-s);dailyLimit.textContent=money(d);todaySpent.textContent=money(ts);todayLeft.textContent=money(Math.max(0,d-ts));monthProgress.style.width=(b?Math.min(100,s/b*100):0)+"%";dailyDescription.textContent=`Сейчас учитывается период до ближайшей выплаты`;updateFinance()}
 function days(){let n=new Date,y=new Date(2026,8,30),x=new Date(n.getFullYear(),n.getMonth(),n.getDate());if(n<new Date(2026,8,1))x=new Date(2026,8,1);return Math.max(1,Math.ceil((y-x)/86400000)+1)}
 function screen(id,b){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");if(id==="budget")renderCats();if(id==="accounts")renderAccounts();home()}
