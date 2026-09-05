@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -155,14 +156,9 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
   <div class="modal-header"><div class="modal-title" id="accountModalTitle">Новый счёт</div><button class="close" id="closeAccountButton">×</button></div>
   <div class="field-label">Тип</div><select id="accountTypeInput" class="select"><option value="debit">Дебетовая карта</option><option value="credit">Кредитная карта</option><option value="cash">Наличные</option></select>
   <div class="field-label">Банк / название</div><input id="accountNameInput" class="text-input" placeholder="Например, Сбер">
-  <div class="field-label">Реальный остаток / задолженность</div>
-  <div id="creditBalanceMode" style="display:none" class="grid2">
-    <button type="button" class="secondary" id="balancePositiveButton">＋ Остаток</button>
-    <button type="button" class="primary" id="balanceNegativeButton">− Долг</button>
-  </div>
-  <input id="accountBalanceInput" class="text-input" type="number" inputmode="decimal">
+  <div class="field-label">Реальный остаток</div><input id="accountBalanceInput" class="text-input" type="number" inputmode="decimal">
   <div id="creditFields" style="display:none"><div class="field-label">Кредитный лимит</div><input id="creditLimitInput" class="text-input" type="number" inputmode="decimal"></div>
-  <div class="small-note">Для кредитной карты можно указать задолженность. Например, лимит 15 000 ₽ и задолженность 15 700 ₽ означают 15 000 ₽ использованного лимита и 700 ₽ процентов. Эти 700 ₽ автоматически запишутся в категорию «Проценты».</div>
+  <div class="small-note">Для кредитной карты отрицательный остаток — это текущая задолженность. Она автоматически попадает в раздел «Долги» и не увеличивает доступные деньги.</div>
   <button class="primary" id="saveAccountButton" style="margin-top:18px">Добавить счёт</button>
 </div></div>
 
@@ -405,79 +401,17 @@ closeCategoryEditButton.onclick=()=>close("categoryEditOverlay");
 saveCategoryLimitButton.onclick=()=>{const v=+categoryLimitInput.value;if(!Number.isFinite(v)||v<0)return alert("Введи корректный лимит");editingCategory.plan=v;save(CK,{version:2,plans:Object.fromEntries(categories.map(c=>[c.name,c.plan]))});close("categoryEditOverlay");renderCats();home()};
 clearAllLimitsButton.onclick=()=>{if(confirm("Стереть все лимиты?\n\nМесячные лимиты всех категорий будут установлены в 0 ₽.\n\nТраты не удалятся.")){categories.forEach(c=>c.plan=0);save(CK,{version:2,plans:Object.fromEntries(categories.map(c=>[c.name,c.plan]))});renderCats();home()}};
 
-let creditBalanceNegative=false;
-function updateCreditFields(){
-  const isCredit=accountTypeInput.value==="credit";
-  creditFields.style.display=isCredit?"block":"none";
-  creditBalanceMode.style.display=isCredit?"grid":"none";
-  if(!isCredit)creditBalanceNegative=false;
-  updateBalanceModeButtons();
-}
-function updateBalanceModeButtons(){
-  if(accountTypeInput.value!=="credit")return;
-  balancePositiveButton.className=creditBalanceNegative?"secondary":"primary";
-  balanceNegativeButton.className=creditBalanceNegative?"primary":"secondary";
-}
-function setCreditBalanceMode(negative){
-  creditBalanceNegative=negative;
-  const current=Math.abs(Number(accountBalanceInput.value)||0);
-  accountBalanceInput.value=current||"";
-  updateBalanceModeButtons();
-}
+function updateCreditFields(){creditFields.style.display=accountTypeInput.value==="credit"?"block":"none"}
 accountTypeInput.onchange=updateCreditFields;
-balancePositiveButton.onclick=()=>setCreditBalanceMode(false);
-balanceNegativeButton.onclick=()=>setCreditBalanceMode(true);
-
-addAccountButton.onclick=()=>{
-  editingAccount=null;creditBalanceNegative=false;
-  accountModalTitle.textContent="Новый счёт";saveAccountButton.textContent="Добавить счёт";
-  accountTypeInput.value="debit";accountNameInput.value="";accountBalanceInput.value="";
-  creditLimitInput.value="";updateCreditFields();open("accountOverlay")
-};
-accountsList.onclick=e=>{
-  const b=e.target.closest("[data-ai]");if(!b)return;
-  editingAccount=+b.dataset.ai;const a=accounts[editingAccount];
-  accountModalTitle.textContent="Изменить счёт";saveAccountButton.textContent="Сохранить";
-  accountTypeInput.value=a.type||"debit";accountNameInput.value=a.name||"";
-  creditBalanceNegative=(a.type==="credit"&&Number(a.balance||0)<0);
-  accountBalanceInput.value=Math.abs(Number(a.balance||0));
-  creditLimitInput.value=a.creditLimit||0;updateCreditFields();open("accountOverlay")
-};
+addAccountButton.onclick=()=>{editingAccount=null;accountModalTitle.textContent="Новый счёт";saveAccountButton.textContent="Добавить счёт";accountTypeInput.value="debit";accountNameInput.value="";accountBalanceInput.value="";creditLimitInput.value="";updateCreditFields();open("accountOverlay")};
+accountsList.onclick=e=>{const b=e.target.closest("[data-ai]");if(!b)return;editingAccount=+b.dataset.ai;const a=accounts[editingAccount];accountModalTitle.textContent="Изменить счёт";saveAccountButton.textContent="Сохранить";accountTypeInput.value=a.type||"debit";accountNameInput.value=a.name||"";accountBalanceInput.value=a.balance||0;creditLimitInput.value=a.creditLimit||0;updateCreditFields();open("accountOverlay")};
 closeAccountButton.onclick=()=>close("accountOverlay");
-
-function syncCreditInterest(account){
-  if(account.type!=="credit")return;
-  const debt=Math.max(0,-Number(account.balance||0));
-  const limit=Math.max(0,Number(account.creditLimit||0));
-  const target=Math.max(0,debt-limit);
-  const existing=transactions
-    .filter(x=>x.type==="creditInterest"&&x.creditAccount===account.name)
-    .reduce((s,x)=>s+Number(x.amount||0),0);
-  const add=Math.max(0,target-existing);
-  if(add>0){
-    transactions.push({
-      id:Date.now()+Math.random(),
-      amount:add,
-      category:"Проценты",
-      date:today(),
-      type:"creditInterest",
-      creditAccount:account.name
-    });
-    save(TY,transactions);
-  }
-}
-
 saveAccountButton.onclick=()=>{
-  const raw=Math.abs(+accountBalanceInput.value||0);
-  const t=accountTypeInput.value,cl=+creditLimitInput.value||0;
-  const b=t==="credit"&&creditBalanceNegative?-raw:raw;
-  const n=accountNameInput.value.trim();
-  if(!n)return alert("Введи название счёта");
-  if(!Number.isFinite(b))return alert("Введи корректный остаток");
+  const n=accountNameInput.value.trim(),b=+accountBalanceInput.value,t=accountTypeInput.value,cl=+creditLimitInput.value||0;
+  if(!n)return alert("Введи название счёта");if(!Number.isFinite(b))return alert("Введи корректный остаток");
   const a={name:n,balance:b,type:t,creditLimit:cl,bank:n};
   if(editingAccount===null)accounts.push(a);else accounts[editingAccount]=a;
-  syncCreditInterest(a);
-  save(AK,accounts);close("accountOverlay");renderAccounts();renderDebts();renderCats();home();
+  save(AK,accounts);close("accountOverlay");renderAccounts();renderDebts();home();
 };
 
 transferButton.onclick=()=>{
@@ -535,5 +469,6 @@ goalsList.onclick=e=>{
 
 document.querySelectorAll(".overlay").forEach(o=>o.onclick=e=>{if(e.target===o)o.classList.remove("open")});
 </script>
+
 </body>
 </html>
