@@ -18,7 +18,7 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
 .primary,.secondary{width:100%;border:0;padding:15px;border-radius:17px;font-weight:750}.primary{background:var(--pink);color:#fff}.secondary{background:var(--pl);color:#64484f}
 .small-button{border:0;background:var(--pp);color:#64484f;width:34px;height:34px;border-radius:11px;font-size:17px}.clear-limits-button{width:100%;border:1px solid var(--border);background:transparent;color:var(--danger);padding:13px;border-radius:15px;margin-bottom:12px}
 .section-heading{font-size:21px;font-weight:800;margin:8px 0 14px}.section-heading-row{display:flex;justify-content:space-between;align-items:center;margin:8px 0 14px}.section-heading-row .section-heading{margin:0}
-.small-note{color:var(--muted);font-size:12px;line-height:1.4;margin-top:10px}.screen{display:none}.screen.active{display:block}
+.small-note{color:var(--muted);font-size:12px;line-height:1.4;margin-top:10px}.settings-group{padding:4px 0 10px}.settings-group+.settings-group{border-top:1px solid var(--border);padding-top:12px}.settings-group-title{font-size:12px;font-weight:800;color:var(--muted);margin:4px 0 6px;text-transform:uppercase;letter-spacing:.04em}.screen{display:none}.screen.active{display:block}
 .category-row,.account-row,.debt-row,.goal-row{padding:13px 0;border-bottom:1px solid var(--border)}.category-row:last-child,.account-row:last-child,.debt-row:last-child,.goal-row:last-child{border:0}
 .category-top,.account-row,.debt-top,.goal-top{display:flex;justify-content:space-between;align-items:center;gap:12px}.category-left,.account-left,.debt-left,.goal-left{flex:1;min-width:0}.category-name,.account-name,.debt-name,.goal-name{font-size:14px;font-weight:700}.category-limit{color:var(--muted);font-size:12px;margin-top:4px}.category-actions,.account-actions{display:flex;align-items:center;gap:8px}.category-remaining,.account-balance{font-weight:800}.negative,.danger{color:var(--danger)}.category-meta{color:var(--muted);font-size:12px;margin-top:5px}.category-bar{height:5px;background:#eee4e4;border-radius:10px;margin-top:8px}.category-bar-inner{height:100%;background:var(--pink);border-radius:10px}
 .total-card{background:var(--dark);color:#fff}.total-card .stat-row>span:first-child{color:#ffffffa6}
@@ -99,12 +99,21 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
 <section id="settings" class="screen">
   <div class="section-heading">Настройки</div>
   <div class="card">
-    <div class="stat-row"><span>Общий доход</span><div class="category-actions"><span class="stat-value" id="salaryDisplay"></span><button class="small-button" id="editSalaryButton">✎</button></div></div>
-    <div class="stat-row"><span>Аванс</span><div class="category-actions"><span class="stat-value" id="advanceDisplay"></span><button class="small-button" id="editAdvanceButton">✎</button></div></div>
-    <div class="stat-row"><span>Дата аванса</span><div class="category-actions"><span class="stat-value" id="advanceDateDisplay"></span><button class="small-button" id="editAdvanceDateButton">✎</button></div></div>
-    <div class="stat-row"><span>Основная зарплата</span><span class="stat-value" id="mainSalaryDisplay"></span></div>
-    <div class="stat-row"><span>Дата основной зарплаты</span><div class="category-actions"><span class="stat-value" id="mainSalaryDateDisplay"></span><button class="small-button" id="editMainSalaryDateButton">✎</button></div></div>
-    <div class="stat-row"><span>Цель накоплений</span><div class="category-actions"><span class="stat-value" id="savingsPercentDisplay"></span><button class="small-button" id="editSavingsButton">✎</button></div></div>
+    <div class="settings-group">
+      <div class="settings-group-title">Деньги</div>
+      <div class="stat-row"><span>Общий доход</span><div class="category-actions"><span class="stat-value" id="salaryDisplay"></span><button class="small-button" id="editSalaryButton">✎</button></div></div>
+      <div class="stat-row"><span>Аванс</span><div class="category-actions"><span class="stat-value" id="advanceDisplay"></span><button class="small-button" id="editAdvanceButton">✎</button></div></div>
+      <div class="stat-row"><span>Основная зарплата</span><span class="stat-value" id="mainSalaryDisplay"></span></div>
+    </div>
+    <div class="settings-group">
+      <div class="settings-group-title">Даты выплат</div>
+      <div class="stat-row"><span>Дата аванса</span><div class="category-actions"><span class="stat-value" id="advanceDateDisplay"></span><button class="small-button" id="editAdvanceDateButton">✎</button></div></div>
+      <div class="stat-row"><span>Дата основной зарплаты</span><div class="category-actions"><span class="stat-value" id="mainSalaryDateDisplay"></span><button class="small-button" id="editMainSalaryDateButton">✎</button></div></div>
+    </div>
+    <div class="settings-group">
+      <div class="settings-group-title">Накопления</div>
+      <div class="stat-row"><span>Цель накоплений</span><div class="category-actions"><span class="stat-value" id="savingsPercentDisplay"></span><button class="small-button" id="editSavingsButton">✎</button></div></div>
+    </div>
   </div>
   <div class="card">
     <div class="card-title">Что учитывает приложение</div>
@@ -196,7 +205,7 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
   <button data-screen="accounts"><span class="nav-icon">▱</span>Счета</button>
   <button data-screen="debts"><span class="nav-icon">↺</span>Долги</button>
   <button data-screen="goals"><span class="nav-icon">♡</span>Цели</button>
-  <button data-screen="settings"><span class="nav-icon">⚙</span>Ещё</button>
+  <button data-screen="settings"><span class="nav-icon">⚙</span>Настройки</button>
 </div></div>
 
 <script>
