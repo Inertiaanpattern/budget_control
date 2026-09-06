@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Babki</title>
+<title>Бабки в шапку</title>
 <link rel="icon" type="image/png" href="money_pouch_icon.png">
 <link rel="apple-touch-icon" href="money_pouch_icon.png">
 <style>
@@ -114,6 +114,13 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
       <div class="settings-group-title">Накопления</div>
       <div class="stat-row"><span>Цель накоплений</span><div class="category-actions"><span class="stat-value" id="savingsPercentDisplay"></span><button class="small-button" id="editSavingsButton">✎</button></div></div>
     </div>
+  </div>
+  <div class="card" id="backupCard">
+    <div class="card-title">💾 Резервная копия данных</div>
+    <div class="small-note" style="margin-top:0;margin-bottom:12px">Сохрани текущие данные Babki в отдельный файл. Резервная копия не изменяет данные.</div>
+    <button class="primary" type="button" id="exportBackupButton" style="margin-bottom:10px">💾 Сохранить данные</button>
+    <button class="secondary" type="button" id="importBackupButton">↩️ Восстановить данные</button>
+    <input id="backupFileInput" type="file" accept="application/json,.json" style="display:none">
   </div>
   <div class="card">
     <div class="card-title">Что учитывает приложение</div>
@@ -467,90 +474,53 @@ goalsList.onclick=e=>{
 };
 
 document.querySelectorAll(".overlay").forEach(o=>o.onclick=e=>{if(e.target===o)o.classList.remove("open")});
-</script>
 
-<div class="settings-section" style="margin-top:18px">
-  <div style="font-weight:700;font-size:18px;margin-bottom:8px">💾 Резервная копия данных</div>
-  <div style="font-size:14px;line-height:1.45;opacity:.75;margin-bottom:12px">
-    Сохрани текущие счета, расходы, лимиты, цели, долги и настройки в отдельный файл.
-    Его можно будет использовать для восстановления после изменений приложения.
-  </div>
-  <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <button type="button" onclick="exportBabkiBackup()" style="padding:11px 14px;border-radius:12px;border:0;cursor:pointer">
-      💾 Сохранить данные
-    </button>
-    <button type="button" onclick="document.getElementById('babkiBackupInput').click()" style="padding:11px 14px;border-radius:12px;border:0;cursor:pointer">
-      ↩️ Восстановить данные
-    </button>
-  </div>
-  <input id="babkiBackupInput" type="file" accept=".json,application/json" style="display:none" onchange="importBabkiBackup(event)">
-</div>
-
-<script>
 function exportBabkiBackup(){
-  const keys = [
-    "babki_september_2026_transactions",
-    "babki_september_2026_categories",
-    "babki_accounts_real_v1",
-    "babki_finance_settings_v1",
-    "babki_savings_goal_percent_v1",
-    "babki_goals_v1",
-    "babki_personal_debts_v1"
-  ];
-  const data = {
-    app: "Babki",
-    backupVersion: 1,
-    createdAt: new Date().toISOString(),
-    storage: {}
-  };
-  keys.forEach(k => {
-    const value = localStorage.getItem(k);
-    if (value !== null) data.storage[k] = value;
-  });
-
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const d = new Date();
-  const pad = n => String(n).padStart(2,"0");
-  a.download = `Babki_резервная_копия_${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.json`;
-  a.href = url;
+  const storage={};
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key && key.startsWith("babki_")) storage[key]=localStorage.getItem(key);
+  }
+  const backup={app:"Babki",backupVersion:1,createdAt:new Date().toISOString(),storage};
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  const d=new Date();
+  const pad=n=>String(n).padStart(2,"0");
+  a.download=`Babki_данные_${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.json`;
+  a.href=url;
+  document.body.appendChild(a);
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
 function importBabkiBackup(event){
-  const file = event.target.files && event.target.files[0];
-  event.target.value = "";
-  if(!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function(){
+  const file=event.target.files && event.target.files[0];
+  event.target.value="";
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
     try{
-      const data = JSON.parse(reader.result);
-      if(!data || data.app !== "Babki" || !data.storage || typeof data.storage !== "object"){
-        throw new Error("Неверный файл резервной копии");
-      }
-
-      const ok = confirm(
-        "Восстановить данные из этой копии?\\n\\n" +
-        "Текущие данные в этом браузере будут заменены данными из файла."
-      );
-      if(!ok) return;
-
-      Object.entries(data.storage).forEach(([key, value]) => {
-        if(typeof value === "string") localStorage.setItem(key, value);
+      const backup=JSON.parse(reader.result);
+      if(!backup || backup.app!=="Babki" || !backup.storage || typeof backup.storage!=="object") throw new Error("Это не файл резервной копии Babki.");
+      const ok=confirm("Восстановить данные из этой копии?\n\nТекущие данные Babki в этом браузере будут заменены данными из файла.");
+      if(!ok)return;
+      Object.keys(localStorage).filter(k=>k.startsWith("babki_")).forEach(k=>localStorage.removeItem(k));
+      Object.entries(backup.storage).forEach(([key,value])=>{
+        if(key.startsWith("babki_") && typeof value==="string") localStorage.setItem(key,value);
       });
-
-      alert("Данные восстановлены. Сейчас Babki перезагрузится.");
+      alert("Данные восстановлены. Babki сейчас перезагрузится.");
       location.reload();
-    }catch(e){
-      alert("Не удалось восстановить данные: " + e.message);
-    }
+    }catch(e){ alert("Не удалось восстановить данные: "+e.message); }
   };
   reader.readAsText(file);
 }
-</script>
 
+
+document.getElementById("exportBackupButton")?.addEventListener("click",exportBabkiBackup);
+document.getElementById("importBackupButton")?.addEventListener("click",()=>document.getElementById("backupFileInput")?.click());
+document.getElementById("backupFileInput")?.addEventListener("change",importBabkiBackup);
+</script>
 </body>
 </html>
