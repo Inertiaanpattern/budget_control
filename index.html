@@ -18,7 +18,7 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
 .primary,.secondary{width:100%;border:0;padding:15px;border-radius:17px;font-weight:750}.primary{background:var(--pink);color:#fff}.secondary{background:var(--pl);color:#64484f}
 .small-button{border:0;background:var(--pp);color:#64484f;width:34px;height:34px;border-radius:11px;font-size:17px}.clear-limits-button{width:100%;border:1px solid var(--border);background:transparent;color:var(--danger);padding:13px;border-radius:15px;margin-bottom:12px}
 .section-heading{font-size:21px;font-weight:800;margin:8px 0 14px}.section-heading-row{display:flex;justify-content:space-between;align-items:center;margin:8px 0 14px}.section-heading-row .section-heading{margin:0}
-.small-note{color:var(--muted);font-size:12px;line-height:1.4;margin-top:10px}.settings-group{padding:4px 0 10px}.settings-group+.settings-group{border-top:1px solid var(--border);padding-top:12px}.settings-group-title{font-size:12px;font-weight:800;color:var(--muted);margin:4px 0 6px;text-transform:uppercase;letter-spacing:.04em}.screen{display:none}.screen.active{display:block}
+.small-note{color:var(--muted);font-size:12px;line-height:1.4;margin-top:10px}.settings-group{padding:4px 0 10px}.settings-group+.settings-group{border-top:1px solid var(--border);padding-top:12px}.settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.settings-actions button{flex:1;min-width:140px}.settings-group-title{font-size:12px;font-weight:800;color:var(--muted);margin:4px 0 6px;text-transform:uppercase;letter-spacing:.04em}.screen{display:none}.screen.active{display:block}
 .category-row,.account-row,.debt-row,.goal-row{padding:13px 0;border-bottom:1px solid var(--border)}.category-row:last-child,.account-row:last-child,.debt-row:last-child,.goal-row:last-child{border:0}
 .category-top,.account-row,.debt-top,.goal-top{display:flex;justify-content:space-between;align-items:center;gap:12px}.category-left,.account-left,.debt-left,.goal-left{flex:1;min-width:0}.category-name,.account-name,.debt-name,.goal-name{font-size:14px;font-weight:700}.category-limit{color:var(--muted);font-size:12px;margin-top:4px}.category-actions,.account-actions{display:flex;align-items:center;gap:8px}.category-remaining,.account-balance{font-weight:800}.negative,.danger{color:var(--danger)}.category-meta{color:var(--muted);font-size:12px;margin-top:5px}.category-bar{height:5px;background:#eee4e4;border-radius:10px;margin-top:8px}.category-bar-inner{height:100%;background:var(--pink);border-radius:10px}
 .total-card{background:var(--dark);color:#fff}.total-card .stat-row>span:first-child{color:#ffffffa6}
@@ -113,6 +113,15 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
     <div class="settings-group">
       <div class="settings-group-title">Накопления</div>
       <div class="stat-row"><span>Цель накоплений</span><div class="category-actions"><span class="stat-value" id="savingsPercentDisplay"></span><button class="small-button" id="editSavingsButton">✎</button></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Резервная копия данных</div>
+    <div class="small-note">Сохраняет твои счета, расходы, лимиты, цели, долги и настройки в отдельный файл. Изменения интерфейса приложения не должны менять этот файл.</div>
+    <div class="settings-actions">
+      <button class="primary-button" id="exportDataButton">Сохранить данные</button>
+      <button class="secondary-button" id="importDataButton">Восстановить данные</button>
+      <input id="importDataFile" type="file" accept="application/json,.json" style="display:none">
     </div>
   </div>
   <div class="card">
@@ -465,6 +474,49 @@ goalsList.onclick=e=>{
   if(edit){editingGoal=+edit.dataset.gi;goalModalTitle.textContent="Изменить цель";resetGoalForm(goals[editingGoal]);open("goalOverlay")}
   if(del){const i=+del.dataset.gd;if(confirm("Удалить цель?")){goals.splice(i,1);save(GK,goals);renderGoals()}}
 };
+
+
+// Безопасная резервная копия: экспортирует только данные Babki, не меняя localStorage.
+const DATA_BACKUP_VERSION=1;
+const DATA_BACKUP_KEYS=[TY,CK,AK,FK,SK,GK,DK];
+function exportBabkiData(){
+  const data={version:DATA_BACKUP_VERSION,app:"Babki",createdAt:new Date().toISOString(),storage:{}};
+  DATA_BACKUP_KEYS.forEach(k=>{
+    const raw=localStorage.getItem(k);
+    if(raw!==null)data.storage[k]=raw;
+  });
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  const stamp=new Date().toISOString().slice(0,19).replace(/[T:]/g,"-");
+  a.href=url;a.download=`Babki_данные_${stamp}.json`;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function importBabkiData(file){
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data||data.app!=="Babki"||data.version!==DATA_BACKUP_VERSION||!data.storage||typeof data.storage!=="object")throw new Error("bad backup");
+      const allowed=new Set(DATA_BACKUP_KEYS);
+      const keys=Object.keys(data.storage);
+      if(!keys.length||keys.some(k=>!allowed.has(k)))throw new Error("bad keys");
+      for(const k of keys){
+        const value=data.storage[k];
+        if(typeof value!=="string")throw new Error("bad value");
+        JSON.parse(value);
+      }
+      if(!confirm("Восстановить данные из этой резервной копии? Текущие данные Babki будут заменены данными из файла."))return;
+      keys.forEach(k=>localStorage.setItem(k,data.storage[k]));
+      alert("Данные восстановлены. Приложение сейчас перезагрузится.");
+      location.reload();
+    }catch(e){alert("Не удалось восстановить данные: файл повреждён или это не резервная копия Babki.");}
+  };
+  reader.readAsText(file);
+}
+exportDataButton.onclick=exportBabkiData;
+importDataButton.onclick=()=>importDataFile.click();
+importDataFile.onchange=()=>{const file=importDataFile.files?.[0];if(file)importBabkiData(file);importDataFile.value=""};
 
 document.querySelectorAll(".overlay").forEach(o=>o.onclick=e=>{if(e.target===o)o.classList.remove("open")});
 </script>
