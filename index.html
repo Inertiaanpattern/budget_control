@@ -115,13 +115,6 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
       <div class="stat-row"><span>Цель накоплений</span><div class="category-actions"><span class="stat-value" id="savingsPercentDisplay"></span><button class="small-button" id="editSavingsButton">✎</button></div></div>
     </div>
   </div>
-  <div class="card" id="backupCard">
-    <div class="card-title">💾 Резервная копия данных</div>
-    <div class="small-note" style="margin-top:0;margin-bottom:12px">Сохрани текущие данные Babki в отдельный файл. Резервная копия не изменяет данные.</div>
-    <button class="primary" type="button" id="exportBackupButton" style="margin-bottom:10px">💾 Сохранить данные</button>
-    <button class="secondary" type="button" id="importBackupButton">↩️ Восстановить данные</button>
-    <input id="backupFileInput" type="file" accept="application/json,.json" style="display:none">
-  </div>
   <div class="card">
     <div class="card-title">Что учитывает приложение</div>
     <div class="small-note">Дневной лимит смотрит на реальные деньги на дебетовых счетах и количество дней до следующей выплаты. Кредитные карты не увеличивают доступный баланс. Долги и цели показываются отдельно, чтобы не путать их с уже потраченными деньгами.</div>
@@ -223,7 +216,6 @@ let salary=140000,advance=26000,advanceDate=null,mainSalaryDate=15,savingsPercen
 let transactions=[],accounts=[],goals=[],debts=[];
 let editingCategory=null,editingAccount=null,editingGoal=null,financeType=null,dateType=null;
 
-// Лимиты по умолчанию — 0. Пользовательские лимиты берутся из localStorage (CK). Это не позволяет старым зашитым в HTML значениям возвращаться после обновления файла.
 const categories=[
 ["Еда вне дома",0],["Транспорт (общ.)",0],["Дом",0],["Одежда",0],["Здоровье",0],
 ["Кредиты | Долги",0],["Подарки",0],["Подписки",0],["Досуг",0],["Продукты",0],
@@ -235,7 +227,7 @@ const categories=[
 const money=v=>new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(Math.round((Number(v)||0)*100)/100)+" ₽";
 const cat=n=>categories.find(x=>x.name===n);
 const today=()=>{let d=new Date;return d.toISOString().slice(0,10)};
-const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){alert("Не удалось сохранить данные: "+e.message)}};
 const read=(k,f)=>{try{const v=JSON.parse(localStorage.getItem(k));return v===null?f:v}catch(e){return f}};
 const spent=()=>transactions.filter(x=>x.type!=="debt").reduce((s,x)=>s+Number(x.amount||0),0);
 const catSpent=n=>transactions.filter(x=>x.type!=="debt"&&x.category===n).reduce((s,x)=>s+Number(x.amount||0),0);
@@ -475,53 +467,6 @@ goalsList.onclick=e=>{
 };
 
 document.querySelectorAll(".overlay").forEach(o=>o.onclick=e=>{if(e.target===o)o.classList.remove("open")});
-
-function exportBabkiBackup(){
-  const storage={};
-  for(let i=0;i<localStorage.length;i++){
-    const key=localStorage.key(i);
-    if(key && key.startsWith("babki_")) storage[key]=localStorage.getItem(key);
-  }
-  const backup={app:"Babki",backupVersion:1,createdAt:new Date().toISOString(),storage};
-  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  const d=new Date();
-  const pad=n=>String(n).padStart(2,"0");
-  a.download=`Babki_данные_${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.json`;
-  a.href=url;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
-
-function importBabkiBackup(event){
-  const file=event.target.files && event.target.files[0];
-  event.target.value="";
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    try{
-      const backup=JSON.parse(reader.result);
-      if(!backup || backup.app!=="Babki" || !backup.storage || typeof backup.storage!=="object") throw new Error("Это не файл резервной копии Babki.");
-      const ok=confirm("Восстановить данные из этой копии?\n\nТекущие данные Babki в этом браузере будут заменены данными из файла.");
-      if(!ok)return;
-      Object.keys(localStorage).filter(k=>k.startsWith("babki_")).forEach(k=>localStorage.removeItem(k));
-      Object.entries(backup.storage).forEach(([key,value])=>{
-        if(key.startsWith("babki_") && typeof value==="string") localStorage.setItem(key,value);
-      });
-      alert("Данные восстановлены. Babki сейчас перезагрузится.");
-      location.reload();
-    }catch(e){ alert("Не удалось восстановить данные: "+e.message); }
-  };
-  reader.readAsText(file);
-}
-
-
-document.getElementById("exportBackupButton")?.addEventListener("click",exportBabkiBackup);
-document.getElementById("importBackupButton")?.addEventListener("click",()=>document.getElementById("backupFileInput")?.click());
-document.getElementById("backupFileInput")?.addEventListener("change",importBabkiBackup);
 </script>
 </body>
 </html>
