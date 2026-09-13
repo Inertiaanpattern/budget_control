@@ -155,6 +155,25 @@ button,input,select,textarea{font:inherit}button{appearance:none;cursor:pointer}
   <div class="modal-header"><div class="modal-title" id="accountModalTitle">Новый счёт</div><button class="close" id="closeAccountButton">×</button></div>
   <div class="field-label">Тип</div><select id="accountTypeInput" class="select"><option value="debit">Дебетовая карта</option><option value="credit">Кредитная карта</option><option value="cash">Наличные</option></select>
   <div class="field-label">Банк / название</div><input id="accountNameInput" class="text-input" placeholder="Например, Сбер">
+  <div class="field-label">Иконка</div>
+  <select id="accountIconMode" class="select">
+    <option value="auto">Логотип банка автоматически</option>
+    <option value="custom">Выбрать свою иконку</option>
+  </select>
+  <div id="customIconFields" style="display:none">
+    <div class="field-label">Рисунок</div>
+    <select id="accountIconKey" class="select">
+      <option value="wallet">Кошелек</option>
+      <option value="card">Банковская карта</option>
+      <option value="cash">Наличные</option>
+      <option value="coins">Монеты</option>
+      <option value="piggy">Копилка</option>
+      <option value="bank">Банк</option>
+      <option value="safe">Сейф</option>
+    </select>
+    <div class="field-label">Цвет</div>
+    <input id="accountIconColor" class="text-input" type="color" value="#c98f9d" style="height:52px;padding:7px">
+  </div>
   <div class="field-label">Реальный остаток</div><input id="accountBalanceInput" class="text-input" type="number" inputmode="decimal">
   <div id="creditFields" style="display:none"><div class="field-label">Кредитный лимит</div><input id="creditLimitInput" class="text-input" type="number" inputmode="decimal"></div>
   <div class="small-note">Для кредитной карты отрицательный остаток — это текущая задолженность. Она автоматически попадает в раздел «Долги» и не увеличивает доступные деньги.</div>
@@ -217,17 +236,17 @@ let transactions=[],accounts=[],goals=[],debts=[];
 let editingCategory=null,editingAccount=null,editingGoal=null,financeType=null,dateType=null;
 
 const categories=[
-["Еда вне дома",0],["Транспорт (общ.)",0],["Дом",0],["Одежда",0],["Здоровье",0],
-["Кредиты | Долги",0],["Подарки",0],["Подписки",0],["Досуг",0],["Продукты",0],
-["Книги",0],["Канцелярия",0],["Бьюти",0],["Путешествия",0],["Аксессуары",0],["Проценты",0],
-["Комиссии/обслуживание карт",0],["Гигиена",0],["Коммунальные платежи",0],["Налоги",0],
-["Транспорт (такси)",0],["Мобильная связь",0],["Техника",0],["Прочие",0],["Благотворительность",0],["Хобби",0]
+["Еда вне дома",25000],["Транспорт (общ.)",6000],["Дом",5000],["Одежда",7000],["Здоровье",3000],
+["Кредиты | Долги",29096],["Подарки",8700],["Подписки",2500],["Досуг",35000],["Продукты",19000],
+["Книги",0],["Канцелярия",500],["Бьюти",4200],["Путешествия",0],["Аксессуары",0],["Проценты",500],
+["Комиссии/обслуживание карт",350],["Гигиена",500],["Коммунальные платежи",6000],["Налоги",0],
+["Транспорт (такси)",12000],["Мобильная связь",350],["Техника",0],["Прочие",2300],["Благотворительность",1200],["Хобби",0]
 ].map(x=>({name:x[0],plan:x[1]}));
 
 const money=v=>new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(Math.round((Number(v)||0)*100)/100)+" ₽";
 const cat=n=>categories.find(x=>x.name===n);
 const today=()=>{let d=new Date;return d.toISOString().slice(0,10)};
-const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){alert("Не удалось сохранить данные: "+e.message)}};
+const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 const read=(k,f)=>{try{const v=JSON.parse(localStorage.getItem(k));return v===null?f:v}catch(e){return f}};
 const spent=()=>transactions.filter(x=>x.type!=="debt").reduce((s,x)=>s+Number(x.amount||0),0);
 const catSpent=n=>transactions.filter(x=>x.type!=="debt"&&x.category===n).reduce((s,x)=>s+Number(x.amount||0),0);
@@ -278,11 +297,38 @@ function renderCats(){
   });updateFinance();
 }
 
+const bankDomains={
+  sberbank:"sberbank.ru","сбер":"sberbank.ru",sber:"sberbank.ru",
+  "т-банк":"tbank.ru","тинькофф":"tbank.ru",tinkoff:"tbank.ru",tbank:"tbank.ru",
+  альфа:"alfabank.ru",alfa:"alfabank.ru",втб:"vtb.ru",vtb:"vtb.ru",
+  авангард:"avangard.ru",газпромбанк:"gazprombank.ru","газпром":"gazprombank.ru",
+  райффайзен:"raiffeisen.ru",raiffeisen:"raiffeisen.ru",совкомбанк:"sovcombank.ru","совком":"sovcombank.ru",
+  "почта банк":"pochtabank.ru","почта":"pochtabank.ru","мтс банк":"mtsbank.ru","мтс":"mtsbank.ru",
+  росбанк:"rosbank.ru",уралсиб:"uralsib.ru","россельхозбанк":"rshb.ru","рсхб":"rshb.ru",
+  "банк санкт-петербург":"bspb.ru","бспб":"bspb.ru",открытие:"open.ru",
+  "озон банк":"ozon.ru",озон:"ozon.ru",ozon:"ozon.ru",дебанк:"debank.com",debank:"debank.com"
+};
+function iconSvg(key,color){
+  const s=`stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"`;
+  const body={
+    wallet:`<path ${s} d="M5 8.5h13a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h11a2 2 0 0 1 2 2v2"/><path ${s} d="M16 12h4"/><circle cx="16" cy="12" r=".7" fill="${color}"/>`,
+    card:`<rect ${s} x="3" y="5" width="18" height="14" rx="2"/><path ${s} d="M3 9h18M7 14h4"/>`,
+    cash:`<rect ${s} x="3" y="6" width="18" height="12" rx="2"/><circle ${s} cx="12" cy="12" r="3"/><path ${s} d="M6 9v0M18 15v0"/>`,
+    coins:`<circle ${s} cx="9" cy="10" r="5"/><circle ${s} cx="15" cy="14" r="5"/><path ${s} d="M7 10h4M13 14h4"/>`,
+    piggy:`<path ${s} d="M5 11c0-3 3-5 7-5s7 2 7 5c0 2-1 3-3 4l1 3h-3l-1-2H9l-1 2H5l1-3c-1-1-1-2-1-4Z"/><path ${s} d="M12 6V4M9 4h6M19 11l2-1M7 10H5"/><circle cx="16" cy="9" r=".7" fill="${color}"/>`,
+    bank:`<path ${s} d="M3 9 12 4l9 5M5 10v7M9 10v7M15 10v7M19 10v7M3 19h18"/>`,
+    safe:`<rect ${s} x="4" y="4" width="16" height="16" rx="2"/><circle ${s} cx="12" cy="12" r="4"/><path ${s} d="M12 8v4l2 2M7 7h0M17 17h0"/>`
+  };
+  return `<svg viewBox="0 0 24 24" width="27" height="27" aria-hidden="true">${body[key]||body.wallet}</svg>`;
+}
 function logoFor(a){
+  if(a.iconMode==="custom"){
+    const color=a.iconColor||"#c98f9d";
+    return `<div class="bank-logo bank-fallback" style="color:${color};background:${color}18">${iconSvg(a.iconKey||"wallet",color)}</div>`;
+  }
   const name=(a.bank||a.name||"").toLowerCase();
-  const domains={sber:"sberbank.ru","сбер":"sberbank.ru","т-банк":"tbank.ru","тинькофф":"tbank.ru",tinkoff:"tbank.ru",альфа:"alfabank.ru",alfa:"alfabank.ru",втб:"vtb.ru",vtb:"vtb.ru",дебанк:"debank.com",debank:"debank.com",озон:"ozon.ru",ozon:"ozon.ru"};
-  const d=Object.keys(domains).find(k=>name.includes(k));
-  if(d)return `<img class="bank-logo" src="https://www.google.com/s2/favicons?domain=${domains[d]}&sz=128" alt="">`;
+  const dKey=Object.keys(bankDomains).find(k=>name.includes(k));
+  if(dKey)return `<img class="bank-logo" src="https://www.google.com/s2/favicons?domain=${bankDomains[dKey]}&sz=128" alt="">`;
   return `<div class="bank-logo bank-fallback">${(a.name||"С").slice(0,1).toUpperCase()}</div>`;
 }
 
@@ -401,14 +447,29 @@ saveCategoryLimitButton.onclick=()=>{const v=+categoryLimitInput.value;if(!Numbe
 clearAllLimitsButton.onclick=()=>{if(confirm("Стереть все лимиты?\n\nМесячные лимиты всех категорий будут установлены в 0 ₽.\n\nТраты не удалятся.")){categories.forEach(c=>c.plan=0);save(CK,{version:2,plans:Object.fromEntries(categories.map(c=>[c.name,c.plan]))});renderCats();home()}};
 
 function updateCreditFields(){creditFields.style.display=accountTypeInput.value==="credit"?"block":"none"}
+function updateCustomIconFields(){customIconFields.style.display=accountIconMode.value==="custom"?"block":"none"}
 accountTypeInput.onchange=updateCreditFields;
-addAccountButton.onclick=()=>{editingAccount=null;accountModalTitle.textContent="Новый счёт";saveAccountButton.textContent="Добавить счёт";accountTypeInput.value="debit";accountNameInput.value="";accountBalanceInput.value="";creditLimitInput.value="";updateCreditFields();open("accountOverlay")};
-accountsList.onclick=e=>{const b=e.target.closest("[data-ai]");if(!b)return;editingAccount=+b.dataset.ai;const a=accounts[editingAccount];accountModalTitle.textContent="Изменить счёт";saveAccountButton.textContent="Сохранить";accountTypeInput.value=a.type||"debit";accountNameInput.value=a.name||"";accountBalanceInput.value=a.balance||0;creditLimitInput.value=a.creditLimit||0;updateCreditFields();open("accountOverlay")};
+accountIconMode.onchange=updateCustomIconFields;
+addAccountButton.onclick=()=>{
+  editingAccount=null;accountModalTitle.textContent="Новый счёт";saveAccountButton.textContent="Добавить счёт";
+  accountTypeInput.value="debit";accountNameInput.value="";accountBalanceInput.value="";creditLimitInput.value="";
+  accountIconMode.value="auto";accountIconKey.value="wallet";accountIconColor.value="#c98f9d";
+  updateCreditFields();updateCustomIconFields();open("accountOverlay")
+};
+accountsList.onclick=e=>{
+  const b=e.target.closest("[data-ai]");if(!b)return;editingAccount=+b.dataset.ai;const a=accounts[editingAccount];
+  accountModalTitle.textContent="Изменить счёт";saveAccountButton.textContent="Сохранить";
+  accountTypeInput.value=a.type||"debit";accountNameInput.value=a.name||"";accountBalanceInput.value=a.balance||0;creditLimitInput.value=a.creditLimit||0;
+  accountIconMode.value=a.iconMode||"auto";accountIconKey.value=a.iconKey||"wallet";accountIconColor.value=a.iconColor||"#c98f9d";
+  updateCreditFields();updateCustomIconFields();open("accountOverlay")
+};
 closeAccountButton.onclick=()=>close("accountOverlay");
 saveAccountButton.onclick=()=>{
   const n=accountNameInput.value.trim(),b=+accountBalanceInput.value,t=accountTypeInput.value,cl=+creditLimitInput.value||0;
   if(!n)return alert("Введи название счёта");if(!Number.isFinite(b))return alert("Введи корректный остаток");
-  const a={name:n,balance:b,type:t,creditLimit:cl,bank:n};
+  const old=editingAccount===null?{}:accounts[editingAccount];
+  const a={...old,name:n,balance:b,type:t,creditLimit:cl,bank:n,
+    iconMode:accountIconMode.value,iconKey:accountIconKey.value,iconColor:accountIconColor.value||"#c98f9d"};
   if(editingAccount===null)accounts.push(a);else accounts[editingAccount]=a;
   save(AK,accounts);close("accountOverlay");renderAccounts();renderDebts();home();
 };
