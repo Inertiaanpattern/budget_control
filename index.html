@@ -467,6 +467,23 @@ goalsList.onclick=e=>{
 };
 
 document.querySelectorAll(".overlay").forEach(o=>o.onclick=e=>{if(e.target===o)o.classList.remove("open")});
+const debugButton=document.createElement("button");
+debugButton.textContent="🔎 Проверить сохранение";
+debugButton.style.cssText="position:fixed;top:10px;right:10px;z-index:9999;padding:10px 12px;border:0;border-radius:12px;background:#302b2c;color:white;font-size:12px";
+document.body.appendChild(debugButton);
+
+debugButton.onclick=()=>{
+  const saved=localStorage.getItem(CK);
+  const data=localStorage.getItem(AK);
+
+  alert(
+    "ДИАГНОСТИКА BABKI\n\n"+
+    "Адрес страницы:\n"+location.href+"\n\n"+
+    "Хранилище лимитов существует: "+(saved!==null?"ДА":"НЕТ")+"\n\n"+
+    "Лимиты:\n"+(saved||"НЕТ СОХРАНЕННЫХ ДАННЫХ")+
+    "\n\nСчета сохранены: "+(data!==null?"ДА":"НЕТ")
+  );
+};
 </script>
 </body>
 </html>
