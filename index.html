@@ -473,6 +473,36 @@ debugButton.style.cssText="position:fixed;top:10px;right:10px;z-index:9999;paddi
 document.body.appendChild(debugButton);
 
 debugButton.onclick=()=>{
+  let text="ДИАГНОСТИКА BABKI\n\n";
+  text+="Адрес страницы:\n"+location.href+"\n\n";
+
+  text+="ВСЕ КЛЮЧИ LOCALSTORAGE:\n";
+
+  if(localStorage.length===0){
+    text+="— ХРАНИЛИЩЕ ПОЛНОСТЬЮ ПУСТО —";
+  }else{
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);
+      const value=localStorage.getItem(key);
+
+      text+="\n"+(i+1)+". "+key+"\n";
+      text+="   Длина данных: "+(value?value.length:0)+" символов\n";
+    }
+  }
+
+  text+="\n\nНаши ключи:\n";
+  text+="Лимиты (CK): "+(localStorage.getItem(CK)!==null?"ЕСТЬ":"НЕТ")+"\n";
+  text+="Счета (AK): "+(localStorage.getItem(AK)!==null?"ЕСТЬ":"НЕТ")+"\n";
+  text+="Операции (TY): "+(localStorage.getItem(TY)!==null?"ЕСТЬ":"НЕТ")+"\n";
+  text+="Категории (CK): "+(localStorage.getItem(CK)!==null?"ЕСТЬ":"НЕТ")+"\n";
+
+  alert(text);
+};
+debugButton.textContent="🔎 Проверить сохранение";
+debugButton.style.cssText="position:fixed;top:10px;right:10px;z-index:9999;padding:10px 12px;border:0;border-radius:12px;background:#302b2c;color:white;font-size:12px";
+document.body.appendChild(debugButton);
+
+debugButton.onclick=()=>{
   const saved=localStorage.getItem(CK);
   const data=localStorage.getItem(AK);
 
