@@ -4222,135 +4222,275 @@ transferButton.addEventListener(
 let transferDragTimer = null;
 let transferDragActive = false;
 let transferDragFrom = null;
-let transferDragPointerId = null;
 let transferDragHandle = null;
 let transferDragGhost = null;
 let transferDragTarget = null;
 let transferDragStartX = 0;
 let transferDragStartY = 0;
 
-function cancelAccountDrag(){
+function clearTransferDrag(){
   if(transferDragTimer){
     clearTimeout(transferDragTimer);
     transferDragTimer = null;
   }
+
   if(transferDragHandle)
     transferDragHandle.classList.remove("dragging");
+
   if(transferDragTarget)
     transferDragTarget.classList.remove("transfer-target");
+
   if(transferDragGhost){
     transferDragGhost.remove();
     transferDragGhost = null;
   }
+
   transferDragActive = false;
   transferDragFrom = null;
-  transferDragPointerId = null;
   transferDragHandle = null;
   transferDragTarget = null;
 }
 
-function activateAccountDrag(x,y){
+function getTransferTarget(x,y){
+  const el = document.elementFromPoint(x,y);
+  const row = el && el.closest(".account-row");
+
+  if(!row || !accountsList.contains(row))
+    return null;
+
+  const handle = row.querySelector(".transfer-handle");
+  if(!handle)
+    return null;
+
+  if(Number(handle.dataset.transferIndex) === transferDragFrom)
+    return null;
+
+  return row;
+}
+
+function startTransferDrag(){
+  if(!transferDragHandle)
+    return;
+
   transferDragActive = true;
-  if(transferDragHandle)
-    transferDragHandle.classList.add("dragging");
+  transferDragHandle.classList.add("dragging");
+
   transferDragGhost = transferDragHandle.cloneNode(true);
   transferDragGhost.classList.add("transfer-ghost");
-  transferDragGhost.classList.remove("dragging");
+  transferDragGhost.removeAttribute("data-transfer-index");
+
   document.body.appendChild(transferDragGhost);
-  moveAccountGhost(x,y);
+  moveTransferGhost(transferDragStartX,transferDragStartY);
 }
 
-function moveAccountGhost(x,y){
-  if(transferDragGhost){
-    transferDragGhost.style.left = x + "px";
-    transferDragGhost.style.top = y + "px";
-  }
-}
-
-accountsList.addEventListener("pointerdown", e => {
-  const handle = e.target.closest(".transfer-handle");
-  if(!handle) return;
-  if(e.pointerType === "mouse" && e.button !== 0) return;
-
-  const index = Number(handle.dataset.transferIndex);
-  if(!Number.isInteger(index)) return;
-
-  cancelAccountDrag();
-  transferDragFrom = index;
-  transferDragPointerId = e.pointerId;
-  transferDragHandle = handle;
-  transferDragStartX = e.clientX;
-  transferDragStartY = e.clientY;
-
-  try{ handle.setPointerCapture(e.pointerId); }catch(_){ }
-
-  transferDragTimer = setTimeout(() => {
-    activateAccountDrag(transferDragStartX,transferDragStartY);
-  },450);
-});
-
-accountsList.addEventListener("pointermove", e => {
-  if(transferDragPointerId !== e.pointerId) return;
-
-  const dx = e.clientX - transferDragStartX;
-  const dy = e.clientY - transferDragStartY;
-
-  if(!transferDragActive){
-    if(Math.hypot(dx,dy) > 10)
-      cancelAccountDrag();
+function moveTransferGhost(x,y){
+  if(!transferDragGhost)
     return;
-  }
 
-  e.preventDefault();
-  moveAccountGhost(e.clientX,e.clientY);
+  transferDragGhost.style.left = x + "px";
+  transferDragGhost.style.top = y + "px";
 
-  const element = document.elementFromPoint(e.clientX,e.clientY);
-  const row = element && element.closest(".account-row");
+  const row = getTransferTarget(x,y);
 
   if(transferDragTarget && transferDragTarget !== row)
     transferDragTarget.classList.remove("transfer-target");
 
-  transferDragTarget =
-    row && accountsList.contains(row) ? row : null;
-
-  if(transferDragTarget){
-    const handle = transferDragTarget.querySelector(".transfer-handle");
-    if(!handle || Number(handle.dataset.transferIndex) === transferDragFrom)
-      transferDragTarget = null;
-  }
+  transferDragTarget = row;
 
   if(transferDragTarget)
     transferDragTarget.classList.add("transfer-target");
-});
+}
 
-accountsList.addEventListener("pointerup", e => {
-  if(transferDragPointerId !== e.pointerId) return;
+function finishTransferDrag(x,y){
+  if(!transferDragHandle)
+    return;
 
   const wasActive = transferDragActive;
   const from = transferDragFrom;
-  const target = transferDragTarget;
+  const row = wasActive ? getTransferTarget(x,y) : null;
+
   let to = null;
 
-  if(target){
-    const handle = target.querySelector(".transfer-handle");
-    if(handle) to = Number(handle.dataset.transferIndex);
+  if(row){
+    const handle = row.querySelector(".transfer-handle");
+    if(handle)
+      to = Number(handle.dataset.transferIndex);
   }
 
-  cancelAccountDrag();
+  clearTransferDrag();
 
-  if(wasActive && Number.isInteger(from) && Number.isInteger(to) && from !== to)
+  if(
+    wasActive &&
+    Number.isInteger(from) &&
+    Number.isInteger(to) &&
+    from !== to
+  ){
     prepareTransfer(from,to);
-});
+  }
+}
 
-accountsList.addEventListener("pointercancel", e => {
-  if(transferDragPointerId === e.pointerId)
-    cancelAccountDrag();
-});
+/* iPhone / touch */
+accountsList.addEventListener(
+  "touchstart",
+  e => {
+    const handle = e.target.closest(".transfer-handle");
+    if(!handle || e.touches.length !== 1)
+      return;
 
-accountsList.addEventListener("contextmenu", e => {
-  if(e.target.closest(".transfer-handle"))
+    const touch = e.touches[0];
+    const index = Number(handle.dataset.transferIndex);
+
+    if(!Number.isInteger(index))
+      return;
+
+    clearTransferDrag();
+
+    transferDragFrom = index;
+    transferDragHandle = handle;
+    transferDragStartX = touch.clientX;
+    transferDragStartY = touch.clientY;
+
+    transferDragTimer = setTimeout(
+      startTransferDrag,
+      500
+    );
+  },
+  {passive:false}
+);
+
+accountsList.addEventListener(
+  "touchmove",
+  e => {
+    if(!transferDragHandle || e.touches.length !== 1)
+      return;
+
+    const touch = e.touches[0];
+    const dx = touch.clientX - transferDragStartX;
+    const dy = touch.clientY - transferDragStartY;
+    const distance = Math.hypot(dx,dy);
+
+    /*
+      Пока долгое нажатие еще не состоялось,
+      небольшие движения пальца НЕ отменяют перевод.
+      Это важно на iPhone: палец почти всегда чуть двигается.
+    */
+    if(!transferDragActive){
+      if(distance > 35)
+        clearTransferDrag();
+      return;
+    }
+
     e.preventDefault();
-});
+    moveTransferGhost(touch.clientX,touch.clientY);
+  },
+  {passive:false}
+);
+
+accountsList.addEventListener(
+  "touchend",
+  e => {
+    if(!transferDragHandle)
+      return;
+
+    const touch =
+      e.changedTouches && e.changedTouches[0];
+
+    if(!touch){
+      clearTransferDrag();
+      return;
+    }
+
+    finishTransferDrag(
+      touch.clientX,
+      touch.clientY
+    );
+  },
+  {passive:false}
+);
+
+accountsList.addEventListener(
+  "touchcancel",
+  () => clearTransferDrag(),
+  {passive:true}
+);
+
+/* Компьютер */
+accountsList.addEventListener(
+  "pointerdown",
+  e => {
+    if(e.pointerType === "touch")
+      return;
+
+    const handle = e.target.closest(".transfer-handle");
+    if(!handle || (e.pointerType === "mouse" && e.button !== 0))
+      return;
+
+    const index = Number(handle.dataset.transferIndex);
+    if(!Number.isInteger(index))
+      return;
+
+    clearTransferDrag();
+
+    transferDragFrom = index;
+    transferDragHandle = handle;
+    transferDragStartX = e.clientX;
+    transferDragStartY = e.clientY;
+
+    transferDragTimer = setTimeout(
+      startTransferDrag,
+      500
+    );
+  }
+);
+
+accountsList.addEventListener(
+  "pointermove",
+  e => {
+    if(e.pointerType === "touch" || !transferDragHandle)
+      return;
+
+    const dx = e.clientX - transferDragStartX;
+    const dy = e.clientY - transferDragStartY;
+
+    if(!transferDragActive){
+      if(Math.hypot(dx,dy) > 20)
+        clearTransferDrag();
+      return;
+    }
+
+    e.preventDefault();
+    moveTransferGhost(e.clientX,e.clientY);
+  }
+);
+
+accountsList.addEventListener(
+  "pointerup",
+  e => {
+    if(e.pointerType === "touch" || !transferDragHandle)
+      return;
+
+    finishTransferDrag(
+      e.clientX,
+      e.clientY
+    );
+  }
+);
+
+accountsList.addEventListener(
+  "pointercancel",
+  e => {
+    if(e.pointerType !== "touch")
+      clearTransferDrag();
+  }
+);
+
+accountsList.addEventListener(
+  "contextmenu",
+  e => {
+    if(e.target.closest(".transfer-handle"))
+      e.preventDefault();
+  }
+);
 
 closeTransferButton.addEventListener(
   "click",
