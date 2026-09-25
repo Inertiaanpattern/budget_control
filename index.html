@@ -871,8 +871,8 @@ button{
       Дневной лимит смотрит на реальные деньги на дебетовых счетах
       и количество дней до следующей выплаты.
       Кредитные карты не увеличивают доступный баланс.
-      Долги и цели показываются отдельно, чтобы не путать их
-      с уже потраченными деньгами.
+      Цели автоматически добавляются в лимит выбранной категории
+      на текущий месяц. Долги не увеличивают доступный бюджет.
     </div>
   </div>
 </section>
@@ -1223,6 +1223,16 @@ button{
       placeholder="0"
     >
 
+    <div class="field-label">Категория бюджета</div>
+
+    <select id="goalCategory" class="select">
+      <option value="">Выбери категорию</option>
+    </select>
+
+    <div class="small-note">
+      Babki автоматически добавит нужную сумму на эту цель в лимит категории текущего месяца.
+    </div>
+
     <div class="field-label">Уже накоплено</div>
 
     <input
@@ -1461,9 +1471,62 @@ const catSpent=n=>
     );
 
 
+function goalMonthsForCurrentBudget(g){
+
+  if(!g || !g.date)
+    return 1;
+
+  const targetDate=new Date(g.date+"T00:00:00");
+  const targetYear=targetDate.getFullYear();
+  const targetMonth=targetDate.getMonth();
+
+  const monthDiff=
+    (targetYear-budgetYear)*12+
+    (targetMonth-budgetMonth);
+
+  /*
+     День покупки не считаем отдельным месяцем накопления:
+     если купить в декабре, деньги должны быть собраны к началу декабря.
+     Поэтому сентябрь -> декабрь = 3 месяца накопления.
+  */
+  return Math.max(1,monthDiff);
+}
+
+
+function goalMonthlyContribution(g){
+
+  const target=Number(g?.target)||0;
+  const saved=Number(g?.saved)||0;
+  const left=Math.max(0,target-saved);
+
+  if(left<=0)
+    return 0;
+
+  return left/goalMonthsForCurrentBudget(g);
+}
+
+
+function goalCategoryAddition(categoryName){
+
+  return goals
+    .filter(g=>g.category===categoryName)
+    .reduce(
+      (sum,g)=>sum+goalMonthlyContribution(g),
+      0
+    );
+}
+
+
+function effectivePlan(c){
+
+  return Number(c?.plan||0)+
+    goalCategoryAddition(c?.name);
+}
+
+
 const budget=()=>
   categories.reduce(
-    (s,x)=>s+Number(x.plan||0),
+    (s,x)=>s+effectivePlan(x),
     0
   );
 
@@ -1697,14 +1760,15 @@ function renderCats(){
 
     const s=catSpent(c.name);
 
-    const r=c.plan-s;
+    const plan=effectivePlan(c);
+    const r=plan-s;
 
-    const p=c.plan
+    const p=plan
       ?Math.min(
         100,
         Math.max(
           0,
-          s/c.plan*100
+          s/plan*100
         )
       )
       :0;
@@ -1724,7 +1788,7 @@ function renderCats(){
           </div>
 
           <div class="category-limit">
-            Лимит: ${money(c.plan)}
+            Лимит: ${money(plan)}
           </div>
 
         </div>
@@ -1746,7 +1810,7 @@ function renderCats(){
       </div>
 
       <div class="category-meta">
-        ${money(s)} из ${money(c.plan)}
+        ${money(s)} из ${money(plan)}
       </div>
 
       <div class="category-bar">
@@ -2068,29 +2132,8 @@ function renderGoals(){
             )
             :0;
 
-        let monthly=left;
-
-        if(g.date){
-
-          const days=
-            Math.max(
-              1,
-              Math.ceil(
-                (
-                  new Date(
-                    g.date+"T00:00:00"
-                  )-new Date()
-                )/86400000
-              )
-            );
-
-          monthly=
-            left/
-            Math.max(
-              1,
-              Math.ceil(days/30)
-            );
-        }
+        const monthly=
+          goalMonthlyContribution(g);
 
 
         return `
@@ -2105,11 +2148,12 @@ function renderGoals(){
                 </div>
 
                 <div class="goal-meta">
-                  ${g.link?`🔗 ${g.link}`:""}
+                  ${g.category?`Категория: ${g.category}`:"Категория не выбрана"}
                   ${g.date
                     ?` · до ${new Date(g.date+"T00:00:00").toLocaleDateString("ru-RU")}`
                     :""
                   }
+                  ${g.link?` · 🔗 ${g.link}`:""}
                 </div>
 
               </div>
@@ -2360,6 +2404,14 @@ function populate(){
         c=>`<option>${c.name}</option>`
       )
       .join("");
+
+  goalCategory.innerHTML=
+    `<option value="">Выбери категорию</option>`+
+    categories
+      .map(
+        c=>`<option value="${c.name}">${c.name}</option>`
+      )
+      .join("");
 }
 
 
@@ -2372,7 +2424,7 @@ function calc(){
 
   const r=
     c
-      ?c.plan-catSpent(c.name)
+      ?effectivePlan(c)-catSpent(c.name)
       :0;
 
   categoryRemaining.textContent=
@@ -4751,6 +4803,7 @@ addGoalButton.addEventListener(
     goalLink.value = "";
     goalTarget.value = "";
     goalSaved.value = "";
+    goalCategory.value = "";
     goalDate.value = "";
 
     open("goalOverlay");
@@ -4791,6 +4844,9 @@ goalsList.addEventListener("click", e => {
     goalSaved.value =
       g.saved || 0;
 
+    goalCategory.value =
+      g.category || "";
+
     goalDate.value =
       g.date || "";
 
@@ -4809,6 +4865,9 @@ goalsList.addEventListener("click", e => {
     save(GK,goals);
 
     renderGoals();
+    renderCats();
+    updateFinance();
+    home();
 
   }
 
@@ -4825,6 +4884,15 @@ saveGoalButton.addEventListener(
   "click",
   () => {
 
+    const category=
+      goalCategory.value || "";
+
+    if(!category){
+      alert("Выбери категорию бюджета для цели.");
+      goalCategory.focus();
+      return;
+    }
+
     const g={
 
       name:
@@ -4835,10 +4903,12 @@ saveGoalButton.addEventListener(
         goalLink.value.trim(),
 
       target:
-        Number(goalTarget.value || 0),
+        Math.max(0,Number(goalTarget.value || 0)),
 
       saved:
-        Number(goalSaved.value || 0),
+        Math.max(0,Number(goalSaved.value || 0)),
+
+      category,
 
       date:
         goalDate.value || null
@@ -4858,6 +4928,9 @@ saveGoalButton.addEventListener(
     close("goalOverlay");
 
     renderGoals();
+    renderCats();
+    updateFinance();
+    home();
 
   }
 );
