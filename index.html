@@ -863,6 +863,9 @@ button{
         placeholder="0 ₽"
       >
 
+      <div class="field-label">Счёт, с которого списаны деньги</div>
+      <select id="expenseAccount" class="select"></select>
+
       <div class="field-label">Категория</div>
 
       <select id="categorySelect" class="select"></select>
@@ -3713,6 +3716,15 @@ quickExpenseButton.addEventListener("click", () => {
 
   amount.value = "";
 
+  expenseAccount.innerHTML =
+    accounts.length
+      ? accounts.map((a,i) =>
+          `<option value="${i}">
+            ${a.name || "Счёт"} · ${money(a.balance || 0)}
+          </option>`
+        ).join("")
+      : `<option value="">Сначала добавь счёт</option>`;
+
   open("expenseOverlay");
 
   setTimeout(() => {
@@ -3828,18 +3840,39 @@ saveExpenseButton.addEventListener("click", () => {
   if(!category)
     return;
 
+  const accountIndex =
+    Number(expenseAccount.value);
+
+  if(
+    !Number.isInteger(accountIndex) ||
+    !accounts[accountIndex]
+  ){
+    alert("Выбери счёт, с которого списаны деньги.");
+    return;
+  }
+
+  const account =
+    accounts[accountIndex];
+
+  account.balance =
+    Number(account.balance || 0) - value;
+
   transactions.push({
     id:Date.now(),
     type:"expense",
     amount:value,
     category,
+    account:account.id,
     date:today()
   });
 
+  save(AK,accounts);
   save(TY,transactions);
 
   close("expenseOverlay");
 
+  renderAccounts();
+  renderDebts();
   renderCats();
   home();
 
