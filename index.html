@@ -326,23 +326,41 @@ button{
   background:#eee
 }
 
-/* Долгое нажатие на иконку счёта для перевода */
-.transfer-handle{
-  width:50px;
-  height:50px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:16px;
+/* Весь счёт можно зажать и перетащить для перевода */
+.account-row{
+  position:relative;
   touch-action:none;
   user-select:none;
   -webkit-user-select:none;
   -webkit-touch-callout:none;
   cursor:grab;
-  transition:transform .15s, opacity .15s, background .15s
+  transition:background .18s, box-shadow .18s, transform .18s, opacity .18s;
 }
-.transfer-handle:active{cursor:grabbing}
-.transfer-handle.dragging{transform:scale(1.08);opacity:.72}
+.account-row:active{cursor:grabbing}
+.account-row.transfer-source{
+  background:var(--pp);
+  border-radius:16px;
+  padding-left:10px;
+  padding-right:10px;
+  margin-left:-10px;
+  margin-right:-10px;
+  box-shadow:0 0 0 2px var(--pink), 0 8px 22px #00000014;
+}
+.account-row.transfer-source::after{
+  content:"⇄  Перетащите на другой счёт";
+  position:absolute;
+  right:8px;
+  top:-10px;
+  padding:5px 9px;
+  border-radius:10px;
+  background:var(--dark);
+  color:#fff;
+  font-size:10px;
+  font-weight:700;
+  pointer-events:none;
+  white-space:nowrap;
+  box-shadow:0 4px 12px #0002;
+}
 .account-row.transfer-target{
   background:var(--pp);
   border-radius:16px;
@@ -350,18 +368,24 @@ button{
   padding-right:10px;
   margin-left:-10px;
   margin-right:-10px;
+  box-shadow:0 0 0 2px var(--pink);
 }
 .transfer-ghost{
   position:fixed;
   z-index:9999;
-  width:50px;
-  height:50px;
-  border-radius:16px;
   pointer-events:none;
-  transform:translate(-50%,-50%) scale(1.08);
-  opacity:.9;
-  box-shadow:0 8px 24px #0002
+  transform:translate(-50%,-50%) scale(.96);
+  opacity:.94;
+  box-shadow:0 12px 30px #0003;
+  background:#fff;
+  border-radius:16px;
+  padding:0 10px;
+  min-width:260px;
+  max-width:calc(100vw - 30px);
 }
+.transfer-ghost .small-button{display:none}
+.transfer-ghost .account-row{padding:13px 0 !important; margin:0 !important; border:0 !important; box-shadow:none !important; background:transparent !important}
+.transfer-ghost::after{display:none}
 
 .bank-fallback{
   display:flex;
@@ -1814,15 +1838,15 @@ function renderAccounts(){
             :0;
 
         return `
-          <div class="account-row">
+          <div
+            class="account-row"
+            data-transfer-index="${i}"
+            title="Зажмите счёт и перетащите его на другой счёт для перевода"
+          >
 
             <div class="account-main">
 
-              <div
-                class="transfer-handle"
-                data-transfer-index="${i}"
-                title="Зажмите и перетащите для перевода"
-              >
+              <div>
                 ${logoFor(a)}
               </div>
 
@@ -4218,11 +4242,11 @@ transferButton.addEventListener(
   () => prepareTransfer()
 );
 
-/* ДОЛГОЕ НАЖАТИЕ + ПЕРЕТАСКИВАНИЕ ИКОНКИ СЧЁТА */
+/* ДОЛГОЕ НАЖАТИЕ + ПЕРЕТАСКИВАНИЕ ВСЕГО СЧЁТА */
 let transferDragTimer = null;
 let transferDragActive = false;
 let transferDragFrom = null;
-let transferDragHandle = null;
+let transferDragRow = null;
 let transferDragGhost = null;
 let transferDragTarget = null;
 let transferDragStartX = 0;
@@ -4234,8 +4258,8 @@ function clearTransferDrag(){
     transferDragTimer = null;
   }
 
-  if(transferDragHandle)
-    transferDragHandle.classList.remove("dragging");
+  if(transferDragRow)
+    transferDragRow.classList.remove("transfer-source");
 
   if(transferDragTarget)
     transferDragTarget.classList.remove("transfer-target");
@@ -4247,7 +4271,7 @@ function clearTransferDrag(){
 
   transferDragActive = false;
   transferDragFrom = null;
-  transferDragHandle = null;
+  transferDragRow = null;
   transferDragTarget = null;
 }
 
@@ -4258,26 +4282,26 @@ function getTransferTarget(x,y){
   if(!row || !accountsList.contains(row))
     return null;
 
-  const handle = row.querySelector(".transfer-handle");
-  if(!handle)
-    return null;
+  const index = Number(row.dataset.transferIndex);
 
-  if(Number(handle.dataset.transferIndex) === transferDragFrom)
+  if(!Number.isInteger(index) || index === transferDragFrom)
     return null;
 
   return row;
 }
 
 function startTransferDrag(){
-  if(!transferDragHandle)
+  if(!transferDragRow)
     return;
 
   transferDragActive = true;
-  transferDragHandle.classList.add("dragging");
+  transferDragRow.classList.add("transfer-source");
 
-  transferDragGhost = transferDragHandle.cloneNode(true);
+  transferDragGhost = transferDragRow.cloneNode(true);
   transferDragGhost.classList.add("transfer-ghost");
+  transferDragGhost.classList.remove("transfer-source");
   transferDragGhost.removeAttribute("data-transfer-index");
+  transferDragGhost.style.width = Math.min(390, Math.max(260, transferDragRow.getBoundingClientRect().width)) + "px";
 
   document.body.appendChild(transferDragGhost);
   moveTransferGhost(transferDragStartX,transferDragStartY);
@@ -4302,20 +4326,13 @@ function moveTransferGhost(x,y){
 }
 
 function finishTransferDrag(x,y){
-  if(!transferDragHandle)
+  if(!transferDragRow)
     return;
 
   const wasActive = transferDragActive;
   const from = transferDragFrom;
   const row = wasActive ? getTransferTarget(x,y) : null;
-
-  let to = null;
-
-  if(row){
-    const handle = row.querySelector(".transfer-handle");
-    if(handle)
-      to = Number(handle.dataset.transferIndex);
-  }
+  const to = row ? Number(row.dataset.transferIndex) : null;
 
   clearTransferDrag();
 
@@ -4329,30 +4346,43 @@ function finishTransferDrag(x,y){
   }
 }
 
+function beginTransferFromEvent(target,x,y){
+  const row = target && target.closest(".account-row");
+
+  /* Кнопка редактирования остаётся обычной кнопкой. */
+  if(!row || target.closest(".small-button"))
+    return;
+
+  const index = Number(row.dataset.transferIndex);
+
+  if(!Number.isInteger(index))
+    return;
+
+  clearTransferDrag();
+
+  transferDragFrom = index;
+  transferDragRow = row;
+  transferDragStartX = x;
+  transferDragStartY = y;
+
+  transferDragTimer = setTimeout(
+    startTransferDrag,
+    500
+  );
+}
+
 /* iPhone / touch */
 accountsList.addEventListener(
   "touchstart",
   e => {
-    const handle = e.target.closest(".transfer-handle");
-    if(!handle || e.touches.length !== 1)
+    if(e.touches.length !== 1)
       return;
 
     const touch = e.touches[0];
-    const index = Number(handle.dataset.transferIndex);
-
-    if(!Number.isInteger(index))
-      return;
-
-    clearTransferDrag();
-
-    transferDragFrom = index;
-    transferDragHandle = handle;
-    transferDragStartX = touch.clientX;
-    transferDragStartY = touch.clientY;
-
-    transferDragTimer = setTimeout(
-      startTransferDrag,
-      500
+    beginTransferFromEvent(
+      e.target,
+      touch.clientX,
+      touch.clientY
     );
   },
   {passive:false}
@@ -4361,7 +4391,7 @@ accountsList.addEventListener(
 accountsList.addEventListener(
   "touchmove",
   e => {
-    if(!transferDragHandle || e.touches.length !== 1)
+    if(!transferDragRow || e.touches.length !== 1)
       return;
 
     const touch = e.touches[0];
@@ -4369,13 +4399,9 @@ accountsList.addEventListener(
     const dy = touch.clientY - transferDragStartY;
     const distance = Math.hypot(dx,dy);
 
-    /*
-      Пока долгое нажатие еще не состоялось,
-      небольшие движения пальца НЕ отменяют перевод.
-      Это важно на iPhone: палец почти всегда чуть двигается.
-    */
     if(!transferDragActive){
-      if(distance > 35)
+      /* Пока ждём долгое нажатие, не отменяем его из-за мелкого движения пальца. */
+      if(distance > 45)
         clearTransferDrag();
       return;
     }
@@ -4389,7 +4415,7 @@ accountsList.addEventListener(
 accountsList.addEventListener(
   "touchend",
   e => {
-    if(!transferDragHandle)
+    if(!transferDragRow)
       return;
 
     const touch =
@@ -4421,24 +4447,13 @@ accountsList.addEventListener(
     if(e.pointerType === "touch")
       return;
 
-    const handle = e.target.closest(".transfer-handle");
-    if(!handle || (e.pointerType === "mouse" && e.button !== 0))
+    if(e.pointerType === "mouse" && e.button !== 0)
       return;
 
-    const index = Number(handle.dataset.transferIndex);
-    if(!Number.isInteger(index))
-      return;
-
-    clearTransferDrag();
-
-    transferDragFrom = index;
-    transferDragHandle = handle;
-    transferDragStartX = e.clientX;
-    transferDragStartY = e.clientY;
-
-    transferDragTimer = setTimeout(
-      startTransferDrag,
-      500
+    beginTransferFromEvent(
+      e.target,
+      e.clientX,
+      e.clientY
     );
   }
 );
@@ -4446,7 +4461,7 @@ accountsList.addEventListener(
 accountsList.addEventListener(
   "pointermove",
   e => {
-    if(e.pointerType === "touch" || !transferDragHandle)
+    if(e.pointerType === "touch" || !transferDragRow)
       return;
 
     const dx = e.clientX - transferDragStartX;
@@ -4466,7 +4481,7 @@ accountsList.addEventListener(
 accountsList.addEventListener(
   "pointerup",
   e => {
-    if(e.pointerType === "touch" || !transferDragHandle)
+    if(e.pointerType === "touch" || !transferDragRow)
       return;
 
     finishTransferDrag(
@@ -4487,7 +4502,7 @@ accountsList.addEventListener(
 accountsList.addEventListener(
   "contextmenu",
   e => {
-    if(e.target.closest(".transfer-handle"))
+    if(e.target.closest(".account-row"))
       e.preventDefault();
   }
 );
