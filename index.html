@@ -326,6 +326,43 @@ button{
   background:#eee
 }
 
+/* Долгое нажатие на иконку счёта для перевода */
+.transfer-handle{
+  width:50px;
+  height:50px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:16px;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+  cursor:grab;
+  transition:transform .15s, opacity .15s, background .15s
+}
+.transfer-handle:active{cursor:grabbing}
+.transfer-handle.dragging{transform:scale(1.08);opacity:.72}
+.account-row.transfer-target{
+  background:var(--pp);
+  border-radius:16px;
+  padding-left:10px;
+  padding-right:10px;
+  margin-left:-10px;
+  margin-right:-10px;
+}
+.transfer-ghost{
+  position:fixed;
+  z-index:9999;
+  width:50px;
+  height:50px;
+  border-radius:16px;
+  pointer-events:none;
+  transform:translate(-50%,-50%) scale(1.08);
+  opacity:.9;
+  box-shadow:0 8px 24px #0002
+}
+
 .bank-fallback{
   display:flex;
   align-items:center;
@@ -1781,7 +1818,11 @@ function renderAccounts(){
 
             <div class="account-main">
 
-              <div>
+              <div
+                class="transfer-handle"
+                data-transfer-index="${i}"
+                title="Зажмите и перетащите для перевода"
+              >
                 ${logoFor(a)}
               </div>
 
@@ -4146,40 +4187,170 @@ saveAccountButton.addEventListener(
 
 /* ПЕРЕВОД */
 
+function prepareTransfer(fromIndex=null, toIndex=null){
+  if(accounts.length < 2){
+    alert("Для перевода нужно минимум два счёта.");
+    return;
+  }
+
+  transferFrom.innerHTML =
+    accounts.map((a,i) =>
+      `<option value="${i}">${a.name || "Счёт"}</option>`
+    ).join("");
+
+  transferTo.innerHTML =
+    accounts.map((a,i) =>
+      `<option value="${i}">${a.name || "Счёт"}</option>`
+    ).join("");
+
+  if(fromIndex !== null)
+    transferFrom.value = String(fromIndex);
+
+  if(toIndex !== null && toIndex !== fromIndex)
+    transferTo.value = String(toIndex);
+
+  transferAmount.value = "";
+  open("transferOverlay");
+}
+
 transferButton.addEventListener(
   "click",
-  () => {
-
-    if(accounts.length < 2){
-
-      alert(
-        "Для перевода нужно минимум два счёта."
-      );
-
-      return;
-    }
-
-    transferFrom.innerHTML =
-      accounts.map((a,i) =>
-        `<option value="${i}">
-          ${a.name || "Счёт"}
-        </option>`
-      ).join("");
-
-    transferTo.innerHTML =
-      accounts.map((a,i) =>
-        `<option value="${i}">
-          ${a.name || "Счёт"}
-        </option>`
-      ).join("");
-
-    transferAmount.value = "";
-
-    open("transferOverlay");
-
-  }
+  () => prepareTransfer()
 );
 
+/* ДОЛГОЕ НАЖАТИЕ + ПЕРЕТАСКИВАНИЕ ИКОНКИ СЧЁТА */
+let transferDragTimer = null;
+let transferDragActive = false;
+let transferDragFrom = null;
+let transferDragPointerId = null;
+let transferDragHandle = null;
+let transferDragGhost = null;
+let transferDragTarget = null;
+let transferDragStartX = 0;
+let transferDragStartY = 0;
+
+function cancelAccountDrag(){
+  if(transferDragTimer){
+    clearTimeout(transferDragTimer);
+    transferDragTimer = null;
+  }
+  if(transferDragHandle)
+    transferDragHandle.classList.remove("dragging");
+  if(transferDragTarget)
+    transferDragTarget.classList.remove("transfer-target");
+  if(transferDragGhost){
+    transferDragGhost.remove();
+    transferDragGhost = null;
+  }
+  transferDragActive = false;
+  transferDragFrom = null;
+  transferDragPointerId = null;
+  transferDragHandle = null;
+  transferDragTarget = null;
+}
+
+function activateAccountDrag(x,y){
+  transferDragActive = true;
+  if(transferDragHandle)
+    transferDragHandle.classList.add("dragging");
+  transferDragGhost = transferDragHandle.cloneNode(true);
+  transferDragGhost.classList.add("transfer-ghost");
+  transferDragGhost.classList.remove("dragging");
+  document.body.appendChild(transferDragGhost);
+  moveAccountGhost(x,y);
+}
+
+function moveAccountGhost(x,y){
+  if(transferDragGhost){
+    transferDragGhost.style.left = x + "px";
+    transferDragGhost.style.top = y + "px";
+  }
+}
+
+accountsList.addEventListener("pointerdown", e => {
+  const handle = e.target.closest(".transfer-handle");
+  if(!handle) return;
+  if(e.pointerType === "mouse" && e.button !== 0) return;
+
+  const index = Number(handle.dataset.transferIndex);
+  if(!Number.isInteger(index)) return;
+
+  cancelAccountDrag();
+  transferDragFrom = index;
+  transferDragPointerId = e.pointerId;
+  transferDragHandle = handle;
+  transferDragStartX = e.clientX;
+  transferDragStartY = e.clientY;
+
+  try{ handle.setPointerCapture(e.pointerId); }catch(_){ }
+
+  transferDragTimer = setTimeout(() => {
+    activateAccountDrag(transferDragStartX,transferDragStartY);
+  },450);
+});
+
+accountsList.addEventListener("pointermove", e => {
+  if(transferDragPointerId !== e.pointerId) return;
+
+  const dx = e.clientX - transferDragStartX;
+  const dy = e.clientY - transferDragStartY;
+
+  if(!transferDragActive){
+    if(Math.hypot(dx,dy) > 10)
+      cancelAccountDrag();
+    return;
+  }
+
+  e.preventDefault();
+  moveAccountGhost(e.clientX,e.clientY);
+
+  const element = document.elementFromPoint(e.clientX,e.clientY);
+  const row = element && element.closest(".account-row");
+
+  if(transferDragTarget && transferDragTarget !== row)
+    transferDragTarget.classList.remove("transfer-target");
+
+  transferDragTarget =
+    row && accountsList.contains(row) ? row : null;
+
+  if(transferDragTarget){
+    const handle = transferDragTarget.querySelector(".transfer-handle");
+    if(!handle || Number(handle.dataset.transferIndex) === transferDragFrom)
+      transferDragTarget = null;
+  }
+
+  if(transferDragTarget)
+    transferDragTarget.classList.add("transfer-target");
+});
+
+accountsList.addEventListener("pointerup", e => {
+  if(transferDragPointerId !== e.pointerId) return;
+
+  const wasActive = transferDragActive;
+  const from = transferDragFrom;
+  const target = transferDragTarget;
+  let to = null;
+
+  if(target){
+    const handle = target.querySelector(".transfer-handle");
+    if(handle) to = Number(handle.dataset.transferIndex);
+  }
+
+  cancelAccountDrag();
+
+  if(wasActive && Number.isInteger(from) && Number.isInteger(to) && from !== to)
+    prepareTransfer(from,to);
+});
+
+accountsList.addEventListener("pointercancel", e => {
+  if(transferDragPointerId === e.pointerId)
+    cancelAccountDrag();
+});
+
+accountsList.addEventListener("contextmenu", e => {
+  if(e.target.closest(".transfer-handle"))
+    e.preventDefault();
+});
 
 closeTransferButton.addEventListener(
   "click",
