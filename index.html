@@ -499,16 +499,35 @@ debugButton.onclick=()=>{
   alert(text);
 };
 
-  const data=localStorage.getItem(AK);
+  debugButton.onclick=()=>{
+  let text="ДИАГНОСТИКА BABKI\n\n";
+  text+="Адрес страницы:\n"+location.href+"\n\n";
 
-  alert(
-    "ДИАГНОСТИКА BABKI\n\n"+ 
-    "Адрес страницы:\n"+location.href+"\n\n"+
-    "Хранилище лимитов существует: "+(saved!==null?"ДА":"НЕТ")+"\n\n"+
-    "Лимиты:\n"+(saved||"НЕТ СОХРАНЕННЫХ ДАННЫХ")+
-    "\n\nСчета сохранены: "+(data!==null?"ДА":"НЕТ")
-  );
+  text+="ВСЕ КЛЮЧИ LOCALSTORAGE:\n";
+
+  if(localStorage.length===0){
+    text+="— ХРАНИЛИЩЕ ПОЛНОСТЬЮ ПУСТО —";
+  }else{
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);
+      const value=localStorage.getItem(key);
+
+      text+="\n"+(i+1)+". "+key+"\n";
+      text+="   Длина данных: "+(value?value.length:0)+" символов\n";
+    }
+  }
+
+  text+="\n\nНаши ключи:\n";
+  text+="Лимиты (CK): "+(localStorage.getItem(CK)!==null?"ЕСТЬ":"НЕТ")+"\n";
+  text+="Счета (AK): "+(localStorage.getItem(AK)!==null?"ЕСТЬ":"НЕТ")+"\n";
+  text+="Операции (TY): "+(localStorage.getItem(TY)!==null?"ЕСТЬ":"НЕТ")+"\n";
+  text+="Категории (CK): "+(localStorage.getItem(CK)!==null?"ЕСТЬ":"НЕТ")+"\n";
+
+  alert(text);
 };
+</script>
+</body>
+</html>
 </script>
 </body>
 </html>
