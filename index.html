@@ -2706,4 +2706,17 @@ async function syncWithGoogle(){
     console.error(error);
 
     setSyncStatus(
-      "Не удалось синхронизировать:
+      "Не удалось синхронизировать: " +
+      (error.message || error),
+      "error"
+    );
+
+  }finally{
+
+    syncButton.disabled=false;
+
+    syncButton.textContent=
+      "↻ Синхронизировать с Google";
+
+  }
+}
