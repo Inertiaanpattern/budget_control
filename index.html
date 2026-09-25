@@ -1195,7 +1195,7 @@ button{
   <div class="modal">
 
     <div class="modal-header">
-      <div class="modal-title">Долг</div>
+      <div class="modal-title" id="debtModalTitle">Новый долг</div>
       <button class="close" id="closeDebtButton">×</button>
     </div>
 
@@ -1309,6 +1309,7 @@ let debts=[];
 let editingCategory=null;
 let editingAccount=null;
 let editingGoal=null;
+let editingDebt=null;
 let financeType=null;
 let dateType=null;
 
@@ -1945,12 +1946,20 @@ function renderDebts(){
                 ${
                   d.kind!=="credit"
                     ?`
-                      <button
-                        class="danger-button"
-                        data-di="${i}"
-                      >
-                        Удалить
-                      </button>
+                      <div class="actions-row">
+                        <button
+                          class="inline-button"
+                          data-dei="${i}"
+                        >
+                          ✎ Изменить
+                        </button>
+                        <button
+                          class="danger-button"
+                          data-di="${i}"
+                        >
+                          Удалить
+                        </button>
+                      </div>
                     `
                     :""
                 }
@@ -4529,9 +4538,12 @@ addDebtButton.addEventListener(
   "click",
   () => {
 
+    editingDebt = null;
+    debtModalTitle.textContent = "Новый долг";
     manualDebtName.value = "";
     manualDebtAmount.value = "";
     manualDebtDueDate.value = "";
+    saveDebtButton.textContent = "Сохранить долг";
 
     open("debtOverlay");
 
@@ -4552,7 +4564,9 @@ saveDebtButton.addEventListener(
     const d={
 
       id:
-        Date.now(),
+        editingDebt !== null
+          ? debts[editingDebt].id
+          : Date.now(),
 
       name:
         manualDebtName.value.trim() ||
@@ -4573,7 +4587,11 @@ saveDebtButton.addEventListener(
     if(d.amount <= 0)
       return;
 
-    debts.push(d);
+    if(editingDebt === null){
+      debts.push(d);
+    }else{
+      debts[editingDebt] = d;
+    }
 
     save(
       DK,
@@ -4581,40 +4599,95 @@ saveDebtButton.addEventListener(
     );
 
     close("debtOverlay");
-
     renderDebts();
 
   }
 );
 
 
-/* УДАЛЕНИЕ ДОЛГА */
+/* РЕДАКТИРОВАНИЕ / УДАЛЕНИЕ ДОЛГА */
 
 debtsList.addEventListener(
   "click",
   e => {
 
-    const button =
+    const editButton =
+      e.target.closest("[data-dei]");
+
+    const deleteButton =
       e.target.closest("[data-di]");
 
-    if(!button)
+    /* Для списка all сначала идут кредитные карты,
+       затем личные долги. Поэтому находим реальный объект
+       по его id, а не просто по позиции. */
+    const all =
+      accounts
+        .filter(
+          a =>
+            a.type === "credit" &&
+            Number(a.balance || 0) < 0
+        )
+        .map(a => ({
+          id:"card_"+a.name,
+          kind:"credit"
+        }))
+        .concat(
+          debts.map(d => ({
+            ...d,
+            kind:"personal"
+          }))
+        );
+
+    if(editButton){
+      const item =
+        all[Number(editButton.dataset.dei)];
+
+      if(!item || item.kind !== "personal")
+        return;
+
+      editingDebt =
+        debts.findIndex(d => d.id === item.id);
+
+      if(editingDebt < 0)
+        return;
+
+      const d = debts[editingDebt];
+
+      debtModalTitle.textContent = "Изменить долг";
+      manualDebtName.value = d.name || "";
+      manualDebtAmount.value = d.amount || 0;
+      manualDebtDueDate.value = d.dueDate || "";
+      saveDebtButton.textContent = "Сохранить изменения";
+
+      open("debtOverlay");
       return;
+    }
 
-    const i =
-      Number(button.dataset.di);
+    if(deleteButton){
+      const item =
+        all[Number(deleteButton.dataset.di)];
 
-    debts.splice(i,1);
+      if(!item || item.kind !== "personal")
+        return;
 
-    save(
-      DK,
-      debts
-    );
+      const i =
+        debts.findIndex(d => d.id === item.id);
 
-    renderDebts();
+      if(i < 0)
+        return;
+
+      debts.splice(i,1);
+
+      save(
+        DK,
+        debts
+      );
+
+      renderDebts();
+    }
 
   }
 );
-
 
 /* GOOGLE */
 
