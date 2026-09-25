@@ -986,12 +986,14 @@ button{
 
     <div class="field-label">Реальный остаток</div>
 
-    <input
-      id="accountBalanceInput"
-      class="text-input"
-      type="number"
-      inputmode="decimal"
-    >
+   <input
+  id="accountBalanceInput"
+  class="text-input"
+  type="text"
+  inputmode="text"
+  autocomplete="off"
+  placeholder="Например, -15700"
+>
 
     <div id="creditFields" style="display:none">
 
@@ -4098,8 +4100,12 @@ saveAccountButton.addEventListener(
       type:
         accountTypeInput.value,
 
-      balance:
-        Number(accountBalanceInput.value || 0),
+     balance:
+  parseFloat(
+    String(accountBalanceInput.value || "0")
+      .replace(/\s/g,"")
+      .replace(",", ".")
+  ) || 0,
 
       bank:
         accountNameInput.value.trim() ||
