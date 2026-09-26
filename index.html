@@ -1004,6 +1004,13 @@ button{
 
 
   <div class="card">
+    <div class="card-title">Фактические выплаты</div>
+    <div class="small-note">Если выплата отличается от плановой, зафиксируй фактическую сумму. Дневной лимит будет учитывать ее вместо плановой суммы.</div>
+    <button class="secondary" id="addPaymentFactButton" style="margin-top:12px">＋ Зафиксировать выплату</button>
+  </div>
+
+
+  <div class="card">
     <div class="card-title">История бюджета</div>
     <div class="small-note">Здесь отдельно сохраняются месячные лимиты и считается средний месячный лимит по сохраненным месяцам.</div>
     <button class="secondary" id="openBudgetHistoryButton" style="margin-top:12px">Посмотреть прошлые месяцы</button>
@@ -1336,6 +1343,28 @@ button{
 </div>
 
 
+<!-- ФАКТИЧЕСКАЯ ВЫПЛАТА -->
+
+<div class="overlay" id="paymentFactOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Фактическая выплата</div>
+      <button class="close" id="closePaymentFactButton">×</button>
+    </div>
+    <div class="field-label">Тип выплаты</div>
+    <select id="paymentFactType" class="select">
+      <option value="salary">Основная зарплата</option>
+      <option value="advance">Аванс</option>
+    </select>
+    <div class="field-label" style="margin-top:12px">Дата выплаты</div>
+    <input id="paymentFactDate" class="text-input" type="date">
+    <div class="field-label" style="margin-top:12px">Сколько реально пришло</div>
+    <input id="paymentFactAmount" class="amount" type="number" inputmode="decimal" placeholder="0 ₽">
+    <button class="primary" id="savePaymentFactButton" style="margin-top:15px">Сохранить выплату</button>
+  </div>
+</div>
+
+
 <!-- ПЕРЕВОД -->
 
 <div class="overlay" id="transferOverlay">
@@ -1544,11 +1573,12 @@ const GOOGLE_SYNC_URL=
 const budgetYear=2026;
 const budgetMonth=8;
 
-let salary=140000;
+let salary=114000;
 let advance=26000;
 let advanceDate=null;
 let mainSalaryDate=15;
 let savingsPercent=20;
+let paymentFacts={};
 
 let transactions=[];
 let accounts=[];
@@ -1793,6 +1823,12 @@ function load(){
   }
 
 
+  const pf=read("babki_payment_facts_v1",{});
+
+  if(pf && typeof pf==="object")
+    paymentFacts=pf;
+
+
   const sp=read(SK,null);
 
   if(Number.isFinite(+sp)){
@@ -1908,12 +1944,7 @@ function updateFinance(){
       :"не указана";
 
   mainSalaryDisplay.textContent=
-    money(
-      Math.max(
-        0,
-        salary-advance
-      )
-    );
+    money(salary);
 
   mainSalaryDateDisplay.textContent=
     mainSalaryDate+" числа";
@@ -1921,12 +1952,16 @@ function updateFinance(){
   savingsPercentDisplay.textContent=
     savingsPercent+"%";
 
+  const monthlyIncome=
+    Math.max(0,Number(salary||0)) +
+    Math.max(0,Number(advance||0));
+
   budgetSalary.textContent=
-    money(salary);
+    money(monthlyIncome);
 
   budgetSavings.textContent=
     money(
-      salary*savingsPercent/100
+      monthlyIncome*savingsPercent/100
     );
 
   budgetTotal.textContent=
@@ -2454,7 +2489,7 @@ function paymentSchedule(){
   const advanceAmount=Math.max(0,Number(advance)||0);
   const salaryAmount=Math.max(
     0,
-    Number(salary||0)-advanceAmount
+    Number(salary||0)
   );
 
   /* salary — общий доход за месяц, advance — часть этой суммы. */
@@ -2471,6 +2506,18 @@ function paymentSchedule(){
   return schedule;
 }
 
+
+function paymentFactKey(date,type){
+  return `${date.toISOString().slice(0,10)}|${type}`;
+}
+
+function paymentAmount(payment){
+  if(!payment || !payment.date) return Number(payment?.amount||0);
+  const fact=paymentFacts[paymentFactKey(payment.date,payment.type)];
+  return fact && Number.isFinite(Number(fact.amount))
+    ? Math.max(0,Number(fact.amount))
+    : Math.max(0,Number(payment.amount||0));
+}
 
 function paymentPeriodInfo(){
 
@@ -2521,7 +2568,7 @@ function paymentPeriodInfo(){
     if(Number.isFinite(Number(mainSalaryDate)) && Number(mainSalaryDate)>0)
       addPrevious(
         mainSalaryDate,
-        Math.max(0,Number(salary||0)-Number(advance||0)),
+        Math.max(0,Number(salary||0)),
         "salary"
       );
 
@@ -2578,7 +2625,7 @@ function periodDailyLimit(){
      из дневного лимита, иначе одна и та же сумма учитывалась бы дважды. */
   const periodIncome=
     info.previous
-      ?Number(info.previous.amount||0)
+      ?paymentAmount(info.previous)
       :0;
 
   const savingsPart=
@@ -2893,6 +2940,28 @@ function calc(){
     (m<0?" danger":"");
 }
 
+
+function openPaymentFact(){
+  paymentFactDate.value=today();
+  paymentFactType.value="salary";
+  paymentFactAmount.value="";
+  open("paymentFactOverlay");
+}
+
+function savePaymentFact(){
+  const dateValue=paymentFactDate.value;
+  const type=paymentFactType.value;
+  const amount=Math.max(0,Number(paymentFactAmount.value||0));
+  if(!dateValue || !amount){
+    alert("Укажи дату и фактическую сумму выплаты.");
+    return;
+  }
+  const date=new Date(dateValue+"T00:00:00");
+  paymentFacts[paymentFactKey(date,type)]={date:dateValue,type,amount};
+  save("babki_payment_facts_v1",paymentFacts);
+  close("paymentFactOverlay");
+  home();
+}
 
 function editFin(t){
 
@@ -5186,6 +5255,13 @@ saveTransferButton.addEventListener(
 
   }
 );
+
+
+/* ФАКТИЧЕСКИЕ ВЫПЛАТЫ */
+
+addPaymentFactButton.addEventListener("click",openPaymentFact);
+closePaymentFactButton.addEventListener("click",()=>close("paymentFactOverlay"));
+savePaymentFactButton.addEventListener("click",savePaymentFact);
 
 
 /* ФИНАНСЫ */
