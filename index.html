@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Бабки в шапку</title>
+<title>Babki</title>
 <link rel="icon" type="image/png" href="money_pouch_icon.png">
 <link rel="apple-touch-icon" href="money_pouch_icon.png">
 
@@ -112,6 +112,81 @@ button{
   font-size:15px;
   font-weight:750;
   margin-bottom:14px
+}
+
+.clickable-card{
+  cursor:pointer;
+  transition:transform .15s, box-shadow .15s, background .15s
+}
+.clickable-card:active{
+  transform:scale(.985);
+  box-shadow:0 5px 18px #00000010
+}
+.card-hint{
+  float:right;
+  color:var(--pink);
+  font-size:11px;
+  font-weight:700
+}
+
+.calculator-result{
+  margin-top:10px;
+  padding:12px 14px;
+  border-radius:14px;
+  background:var(--pp);
+  font-size:18px;
+  font-weight:800
+}
+
+.calc-wrap{
+  display:flex;
+  align-items:center;
+  gap:7px
+}
+.calc-wrap > input{
+  flex:1;
+  min-width:0
+}
+.calc-button{
+  flex:0 0 40px;
+  width:40px;
+  height:40px;
+  border:0;
+  border-radius:12px;
+  background:var(--pp);
+  color:#64484f;
+  font-size:18px;
+  font-weight:800
+}
+
+.history-filter.active{
+  background:var(--pink);
+  color:#fff
+}
+.history-date{
+  font-size:12px;
+  color:var(--muted);
+  margin:12px 0 5px
+}
+.history-row{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:11px 0;
+  border-bottom:1px solid var(--border)
+}
+.history-row:last-child{border-bottom:0}
+.history-main{flex:1;min-width:0}
+.history-name{font-size:14px;font-weight:700}
+.history-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.history-amount{font-weight:800;white-space:nowrap}
+.history-amount.income{color:#66856f}
+.history-amount.expense{color:var(--danger)}
+.history-edit{
+  width:32px;height:32px;border:0;border-radius:10px;background:var(--pp);color:#64484f;font-size:15px
+}
+.history-delete{
+  width:32px;height:32px;border:0;border-radius:10px;background:#f5dddd;color:var(--danger);font-size:15px
 }
 
 .stat-row{
@@ -640,63 +715,6 @@ button{
 .sync-status.error{
   color:var(--danger)
 }
-
-.history-filters{
-  display:flex;
-  gap:7px;
-  overflow:auto;
-  padding-bottom:3px;
-  margin-bottom:10px
-}
-.history-filter{
-  flex:0 0 auto;
-  border:1px solid var(--border);
-  background:#fff;
-  color:var(--muted);
-  border-radius:12px;
-  padding:9px 12px;
-  font-size:12px;
-  font-weight:700
-}
-.history-filter.active{
-  background:var(--pp);
-  color:#64484f;
-  border-color:#e1c3ca
-}
-.history-date{
-  font-size:12px;
-  color:var(--muted);
-  font-weight:800;
-  padding:12px 0 5px
-}
-.history-row{
-  display:flex;
-  align-items:center;
-  gap:11px;
-  padding:12px 0;
-  border-bottom:1px solid var(--border);
-  cursor:pointer
-}
-.history-row:last-child{border-bottom:0}
-.history-dot{
-  width:38px;
-  height:38px;
-  border-radius:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:var(--pp);
-  font-weight:800
-}
-.history-main{flex:1;min-width:0}
-.history-name{font-size:14px;font-weight:750}
-.history-meta{font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.history-amount{font-size:14px;font-weight:800;white-space:nowrap}
-.history-amount.expense{color:var(--text)}
-.history-amount.income{color:#66856f}
-.clickable-card{cursor:pointer;transition:transform .12s,box-shadow .12s}
-.clickable-card:active{transform:scale(.99);box-shadow:0 0 0 2px var(--pl)}
-.back-button{margin-bottom:10px}
 </style>
 </head>
 
@@ -706,7 +724,6 @@ button{
 
 <section id="home" class="screen active">
   <div class="header">
-    <div class="header-title">Бабки</div>
     <div class="month">Сентябрь 2026</div>
   </div>
 
@@ -738,8 +755,8 @@ button{
 
   <div style="height:18px"></div>
 
-  <div class="card clickable-card" id="monthlySpendingCard" title="Открыть историю операций">
-    <div class="card-title">Сентябрь · история операций</div>
+  <div class="card clickable-card" id="monthlyHistoryCard">
+    <div class="card-title">Сентябрь <span class="card-hint">История операций →</span></div>
     <div class="stat-row">
       <span>План расходов</span>
       <span class="stat-value" id="monthPlan">0 ₽</span>
@@ -842,14 +859,35 @@ button{
 </section>
 
 
-<section id="history" class="screen">
-  <button class="inline-button back-button" id="historyBackButton">← Назад</button>
-  <div class="section-heading" id="historyTitle">История операций</div>
+<section id="budgetHistory" class="screen">
+  <div class="section-heading-row">
+    <div class="section-heading">История бюджета</div>
+    <button class="inline-button" id="backFromBudgetHistoryButton">← Назад</button>
+  </div>
 
-  <div class="history-filters">
-    <button class="history-filter active" data-history-filter="all">Все</button>
-    <button class="history-filter" data-history-filter="expense">Расходы</button>
-    <button class="history-filter" data-history-filter="income">Поступления</button>
+  <div class="card">
+    <div class="card-title">Средний месячный лимит за 2026</div>
+    <div class="stat-row">
+      <span>Средний план расходов</span>
+      <span class="stat-value" id="budgetYearAverage">0 ₽</span>
+    </div>
+    <div class="small-note" id="budgetHistoryNote"></div>
+  </div>
+
+  <div class="card" id="budgetHistoryList"></div>
+</section>
+
+
+<section id="history" class="screen">
+  <div class="section-heading-row">
+    <div class="section-heading" id="historyTitle">История операций</div>
+    <button class="inline-button" id="backFromHistoryButton">← Назад</button>
+  </div>
+
+  <div class="actions-row history-filters">
+    <button class="inline-button history-filter active" data-history-filter="all">Все</button>
+    <button class="inline-button history-filter" data-history-filter="expense">Расходы</button>
+    <button class="inline-button history-filter" data-history-filter="income">Поступления</button>
   </div>
 
   <div class="card" id="historyList"></div>
@@ -924,6 +962,13 @@ button{
 
 
   <div class="card">
+    <div class="card-title">История бюджета</div>
+    <div class="small-note">Здесь отдельно сохраняются месячные лимиты и считается средний месячный лимит по сохраненным месяцам.</div>
+    <button class="secondary" id="openBudgetHistoryButton" style="margin-top:12px">Посмотреть прошлые месяцы</button>
+  </div>
+
+
+  <div class="card">
     <div class="card-title">Синхронизация</div>
 
     <button class="primary" id="syncButton">
@@ -962,6 +1007,13 @@ button{
       <button class="close" id="closeExpenseButton">×</button>
     </div>
 
+    <div class="field-label">Дата операции</div>
+    <input
+      id="operationDate"
+      class="text-input"
+      type="date"
+    >
+
     <div id="incomeFields" style="display:none">
 
       <input
@@ -971,9 +1023,6 @@ button{
         inputmode="decimal"
         placeholder="0 ₽"
       >
-
-      <div class="field-label">Дата операции</div>
-      <input id="operationDate" class="text-input" type="date">
 
       <div class="field-label">Источник дохода</div>
       <input
@@ -997,9 +1046,6 @@ button{
         inputmode="decimal"
         placeholder="0 ₽"
       >
-
-      <div class="field-label">Дата операции</div>
-      <input id="operationDateExpense" class="text-input" type="date">
 
       <div class="field-label">Счёт, с которого списаны деньги</div>
       <select id="expenseAccount" class="select"></select>
@@ -1059,9 +1105,29 @@ button{
       <button class="primary" id="saveExpenseButton">
         Записать
       </button>
-      <button class="danger-button" id="deleteOperationButton" style="display:none;width:100%;margin-top:9px">Удалить операцию</button>
+      <button class="danger-button" id="deleteOperationButton" style="display:none;margin-top:8px;width:100%">
+        Удалить операцию
+      </button>
     </div>
 
+  </div>
+</div>
+
+
+<!-- КАЛЬКУЛЯТОР -->
+
+<div class="overlay" id="calculatorOverlay">
+  <div class="modal calculator-modal">
+    <div class="modal-header">
+      <div class="modal-title">Калькулятор</div>
+      <button class="close" id="closeCalculatorButton">×</button>
+    </div>
+    <div class="small-note" style="margin:0 0 10px">Можно считать прямо здесь: например, 15000+700 или 25000/3.</div>
+    <input id="calculatorInput" class="amount" type="text" inputmode="decimal" placeholder="0+0">
+    <div class="calculator-result" id="calculatorResult">= 0 ₽</div>
+    <div class="modal-button">
+      <button class="primary" id="applyCalculatorButton">Подставить результат</button>
+    </div>
   </div>
 </div>
 
@@ -1448,14 +1514,17 @@ let goals=[];
 let debts=[];
 
 let editingCategory=null;
-let editingTransactionIndex=null;
-let historyAccountId=null;
-let historyFilter="all";
 let editingAccount=null;
 let editingGoal=null;
 let editingDebt=null;
 let financeType=null;
 let dateType=null;
+let editingTransactionIndex=null;
+let historyAccountId=null;
+let historyFilter="all";
+let historyReturnScreen="home";
+let calculatorTarget=null;
+let suppressAccountClickUntil=0;
 
 
 const categories=[
@@ -1718,7 +1787,69 @@ function saveCategories(){
       )
     }
   );
+
+  saveBudgetHistorySnapshot();
 }
+
+const BH="babki_budget_history_v1";
+
+function budgetMonthKey(){
+  return `${budgetYear}-${String(budgetMonth+1).padStart(2,"0")}`;
+}
+
+function readBudgetHistory(){
+  const h=read(BH,{});
+  return h && typeof h==="object" ? h : {};
+}
+
+function saveBudgetHistorySnapshot(){
+  const h=readBudgetHistory();
+  const key=budgetMonthKey();
+  h[key]={
+    year:budgetYear,
+    month:budgetMonth+1,
+    categories:Object.fromEntries(
+      categories.map(c=>[c.name,Number(c.plan||0)])
+    ),
+    total:categories.reduce((s,c)=>s+Number(c.plan||0),0)
+  };
+  save(BH,h);
+}
+
+function renderBudgetHistory(){
+  saveBudgetHistorySnapshot();
+  const h=readBudgetHistory();
+  const keys=Object.keys(h).filter(k=>String(k).startsWith(String(budgetYear)+"-")).sort();
+  const totals=keys.map(k=>Number(h[k]?.total||0));
+  const avg=totals.length ? totals.reduce((s,v)=>s+v,0)/totals.length : 0;
+  budgetYearAverage.textContent=money(avg);
+  budgetHistoryNote.textContent=
+    totals.length
+      ? `Сохранено месяцев: ${totals.length}. Среднее считается только по месяцам, которые Babki успела сохранить.`
+      : "Пока нет сохраненных месяцев.";
+
+  if(!keys.length){
+    budgetHistoryList.innerHTML='<div class="empty">История лимитов пока пустая.</div>';
+    return;
+  }
+
+  budgetHistoryList.innerHTML=keys.slice().reverse().map(key=>{
+    const m=h[key]||{};
+    const label=new Intl.DateTimeFormat("ru-RU",{month:"long",year:"numeric"})
+      .format(new Date(Number(m.year)||budgetYear,(Number(m.month)||1)-1,1));
+    const cats=Object.entries(m.categories||{})
+      .filter(([,v])=>Number(v||0)>0)
+      .sort((a,b)=>Number(b[1])-Number(a[1]))
+      .map(([name,v])=>`<div class="stat-row"><span>${name}</span><span class="stat-value">${money(v)}</span></div>`)
+      .join("");
+    return `<div class="history-month-block">
+      <div class="card-title" style="margin-bottom:6px;text-transform:capitalize">${label}</div>
+      <div class="stat-row"><span>Всего лимитов</span><span class="stat-value">${money(m.total||0)}</span></div>
+      ${cats ? `<div class="small-note" style="margin:8px 0 2px">По категориям</div>${cats}` : ""}
+    </div>`;
+  }).join('<div style="height:10px"></div>');
+}
+
 
 
 function updateFinance(){
@@ -1922,8 +2053,7 @@ function renderAccounts(){
           <div
             class="account-row"
             data-transfer-index="${i}"
-            data-account-history="${i}"
-            title="Нажмите для истории · зажмите и перетащите для перевода"
+            title="Зажмите счёт и перетащите его на другой счёт для перевода"
           >
 
             <div class="account-main">
@@ -2316,64 +2446,6 @@ function periodDailyLimit(){
 }
 
 
-function accountIndexForTransaction(t){
-  if(!t) return -1;
-  const ref=t.account;
-  let i=accounts.findIndex(a=>a.id===ref);
-  if(i<0 && typeof ref==="string") i=accounts.findIndex(a=>a.name===ref);
-  if(i<0 && Number.isInteger(ref)) i=ref;
-  return i;
-}
-
-function accountNameForTransaction(t){
-  const i=accountIndexForTransaction(t);
-  return i>=0 && accounts[i] ? (accounts[i].name||"Счёт") : "Счёт удалён";
-}
-
-function formatHistoryDate(value){
-  if(!value) return "Без даты";
-  const parts=String(value).split("-");
-  if(parts.length===3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
-  return value;
-}
-
-function openHistory(accountId=null){
-  historyAccountId=accountId;
-  historyFilter="all";
-  document.querySelectorAll("[data-history-filter]").forEach(b=>b.classList.toggle("active",b.dataset.historyFilter==="all"));
-  renderHistory();
-  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
-  document.getElementById("history").classList.add("active");
-  document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));
-}
-
-function renderHistory(){
-  const list=historyList;
-  let items=transactions.map((t,i)=>({...t,__index:i}));
-  if(historyAccountId!==null) items=items.filter(t=>t.account===historyAccountId || accountIndexForTransaction(t)===historyAccountId);
-  if(historyFilter!=="all") items=items.filter(t=>t.type===historyFilter);
-  items.sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")) || Number(b.__index)-Number(a.__index));
-  historyTitle.textContent=historyAccountId!==null && accounts[historyAccountId] ? `История · ${accounts[historyAccountId].name||"Счёт"}` : "История операций";
-  if(!items.length){list.innerHTML='<div class="empty">Операций пока нет.</div>';return;}
-  let html="", lastDate=null;
-  items.forEach(t=>{
-    if(t.date!==lastDate){html+=`<div class="history-date">${formatHistoryDate(t.date)}</div>`;lastDate=t.date;}
-    const income=t.type==="income";
-    const name=income ? (t.name||"Доход") : (t.category||"Расход");
-    const meta=income ? `Поступление · ${accountNameForTransaction(t)}` : `${t.category||"Расход"} · ${accountNameForTransaction(t)}`;
-    html+=`<div class="history-row" data-ti="${t.__index}">
-      <div class="history-dot">${income?"＋":"−"}</div>
-      <div class="history-main"><div class="history-name">${name}</div><div class="history-meta">${meta}</div></div>
-      <div class="history-amount ${income?"income":"expense"}">${income?"+":"−"}${money(t.amount||0)}</div>
-    </div>`;
-  });
-  list.innerHTML=html;
-}
-
-function recalcAccountBalancesFromTransactions(){
-  // Балансы уже хранятся в счетах, поэтому при редактировании сначала отменяем старое движение, затем применяем новое.
-}
-
 function home(){
 
   const b=budget();
@@ -2441,6 +2513,123 @@ function home(){
 }
 
 
+function accountNameById(id){
+  const a=accounts.find(x=>String(x.id)===String(id));
+  return a?.name || "Счёт удален";
+}
+
+function formatHistoryDate(date){
+  if(!date) return "Без даты";
+  const d=new Date(date+"T00:00:00");
+  if(Number.isNaN(d.getTime())) return date;
+  return d.toLocaleDateString("ru-RU",{day:"numeric",month:"long",year:"numeric"});
+}
+
+function openHistory(accountId=null, returnScreen="home"){
+  historyAccountId=accountId;
+  historyReturnScreen=returnScreen;
+  historyFilter="all";
+  historyTitle.textContent=accountId===null ? "История операций" : `История: ${accountNameById(accountId)}`;
+  document.querySelectorAll(".history-filter").forEach(b=>b.classList.toggle("active",b.dataset.historyFilter==="all"));
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById("history").classList.add("active");
+  renderHistory();
+}
+
+function renderHistory(){
+  const rows=transactions
+    .map((x,index)=>({x,index}))
+    .filter(({x})=>historyAccountId===null || String(x.account)===String(historyAccountId))
+    .filter(({x})=>historyFilter==="all" || x.type===historyFilter)
+    .sort((a,b)=>String(b.x.date||"").localeCompare(String(a.x.date||"")) || b.index-a.index);
+
+  if(!rows.length){
+    historyList.innerHTML='<div class="empty">Операций пока нет.</div>';
+    return;
+  }
+
+  let lastDate=null;
+  const html=[];
+  rows.forEach(({x,index})=>{
+    if(x.date!==lastDate){
+      lastDate=x.date;
+      html.push(`<div class="history-date">${formatHistoryDate(x.date)}</div>`);
+    }
+    const isIncome=x.type==="income";
+    const title=isIncome ? (x.name||"Доход") : (x.category||"Расход");
+    const amount=(isIncome?"+":"−")+money(x.amount||0);
+    html.push(`<div class="history-row" data-history-index="${index}">
+      <div class="history-main">
+        <div class="history-name">${title}</div>
+        <div class="history-meta">${accountNameById(x.account)}</div>
+      </div>
+      <div class="history-amount ${isIncome?"income":"expense"}">${amount}</div>
+      <button class="history-edit" data-history-edit="${index}" title="Изменить">✎</button>
+      <button class="history-delete" data-history-delete="${index}" title="Удалить">×</button>
+    </div>`);
+  });
+  historyList.innerHTML=html.join("");
+}
+
+function reverseTransactionEffect(t){
+  const a=accounts.find(x=>String(x.id)===String(t.account));
+  if(!a) return;
+  const v=Number(t.amount||0);
+  if(t.type==="income") a.balance=Number(a.balance||0)-v;
+  else if(t.type==="expense") a.balance=Number(a.balance||0)+v;
+}
+
+function applyTransactionEffect(t){
+  const a=accounts.find(x=>String(x.id)===String(t.account));
+  if(!a) return false;
+  const v=Number(t.amount||0);
+  if(t.type==="income") a.balance=Number(a.balance||0)+v;
+  else if(t.type==="expense") a.balance=Number(a.balance||0)-v;
+  return true;
+}
+
+function editTransaction(index){
+  const t=transactions[index];
+  if(!t) return;
+  editingTransactionIndex=index;
+  operationModalTitle.textContent=t.type==="income" ? "Изменить доход" : "Изменить расход";
+  operationDate.value=t.date||today();
+  incomeFields.style.display=t.type==="income" ? "block" : "none";
+  expenseFields.style.display=t.type==="income" ? "none" : "block";
+  debtFields.style.display="none";
+  deleteOperationButton.style.display="block";
+  saveExpenseButton.textContent="Сохранить изменения";
+
+  if(t.type==="income"){
+    incomeAmount.value=t.amount||0;
+    incomeName.value=t.name||"";
+    incomeAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}" ${String(a.id)===String(t.account)?"selected":""}>${a.name||"Счёт"} · ${money(a.balance||0)}</option>`).join("");
+  }else{
+    amount.value=t.amount||0;
+    expenseAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}" ${String(a.id)===String(t.account)?"selected":""}>${a.name||"Счёт"} · ${money(a.balance||0)}</option>`).join("");
+    categorySelect.value=t.category||categories[0]?.name||"";
+    calc();
+  }
+  open("expenseOverlay");
+}
+
+function deleteTransaction(index){
+  const t=transactions[index];
+  if(!t) return;
+  if(!confirm("Удалить эту операцию?")) return;
+  reverseTransactionEffect(t);
+  transactions.splice(index,1);
+  save(AK,accounts);
+  save(TY,transactions);
+  close("expenseOverlay");
+  editingTransactionIndex=null;
+  renderAccounts();
+  renderDebts();
+  renderCats();
+  home();
+  renderHistory();
+}
+
 function screen(id,b){
 
   document
@@ -2474,6 +2663,12 @@ function screen(id,b){
 
   if(id==="goals")
     renderGoals();
+
+  if(id==="budgetHistory")
+    renderBudgetHistory();
+
+  if(id==="history")
+    renderHistory();
 
   home();
 }
@@ -3918,64 +4113,11 @@ document
   });
 
 
-monthlySpendingCard.addEventListener("click",()=>openHistory());
-historyBackButton.addEventListener("click",()=>screen("home",document.querySelector('.nav button[data-screen="home"]')));
-
-document.querySelectorAll("[data-history-filter]").forEach(button=>{
-  button.addEventListener("click",()=>{
-    historyFilter=button.dataset.historyFilter;
-    document.querySelectorAll("[data-history-filter]").forEach(b=>b.classList.toggle("active",b===button));
-    renderHistory();
-  });
-});
-
-historyList.addEventListener("click",e=>{
-  const row=e.target.closest("[data-ti]");
-  if(!row) return;
-  openEditTransaction(Number(row.dataset.ti));
-});
-
-function openEditTransaction(index){
-  const t=transactions[index];
-  if(!t) return;
-  editingTransactionIndex=index;
-  operationModalTitle.textContent=t.type==="income"?"Редактировать доход":"Редактировать расход";
-  incomeFields.style.display=t.type==="income"?"block":"none";
-  expenseFields.style.display=t.type==="expense"?"block":"none";
-  debtFields.style.display="none";
-  deleteOperationButton.style.display="block";
-  saveExpenseButton.textContent="Сохранить изменения";
-  const date=t.date||today();
-  operationDate.value=date;
-  operationDateExpense.value=date;
-  if(t.type==="income") {
-    incomeAmount.value=t.amount||"";
-    incomeName.value=t.name||"Доход";
-    incomeAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}">${a.name||"Счёт"} · ${money(a.balance||0)}</option>`).join("");
-    const ai=accountIndexForTransaction(t); if(ai>=0) incomeAccount.value=String(ai);
-  } else {
-    amount.value=t.amount||"";
-    expenseAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}">${a.name||"Счёт"} · ${money(a.balance||0)}</option>`).join("");
-    const ai=accountIndexForTransaction(t); if(ai>=0) expenseAccount.value=String(ai);
-    populate();
-    categorySelect.value=t.category||"";
-    calc();
-  }
-  open("expenseOverlay");
-}
-
-function closeOperationModal(){
-  close("expenseOverlay");
-  editingTransactionIndex=null;
-  deleteOperationButton.style.display="none";
-}
-
 /* РАСХОД / ДОХОД */
 
 quickExpenseButton.addEventListener("click", () => {
 
   editingTransactionIndex=null;
-  deleteOperationButton.style.display="none";
   operationModalTitle.textContent = "Расход";
 
   incomeFields.style.display = "none";
@@ -3983,9 +4125,10 @@ quickExpenseButton.addEventListener("click", () => {
   debtFields.style.display = "none";
 
   saveExpenseButton.textContent = "Записать";
+  deleteOperationButton.style.display = "none";
+  operationDate.value = today();
 
   amount.value = "";
-  operationDateExpense.value=today();
 
   expenseAccount.innerHTML =
     accounts.length
@@ -4008,7 +4151,6 @@ quickExpenseButton.addEventListener("click", () => {
 quickIncomeButton.addEventListener("click", () => {
 
   editingTransactionIndex=null;
-  deleteOperationButton.style.display="none";
   operationModalTitle.textContent = "Доход";
 
   incomeFields.style.display = "block";
@@ -4016,10 +4158,11 @@ quickIncomeButton.addEventListener("click", () => {
   debtFields.style.display = "none";
 
   saveExpenseButton.textContent = "Записать";
+  deleteOperationButton.style.display = "none";
+  operationDate.value = today();
 
   incomeAmount.value = "";
   incomeName.value = "";
-  operationDate.value=today();
 
   incomeAccount.innerHTML =
     accounts.length
@@ -4039,7 +4182,49 @@ quickIncomeButton.addEventListener("click", () => {
 });
 
 
-closeExpenseButton.addEventListener("click", closeOperationModal);
+closeExpenseButton.addEventListener("click", () => {
+  close("expenseOverlay");
+});
+
+deleteOperationButton.addEventListener("click", () => {
+  if(editingTransactionIndex!==null)
+    deleteTransaction(editingTransactionIndex);
+});
+
+monthlyHistoryCard.addEventListener("click", () => openHistory(null,"home"));
+
+historyList.addEventListener("click", e => {
+  const edit=e.target.closest("[data-history-edit]");
+  if(edit){ editTransaction(Number(edit.dataset.historyEdit)); return; }
+  const del=e.target.closest("[data-history-delete]");
+  if(del){ deleteTransaction(Number(del.dataset.historyDelete)); }
+});
+
+document.querySelectorAll(".history-filter").forEach(button => {
+  button.addEventListener("click", () => {
+    historyFilter=button.dataset.historyFilter;
+    document.querySelectorAll(".history-filter").forEach(b=>b.classList.toggle("active",b===button));
+    renderHistory();
+  });
+});
+
+backFromHistoryButton.addEventListener("click", () => {
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById(historyReturnScreen).classList.add("active");
+  if(historyReturnScreen==="accounts") renderAccounts();
+  home();
+});
+
+openBudgetHistoryButton.addEventListener("click", () => {
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById("budgetHistory").classList.add("active");
+  renderBudgetHistory();
+});
+
+backFromBudgetHistoryButton.addEventListener("click", () => {
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById("settings").classList.add("active");
+});
 
 
 amount.addEventListener("input", calc);
@@ -4051,69 +4236,93 @@ categorySelect.addEventListener("change", calc);
 
 saveExpenseButton.addEventListener("click", () => {
 
-  const editing = editingTransactionIndex !== null;
+  const isIncome = incomeFields.style.display !== "none";
+  const value = Number((isIncome ? incomeAmount.value : amount.value) || 0);
+  if(value <= 0) return;
 
-  /* ДОХОД */
-  if(incomeFields.style.display !== "none"){
-    const value=Number(incomeAmount.value||0);
-    if(value<=0) return;
-    const accountIndex=Number(incomeAccount.value);
-    if(!Number.isInteger(accountIndex)||!accounts[accountIndex]){alert("Выбери счёт, куда пришли деньги.");return;}
-    const date=operationDate.value||today();
-    const updated={id:editing?transactions[editingTransactionIndex].id:Date.now(),type:"income",amount:value,name:incomeName.value.trim()||"Доход",account:accounts[accountIndex].id,date};
-    if(editing){
-      const old=transactions[editingTransactionIndex];
-      const oldAi=accountIndexForTransaction(old);
-      if(oldAi>=0) accounts[oldAi].balance=Number(accounts[oldAi].balance||0)-Number(old.amount||0);
-      accounts[accountIndex].balance=Number(accounts[accountIndex].balance||0)+value;
-      transactions[editingTransactionIndex]=updated;
-    }else{
-      accounts[accountIndex].balance=Number(accounts[accountIndex].balance||0)+value;
-      transactions.push(updated);
+  const date = operationDate.value || today();
+  let accountIndex;
+  let category;
+  let name;
+
+  if(isIncome){
+    accountIndex=Number(incomeAccount.value);
+    name=incomeName.value.trim() || "Доход";
+  }else{
+    category=categorySelect.value;
+    accountIndex=Number(expenseAccount.value);
+    if(!category) return;
+  }
+
+  if(!Number.isInteger(accountIndex) || !accounts[accountIndex]){
+    alert(isIncome ? "Выбери счёт, куда пришли деньги." : "Выбери счёт, с которого списаны деньги.");
+    return;
+  }
+
+  /* РЕДАКТИРОВАНИЕ СУЩЕСТВУЮЩЕЙ ОПЕРАЦИИ */
+  if(editingTransactionIndex!==null){
+    const old=transactions[editingTransactionIndex];
+    if(!old) return;
+
+    reverseTransactionEffect(old);
+
+    const updated={
+      ...old,
+      amount:value,
+      account:accounts[accountIndex].id,
+      date
+    };
+
+    if(isIncome) updated.name=name;
+    else updated.category=category;
+
+    updated.type=isIncome ? "income" : "expense";
+
+    if(!applyTransactionEffect(updated)){
+      applyTransactionEffect(old);
+      return;
     }
-    save(AK,accounts);save(TY,transactions);
-    closeOperationModal();renderAccounts();renderDebts();renderCats();home();
+
+    transactions[editingTransactionIndex]=updated;
+    save(AK,accounts);
+    save(TY,transactions);
+    close("expenseOverlay");
+    editingTransactionIndex=null;
+    deleteOperationButton.style.display="none";
+    renderAccounts();
+    renderDebts();
+    renderCats();
+    home();
     if(document.getElementById("history").classList.contains("active")) renderHistory();
     return;
   }
 
-  /* РАСХОД */
-  const value=Number(amount.value||0);
-  if(value<=0) return;
-  const category=categorySelect.value;
-  if(!category) return;
-  const accountIndex=Number(expenseAccount.value);
-  if(!Number.isInteger(accountIndex)||!accounts[accountIndex]){alert("Выбери счёт, с которого списаны деньги.");return;}
-  const date=operationDateExpense.value||today();
-  const updated={id:editing?transactions[editingTransactionIndex].id:Date.now(),type:"expense",amount:value,category,account:accounts[accountIndex].id,date};
-  if(editing){
-    const old=transactions[editingTransactionIndex];
-    const oldAi=accountIndexForTransaction(old);
-    if(oldAi>=0) accounts[oldAi].balance=Number(accounts[oldAi].balance||0)+Number(old.amount||0);
-    accounts[accountIndex].balance=Number(accounts[accountIndex].balance||0)-value;
-    transactions[editingTransactionIndex]=updated;
-  }else{
-    accounts[accountIndex].balance=Number(accounts[accountIndex].balance||0)-value;
-    transactions.push(updated);
-  }
-  save(AK,accounts);save(TY,transactions);
-  closeOperationModal();renderAccounts();renderDebts();renderCats();home();
-  if(document.getElementById("history").classList.contains("active")) renderHistory();
-});
+  /* НОВАЯ ОПЕРАЦИЯ */
+  const account=accounts[accountIndex];
+  const transaction={
+    id:Date.now(),
+    type:isIncome ? "income" : "expense",
+    amount:value,
+    account:account.id,
+    date
+  };
 
-deleteOperationButton.addEventListener("click",()=>{
-  if(editingTransactionIndex===null) return;
-  const t=transactions[editingTransactionIndex];
-  if(!t) return;
-  if(!confirm("Удалить эту операцию?")) return;
-  const ai=accountIndexForTransaction(t);
-  if(ai>=0){
-    if(t.type==="income") accounts[ai].balance=Number(accounts[ai].balance||0)-Number(t.amount||0);
-    else accounts[ai].balance=Number(accounts[ai].balance||0)+Number(t.amount||0);
+  if(isIncome){
+    transaction.name=name;
+    account.balance=Number(account.balance||0)+value;
+  }else{
+    transaction.category=category;
+    account.balance=Number(account.balance||0)-value;
   }
-  transactions.splice(editingTransactionIndex,1);
-  save(AK,accounts);save(TY,transactions);
-  closeOperationModal();renderAccounts();renderDebts();renderCats();home();renderHistory();
+
+  transactions.push(transaction);
+  save(AK,accounts);
+  save(TY,transactions);
+  close("expenseOverlay");
+  renderAccounts();
+  renderDebts();
+  renderCats();
+  home();
 });
 
 
@@ -4242,10 +4451,8 @@ accountsList.addEventListener("click", e => {
   const button =
     e.target.closest("[data-ai]");
 
-  if(!button)
-    return;
-
-  editingAccount =
+  if(button){
+    editingAccount =
     Number(button.dataset.ai);
 
   const a =
@@ -4275,6 +4482,15 @@ accountsList.addEventListener("click", e => {
     "Сохранить";
 
   open("accountOverlay");
+    return;
+  }
+
+  const row=e.target.closest(".account-row");
+  if(row && Date.now()>suppressAccountClickUntil){
+    const i=Number(row.dataset.transferIndex);
+    if(Number.isInteger(i) && accounts[i])
+      openHistory(accounts[i].id,"accounts");
+  }
 
 });
 
@@ -4370,15 +4586,6 @@ saveAccountButton.addEventListener(
   }
 );
 
-
-accountsList.addEventListener("click",e=>{
-  const edit=e.target.closest("[data-ai]");
-  if(edit) return;
-  const row=e.target.closest(".account-row");
-  if(!row || transferDragActive) return;
-  const i=Number(row.dataset.accountHistory);
-  if(Number.isInteger(i)) openHistory(i);
-});
 
 /* ПЕРЕВОД */
 
@@ -4506,6 +4713,9 @@ function finishTransferDrag(x,y){
   const to = row ? Number(row.dataset.transferIndex) : null;
 
   clearTransferDrag();
+
+  if(wasActive)
+    suppressAccountClickUntil=Date.now()+900;
 
   if(
     wasActive &&
@@ -5203,9 +5413,72 @@ syncButton.addEventListener(
 /* ЗАПУСК */
 
 load();
+saveBudgetHistorySnapshot();
 populate();
 
 renderCats();
+function setupCalculators(){
+  const ids=[
+    "incomeAmount","amount","debtAmount","manualDebtAmount",
+    "accountBalanceInput","creditLimitInput","financeInput",
+    "transferAmount","categoryLimitInput","goalTarget","goalSaved"
+  ];
+
+  ids.forEach(id=>{
+    const input=document.getElementById(id);
+    if(!input || input.dataset.calcReady) return;
+    input.dataset.calcReady="1";
+    const wrap=document.createElement("div");
+    wrap.className="calc-wrap";
+    input.parentNode.insertBefore(wrap,input);
+    wrap.appendChild(input);
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="calc-button";
+    button.textContent="∑";
+    button.title="Открыть калькулятор";
+    button.addEventListener("click",()=>openCalculator(input));
+    wrap.appendChild(button);
+  });
+}
+
+function openCalculator(input){
+  calculatorTarget=input;
+  calculatorInput.value=input.value||"";
+  calculatorResult.textContent="= "+(Number(input.value||0).toLocaleString("ru-RU"))+" ₽";
+  open("calculatorOverlay");
+  setTimeout(()=>{calculatorInput.focus(); calculatorInput.select();},80);
+}
+
+function calculateExpression(value){
+  const expr=String(value||"").replace(/,/g,".").replace(/\s/g,"");
+  if(!expr || !/^[0-9+\-*/().]+$/.test(expr)) return null;
+  try{
+    const result=Function('"use strict";return ('+expr+')')();
+    return Number.isFinite(result) ? result : null;
+  }catch(e){
+    return null;
+  }
+}
+
+calculatorInput.addEventListener("input",()=>{
+  const result=calculateExpression(calculatorInput.value);
+  calculatorResult.textContent=result===null ? "Проверь выражение" : "= "+money(result);
+});
+
+closeCalculatorButton.addEventListener("click",()=>close("calculatorOverlay"));
+applyCalculatorButton.addEventListener("click",()=>{
+  const result=calculateExpression(calculatorInput.value);
+  if(result===null){ alert("Не удалось посчитать выражение."); return; }
+  if(calculatorTarget){
+    calculatorTarget.value=String(Math.round(result*100)/100);
+    calculatorTarget.dispatchEvent(new Event("input",{bubbles:true}));
+  }
+  close("calculatorOverlay");
+});
+
+setupCalculators();
+
 renderAccounts();
 renderDebts();
 renderGoals();
