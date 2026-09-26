@@ -441,6 +441,31 @@ button{
   background:#eee
 }
 
+.bank-icon-picker{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:7px
+}
+.bank-icon-choice{
+  border:1px solid var(--border);
+  background:#fff;
+  color:#64484f;
+  padding:8px 10px;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:700
+}
+.bank-icon-choice.active{
+  background:var(--pp);
+  border-color:var(--pink);
+}
+.bank-logo svg{
+  width:42px;
+  height:42px;
+  display:block
+}
+
 /* Весь счёт можно зажать и перетащить для перевода */
 .account-row{
   position:relative;
@@ -946,10 +971,7 @@ button{
 
       <div class="stat-row">
         <span>Общий доход</span>
-        <div class="category-actions">
-          <span class="stat-value" id="salaryDisplay"></span>
-          <button class="small-button" id="editSalaryButton">✎</button>
-        </div>
+        <span class="stat-value" id="salaryDisplay"></span>
       </div>
 
       <div class="stat-row">
@@ -962,7 +984,10 @@ button{
 
       <div class="stat-row">
         <span>Основная зарплата</span>
-        <span class="stat-value" id="mainSalaryDisplay"></span>
+        <div class="category-actions">
+          <span class="stat-value" id="mainSalaryDisplay"></span>
+          <button class="small-button" id="editSalaryButton">✎</button>
+        </div>
       </div>
     </div>
 
@@ -1000,13 +1025,6 @@ button{
       </div>
     </div>
 
-  </div>
-
-
-  <div class="card">
-    <div class="card-title">Фактические выплаты</div>
-    <div class="small-note">Если выплата отличается от плановой, зафиксируй фактическую сумму. Дневной лимит будет учитывать ее вместо плановой суммы.</div>
-    <button class="secondary" id="addPaymentFactButton" style="margin-top:12px">＋ Зафиксировать выплату</button>
   </div>
 
 
@@ -1238,6 +1256,21 @@ button{
       placeholder="Например, Сбер"
     >
 
+    <div class="field-label">Иконка счёта</div>
+
+    <div class="bank-icon-picker" id="bankIconChoices">
+      <button type="button" class="bank-icon-choice" data-icon-key="auto">Авто</button>
+      <button type="button" class="bank-icon-choice" data-icon-key="sber">Сбер</button>
+      <button type="button" class="bank-icon-choice" data-icon-key="tbank">Т-Банк</button>
+      <button type="button" class="bank-icon-choice" data-icon-key="vtb">ВТБ</button>
+      <button type="button" class="bank-icon-choice" data-icon-key="alfa">Альфа</button>
+      <button type="button" class="bank-icon-choice" data-icon-key="avangard">Авангард</button>
+      <button type="button" class="bank-icon-choice" data-icon-key="wallet">Кошелёк</button>
+    </div>
+    <input id="bankIconFileInput" type="file" accept="image/*" style="display:none">
+    <button type="button" class="secondary" id="uploadBankIconButton" style="margin-top:8px;padding:11px">Загрузить свою иконку</button>
+    <div class="small-note" id="bankIconNote">Можно выбрать готовую иконку или загрузить картинку с телефона.</div>
+
     <div class="field-label">Реальный остаток</div>
 
    <input
@@ -1339,28 +1372,6 @@ button{
       Сохранить
     </button>
 
-  </div>
-</div>
-
-
-<!-- ФАКТИЧЕСКАЯ ВЫПЛАТА -->
-
-<div class="overlay" id="paymentFactOverlay">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Фактическая выплата</div>
-      <button class="close" id="closePaymentFactButton">×</button>
-    </div>
-    <div class="field-label">Тип выплаты</div>
-    <select id="paymentFactType" class="select">
-      <option value="salary">Основная зарплата</option>
-      <option value="advance">Аванс</option>
-    </select>
-    <div class="field-label" style="margin-top:12px">Дата выплаты</div>
-    <input id="paymentFactDate" class="text-input" type="date">
-    <div class="field-label" style="margin-top:12px">Сколько реально пришло</div>
-    <input id="paymentFactAmount" class="amount" type="number" inputmode="decimal" placeholder="0 ₽">
-    <button class="primary" id="savePaymentFactButton" style="margin-top:15px">Сохранить выплату</button>
   </div>
 </div>
 
@@ -1578,7 +1589,6 @@ let advance=26000;
 let advanceDate=null;
 let mainSalaryDate=15;
 let savingsPercent=20;
-let paymentFacts={};
 
 let transactions=[];
 let accounts=[];
@@ -1596,6 +1606,7 @@ let historyAccountId=null;
 let historyFilter="all";
 let historyReturnScreen="home";
 let calculatorTarget=null;
+let selectedBankIcon="auto";
 let suppressAccountClickUntil=0;
 
 
@@ -1822,11 +1833,17 @@ function load(){
       mainSalaryDate=+f.mainSalaryDate;
   }
 
-
-  const pf=read("babki_payment_facts_v1",{});
-
-  if(pf && typeof pf==="object")
-    paymentFacts=pf;
+  /* Миграция старого формата: раньше salary хранила уже общий доход.
+     Теперь salary = основная зарплата, advance = отдельный аванс. */
+  const FM="babki_finance_format_v2";
+  const hadSavedFinance = localStorage.getItem(FK)!==null;
+  if(hadSavedFinance && read(FM,null)!==true){
+    if(Number.isFinite(+salary) && Number.isFinite(+advance) && salary>=advance && salary>0){
+      salary=Math.max(0,salary-advance);
+    }
+    save(FM,true);
+    save(FK,{salary,advance,advanceDate,mainSalaryDate});
+  }
 
 
   const sp=read(SK,null);
@@ -1932,8 +1949,12 @@ function renderBudgetHistory(){
 
 function updateFinance(){
 
+  const totalIncome =
+    Math.max(0,Number(salary)||0) +
+    Math.max(0,Number(advance)||0);
+
   salaryDisplay.textContent=
-    money(salary);
+    money(totalIncome);
 
   advanceDisplay.textContent=
     money(advance);
@@ -1952,16 +1973,12 @@ function updateFinance(){
   savingsPercentDisplay.textContent=
     savingsPercent+"%";
 
-  const monthlyIncome=
-    Math.max(0,Number(salary||0)) +
-    Math.max(0,Number(advance||0));
-
   budgetSalary.textContent=
-    money(monthlyIncome);
+    money(totalIncome);
 
   budgetSavings.textContent=
     money(
-      monthlyIncome*savingsPercent/100
+      totalIncome*savingsPercent/100
     );
 
   budgetTotal.textContent=
@@ -1971,9 +1988,9 @@ function updateFinance(){
     money(
       Math.max(
         0,
-        salary-
+        totalIncome-
         budget()-
-        salary*savingsPercent/100
+        totalIncome*savingsPercent/100
       )
     );
 }
@@ -2055,52 +2072,53 @@ function renderCats(){
 }
 
 
-function logoFor(a){
+function bankIconKeyFor(a){
 
-  const name=
-    (a.bank||a.name||"")
-      .toLowerCase();
+  if(a && a.icon && a.icon!="auto")
+    return a.icon;
 
-  const domains={
-    sber:"sberbank.ru",
-    "сбер":"sberbank.ru",
-    "т-банк":"tbank.ru",
-    "тинькофф":"tbank.ru",
-    tinkoff:"tbank.ru",
-    "альфа":"alfabank.ru",
-    alfa:"alfabank.ru",
-    "втб":"vtb.ru",
-    vtb:"vtb.ru",
-    "дебанк":"debank.com",
-    debank:"debank.com",
-    "озон":"ozon.ru",
-    ozon:"ozon.ru"
-  };
+  const name=(a?.bank||a?.name||"").toLowerCase();
 
-  const d=
-    Object.keys(domains)
-      .find(
-        k=>name.includes(k)
-      );
+  if(name.includes("сбер")) return "sber";
+  if(name.includes("т-банк")||name.includes("тинькофф")||name.includes("tinkoff")) return "tbank";
+  if(name.includes("втб")||name.includes("vtb")) return "vtb";
+  if(name.includes("альфа")||name.includes("alfa")) return "alfa";
+  if(name.includes("авангард")||name.includes("avangard")) return "avangard";
+  if(name.includes("озон")||name.includes("ozon")) return "wallet";
 
-  if(d){
-
-    return `
-      <img
-        class="bank-logo"
-        src="https://www.google.com/s2/favicons?domain=${domains[d]}&sz=128"
-        alt=""
-      >
-    `;
-  }
-
-  return `
-    <div class="bank-logo bank-fallback">
-      ${(a.name||"С").slice(0,1).toUpperCase()}
-    </div>
-  `;
+  return "initial";
 }
 
+function bankIconSvg(key,label="С"){
+
+  const map={
+    sber:["#21A038","С"],
+    tbank:["#FFDD2D","T"],
+    vtb:["#1B5BD7","ВТБ"],
+    alfa:["#EF3124","A"],
+    avangard:["#1B9B55","А"],
+    wallet:["#8C6FF0","▱"],
+    initial:["#E8DDE0",String(label||"С").slice(0,2).toUpperCase()]
+  };
+
+  const [bg,text]=map[key]||map.initial;
+
+  return `<svg viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect x="0" y="0" width="42" height="42" rx="13" fill="${bg}"/>
+    <text x="21" y="26" text-anchor="middle" font-family="Arial,sans-serif" font-size="${text.length>2?9:15}" font-weight="800" fill="${key==='tbank'?'#222':'#fff'}">${text}</text>
+  </svg>`;
+}
+
+function logoFor(a){
+
+  const key=bankIconKeyFor(a);
+
+  if(a && typeof a.icon==="string" && a.icon.startsWith("data:image/")){
+    return `<img class="bank-logo" src="${a.icon}" alt="">`;
+  }
+
+  return `<div class="bank-logo">${bankIconSvg(key,(a?.name||"С"))}</div>`;
+}
 
 function renderAccounts(){
 
@@ -2457,89 +2475,7 @@ function renderGoals(){
 }
 
 
-function paymentSchedule(){
-
-  const now=new Date();
-  const year=now.getFullYear();
-  const month=now.getMonth();
-  const schedule=[];
-
-  const addPayment=(day,amount,type,monthOffset=0)=>{
-    const d=Number(day);
-    if(!Number.isFinite(d)||d<1) return;
-
-    const safeDay=Math.min(31,Math.max(1,d));
-    const date=new Date(year,month+monthOffset,safeDay);
-
-    schedule.push({
-      date,
-      amount:Math.max(0,Number(amount)||0),
-      type
-    });
-  };
-
-  const advanceAmount=Math.max(0,Number(advance)||0);
-  /* salary — общий доход за месяц. Аванс является частью зарплаты,
-     поэтому основная выплата = общий доход минус аванс. */
-  const mainSalaryAmount=Math.max(
-    0,
-    Number(salary||0)-advanceAmount
-  );
-
-  if(Number.isFinite(Number(advanceDate)) && Number(advanceDate)>0)
-    addPayment(advanceDate,advanceAmount,"advance");
-
-  if(Number.isFinite(Number(mainSalaryDate)) && Number(mainSalaryDate)>0)
-    addPayment(mainSalaryDate,mainSalaryAmount,"salary");
-
-  if(!schedule.length)
-    addPayment(15,Number(salary||0),"salary");
-
-  return schedule;
-}
-
-function paymentFactKey(date,type){
-  return `${date.toISOString().slice(0,10)}|${type}`;
-}
-
-function paymentAmount(payment){
-  if(!payment || !payment.date)
-    return Number(payment?.amount||0);
-
-  const fact=paymentFacts[paymentFactKey(payment.date,payment.type)];
-
-  return fact && Number.isFinite(Number(fact.amount))
-    ? Math.max(0,Number(fact.amount))
-    : Math.max(0,Number(payment.amount||0));
-}
-
-function monthPaymentSchedule(offset=0){
-  const base=new Date();
-  const year=base.getFullYear();
-  const month=base.getMonth()+offset;
-  const result=[];
-
-  const add=(day,amount,type)=>{
-    const d=Number(day);
-    if(!Number.isFinite(d)||d<1) return;
-    result.push({
-      date:new Date(year,month,Math.min(31,Math.max(1,d))),
-      amount:Math.max(0,Number(amount)||0),
-      type
-    });
-  };
-
-  const adv=Math.max(0,Number(advance)||0);
-  const main=Math.max(0,Number(salary||0)-adv);
-
-  if(Number(advanceDate)>0) add(advanceDate,adv,"advance");
-  if(Number(mainSalaryDate)>0) add(mainSalaryDate,main,"salary");
-
-  if(!result.length) add(15,Number(salary||0),"salary");
-  return result.sort((a,b)=>a.date-b.date);
-}
-
-function paymentPeriodInfo(){
+function nextPaymentInfo(){
 
   const now=new Date();
   const todayStart=new Date(
@@ -2548,118 +2484,75 @@ function paymentPeriodInfo(){
     now.getDate()
   );
 
-  const current=monthPaymentSchedule(0);
-  const previousMonth=monthPaymentSchedule(-1);
-  const nextMonth=monthPaymentSchedule(1);
+  const dates=[];
 
-  let previous=current
-    .filter(p=>p.date<=todayStart)
-    .sort((a,b)=>b.date-a.date)[0];
+  /* Аванс и основная зарплата — оба считаются выплатами. */
+  [advanceDate,mainSalaryDate].forEach(value=>{
+    const day=Number(value);
+    if(!Number.isFinite(day)||day<1)
+      return;
 
-  let next=current
-    .filter(p=>p.date>todayStart)
-    .sort((a,b)=>a.date-b.date)[0];
+    const safeDay=Math.min(31,Math.max(1,day));
+    let candidate=new Date(
+      todayStart.getFullYear(),
+      todayStart.getMonth(),
+      safeDay
+    );
 
-  if(!previous)
-    previous=previousMonth[previousMonth.length-1]||null;
+    /* Если выплата этого месяца уже прошла — берём следующий месяц. */
+    if(candidate<=todayStart){
+      candidate=new Date(
+        todayStart.getFullYear(),
+        todayStart.getMonth()+1,
+        safeDay
+      );
+    }
 
-  if(!next)
-    next=nextMonth[0]||null;
+    dates.push(candidate);
+  });
 
-  const periodStart=previous
-    ?new Date(previous.date.getFullYear(),previous.date.getMonth(),previous.date.getDate())
-    :todayStart;
+  /* На всякий случай: если даты выплат не заданы, оставляем 15-е число. */
+  if(!dates.length){
+    dates.push(
+      new Date(
+        todayStart.getFullYear(),
+        todayStart.getMonth()+1,
+        15
+      )
+    );
+  }
 
-  const periodEnd=next
-    ?new Date(next.date.getFullYear(),next.date.getMonth(),next.date.getDate())
-    :todayStart;
+  const next=dates.sort((a,b)=>a-b)[0];
 
   const days=Math.max(
     1,
-    Math.ceil((periodEnd-todayStart)/86400000)
+    Math.ceil((next-todayStart)/86400000)
   );
 
   return {
-    previous,
-    next,
-    periodStart,
-    periodEnd,
+    date:next,
     days
   };
 }
 
-function monthExpenseTotal(){
-  const now=new Date();
-  const key=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-
-  return transactions
-    .filter(x=>x.type==="expense" && String(x.date||"").startsWith(key))
-    .reduce((s,x)=>s+Number(x.amount||0),0);
-}
-
-function periodExpenseTotal(start,end){
-  return transactions
-    .filter(x=>{
-      if(x.type!=="expense" || !x.date) return false;
-      const d=new Date(x.date+"T00:00:00");
-      return d>=start && d<end;
-    })
-    .reduce((s,x)=>s+Number(x.amount||0),0);
-}
-
-function monthlySpendCapacity(){
-  /* Категории задают месячный потолок расходов.
-     Доход минус накопления задает второй потолок.
-     Берём меньший из двух, чтобы категория не создавала деньги из воздуха. */
-  const incomeAfterSavings=Math.max(
-    0,
-    Number(salary||0) * (1-savingsPercent/100)
-  );
-
-  const categoryPlan=Math.max(0,budget());
-
-  return Math.min(
-    categoryPlan,
-    incomeAfterSavings
-  );
-}
 
 function periodDailyLimit(){
 
-  const info=paymentPeriodInfo();
-  const periodStart=info.periodStart;
-  const periodEnd=info.periodEnd;
+  const cash=
+    accounts
+      .filter(a=>a.type!=="credit")
+      .reduce(
+        (s,a)=>s+Number(a.balance||0),
+        0
+      );
 
-  /* Плановые/фактические выплаты текущего месяца.
-     Аванс и основная зарплата имеют разные суммы, поэтому дневной лимит
-     распределяется пропорционально размеру соответствующей выплаты. */
-  const monthPayments=monthPaymentSchedule(0);
-  const totalPaymentIncome=monthPayments.reduce(
-    (s,p)=>s+paymentAmount(p),
-    0
-  );
+  const info=
+    nextPaymentInfo();
 
-  if(totalPaymentIncome<=0)
-    return 0;
-
-  const currentPayment=info.previous;
-  const currentAmount=currentPayment
-    ?paymentAmount(currentPayment)
-    :0;
-
-  const monthlyCapacity=monthlySpendCapacity();
-
-  /* Сколько месячного бюджета приходится на текущий период. */
-  const periodCapacity=
-    monthlyCapacity * (currentAmount/totalPaymentIncome);
-
-  const spentInPeriod=periodExpenseTotal(periodStart,periodEnd);
-  const remainingPeriod=Math.max(
+  return Math.max(
     0,
-    periodCapacity-spentInPeriod
+    cash/info.days
   );
-
-  return remainingPeriod/info.days;
 }
 
 
@@ -2714,22 +2607,17 @@ function home(){
     )+"%";
 
 
-  const period=
-    paymentPeriodInfo();
-
-  const paymentName=
-    period.next.type==="advance"
-      ?"аванса"
-      :"зарплаты";
+  const info=
+    nextPaymentInfo();
 
   dailyDescription.textContent=
-    `До ${paymentName}: ${period.days} ${
-      period.days===1
+    `До следующей выплаты: ${info.days} ${
+      info.days===1
         ?"день"
-        :period.days<5
+        :info.days<5
           ?"дня"
           :"дней"
-    } · с учетом ${savingsPercent}% накоплений`;
+    } · реальные деньги на счетах`;
 
   updateFinance();
 }
@@ -2963,40 +2851,18 @@ function calc(){
 }
 
 
-function openPaymentFact(){
-  paymentFactDate.value=today();
-  paymentFactType.value="salary";
-  paymentFactAmount.value="";
-  open("paymentFactOverlay");
-}
-
-function savePaymentFact(){
-  const dateValue=paymentFactDate.value;
-  const type=paymentFactType.value;
-  const amount=Math.max(0,Number(paymentFactAmount.value||0));
-  if(!dateValue || !amount){
-    alert("Укажи дату и фактическую сумму выплаты.");
-    return;
-  }
-  const date=new Date(dateValue+"T00:00:00");
-  paymentFacts[paymentFactKey(date,type)]={date:dateValue,type,amount};
-  save("babki_payment_facts_v1",paymentFacts);
-  close("paymentFactOverlay");
-  home();
-}
-
 function editFin(t){
 
   financeType=t;
 
   financeTitle.textContent=
     t==="salary"
-      ?"Общий доход"
+      ?"Основная зарплата"
       :"Аванс";
 
   financeLabel.textContent=
     t==="salary"
-      ?"Сумма общего дохода"
+      ?"Сумма основной зарплаты"
       :"Сумма аванса";
 
   financeInput.value=
@@ -4751,6 +4617,39 @@ clearAllLimitsButton.addEventListener(
 
 /* СЧЕТА */
 
+function updateBankIconPicker(){
+  document.querySelectorAll(".bank-icon-choice").forEach(btn=>{
+    btn.classList.toggle("active",btn.dataset.iconKey===selectedBankIcon);
+  });
+
+  const note=document.getElementById("bankIconNote");
+  if(note){
+    note.textContent = selectedBankIcon && selectedBankIcon.startsWith("data:image/")
+      ? "Загружена ваша иконка. Её можно заменить в любой момент."
+      : "Можно выбрать готовую иконку или загрузить картинку с телефона.";
+  }
+}
+
+document.querySelectorAll(".bank-icon-choice").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    selectedBankIcon=btn.dataset.iconKey||"auto";
+    updateBankIconPicker();
+  });
+});
+
+uploadBankIconButton.addEventListener("click",()=>bankIconFileInput.click());
+
+bankIconFileInput.addEventListener("change",()=>{
+  const file=bankIconFileInput.files?.[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    selectedBankIcon=String(reader.result||"");
+    updateBankIconPicker();
+  };
+  reader.readAsDataURL(file);
+});
+
 addAccountButton.addEventListener(
   "click",
   () => {
@@ -4766,6 +4665,8 @@ addAccountButton.addEventListener(
     accountNameInput.value = "";
     accountBalanceInput.value = "";
     creditLimitInput.value = "";
+    selectedBankIcon = "auto";
+    updateBankIconPicker();
 
     creditFields.style.display =
       "none";
@@ -4799,6 +4700,9 @@ accountsList.addEventListener("click", e => {
 
   accountNameInput.value =
     a.name || "";
+
+  selectedBankIcon = a.icon || "auto";
+  updateBankIconPicker();
 
   accountBalanceInput.value =
     a.balance || 0;
@@ -4892,7 +4796,10 @@ saveAccountButton.addEventListener(
           ? Number(
               creditLimitInput.value || 0
             )
-          : 0
+          : 0,
+
+      icon:
+        selectedBankIcon || "auto"
     };
 
 
@@ -5277,13 +5184,6 @@ saveTransferButton.addEventListener(
 
   }
 );
-
-
-/* ФАКТИЧЕСКИЕ ВЫПЛАТЫ */
-
-addPaymentFactButton.addEventListener("click",openPaymentFact);
-closePaymentFactButton.addEventListener("click",()=>close("paymentFactOverlay"));
-savePaymentFactButton.addEventListener("click",savePaymentFact);
 
 
 /* ФИНАНСЫ */
