@@ -2460,12 +2460,8 @@ function renderGoals(){
 function paymentSchedule(){
 
   const now=new Date();
-  const todayStart=new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate()
-  );
-
+  const year=now.getFullYear();
+  const month=now.getMonth();
   const schedule=[];
 
   const addPayment=(day,amount,type,monthOffset=0)=>{
@@ -2473,11 +2469,7 @@ function paymentSchedule(){
     if(!Number.isFinite(d)||d<1) return;
 
     const safeDay=Math.min(31,Math.max(1,d));
-    const date=new Date(
-      todayStart.getFullYear(),
-      todayStart.getMonth()+monthOffset,
-      safeDay
-    );
+    const date=new Date(year,month+monthOffset,safeDay);
 
     schedule.push({
       date,
@@ -2487,36 +2479,64 @@ function paymentSchedule(){
   };
 
   const advanceAmount=Math.max(0,Number(advance)||0);
-  const salaryAmount=Math.max(
+  /* salary — общий доход за месяц. Аванс является частью зарплаты,
+     поэтому основная выплата = общий доход минус аванс. */
+  const mainSalaryAmount=Math.max(
     0,
-    Number(salary||0)
+    Number(salary||0)-advanceAmount
   );
 
-  /* salary — общий доход за месяц, advance — часть этой суммы. */
   if(Number.isFinite(Number(advanceDate)) && Number(advanceDate)>0)
     addPayment(advanceDate,advanceAmount,"advance");
 
   if(Number.isFinite(Number(mainSalaryDate)) && Number(mainSalaryDate)>0)
-    addPayment(mainSalaryDate,salaryAmount,"salary");
+    addPayment(mainSalaryDate,mainSalaryAmount,"salary");
 
-  /* Если дата аванса не задана, основная выплата остается единственной. */
   if(!schedule.length)
     addPayment(15,Number(salary||0),"salary");
 
   return schedule;
 }
 
-
 function paymentFactKey(date,type){
   return `${date.toISOString().slice(0,10)}|${type}`;
 }
 
 function paymentAmount(payment){
-  if(!payment || !payment.date) return Number(payment?.amount||0);
+  if(!payment || !payment.date)
+    return Number(payment?.amount||0);
+
   const fact=paymentFacts[paymentFactKey(payment.date,payment.type)];
+
   return fact && Number.isFinite(Number(fact.amount))
     ? Math.max(0,Number(fact.amount))
     : Math.max(0,Number(payment.amount||0));
+}
+
+function monthPaymentSchedule(offset=0){
+  const base=new Date();
+  const year=base.getFullYear();
+  const month=base.getMonth()+offset;
+  const result=[];
+
+  const add=(day,amount,type)=>{
+    const d=Number(day);
+    if(!Number.isFinite(d)||d<1) return;
+    result.push({
+      date:new Date(year,month,Math.min(31,Math.max(1,d))),
+      amount:Math.max(0,Number(amount)||0),
+      type
+    });
+  };
+
+  const adv=Math.max(0,Number(advance)||0);
+  const main=Math.max(0,Number(salary||0)-adv);
+
+  if(Number(advanceDate)>0) add(advanceDate,adv,"advance");
+  if(Number(mainSalaryDate)>0) add(mainSalaryDate,main,"salary");
+
+  if(!result.length) add(15,Number(salary||0),"salary");
+  return result.sort((a,b)=>a.date-b.date);
 }
 
 function paymentPeriodInfo(){
@@ -2528,7 +2548,9 @@ function paymentPeriodInfo(){
     now.getDate()
   );
 
-  const current=paymentSchedule();
+  const current=monthPaymentSchedule(0);
+  const previousMonth=monthPaymentSchedule(-1);
+  const nextMonth=monthPaymentSchedule(1);
 
   let previous=current
     .filter(p=>p.date<=todayStart)
@@ -2538,106 +2560,106 @@ function paymentPeriodInfo(){
     .filter(p=>p.date>todayStart)
     .sort((a,b)=>a.date-b.date)[0];
 
-  /* Если до первой выплаты месяца, ищем последнюю выплату прошлого месяца
-     и используем ее как начало текущего периода. */
-  if(!previous){
-    const previousMonth=new Date(
-      todayStart.getFullYear(),
-      todayStart.getMonth()-1,
-      1
-    );
+  if(!previous)
+    previous=previousMonth[previousMonth.length-1]||null;
 
-    const prevSchedule=[];
-    const addPrevious=(day,amount,type)=>{
-      const d=Number(day);
-      if(!Number.isFinite(d)||d<1) return;
-      prevSchedule.push({
-        date:new Date(
-          previousMonth.getFullYear(),
-          previousMonth.getMonth(),
-          Math.min(31,Math.max(1,d))
-        ),
-        amount:Math.max(0,Number(amount)||0),
-        type
-      });
-    };
+  if(!next)
+    next=nextMonth[0]||null;
 
-    if(Number.isFinite(Number(advanceDate)) && Number(advanceDate)>0)
-      addPrevious(advanceDate,advance,"advance");
+  const periodStart=previous
+    ?new Date(previous.date.getFullYear(),previous.date.getMonth(),previous.date.getDate())
+    :todayStart;
 
-    if(Number.isFinite(Number(mainSalaryDate)) && Number(mainSalaryDate)>0)
-      addPrevious(
-        mainSalaryDate,
-        Math.max(0,Number(salary||0)),
-        "salary"
-      );
-
-    previous=prevSchedule.sort((a,b)=>b.date-a.date)[0];
-  }
-
-  if(!next){
-    /* Защита для конца месяца: если все даты уже прошли, следующая —
-       первая выплата следующего месяца. */
-    const firstDay=current
-      .slice()
-      .sort((a,b)=>a.date-b.date)[0];
-
-    if(firstDay){
-      next={
-        ...firstDay,
-        date:new Date(
-          todayStart.getFullYear(),
-          todayStart.getMonth()+1,
-          firstDay.date.getDate()
-        )
-      };
-    }
-  }
+  const periodEnd=next
+    ?new Date(next.date.getFullYear(),next.date.getMonth(),next.date.getDate())
+    :todayStart;
 
   const days=Math.max(
     1,
-    Math.ceil((next.date-todayStart)/86400000)
+    Math.ceil((periodEnd-todayStart)/86400000)
   );
 
   return {
     previous,
     next,
+    periodStart,
+    periodEnd,
     days
   };
 }
 
+function monthExpenseTotal(){
+  const now=new Date();
+  const key=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
 
-function nextPaymentInfo(){
-  const info=paymentPeriodInfo();
-  return {
-    date:info.next.date,
-    days:info.days
-  };
+  return transactions
+    .filter(x=>x.type==="expense" && String(x.date||"").startsWith(key))
+    .reduce((s,x)=>s+Number(x.amount||0),0);
 }
 
+function periodExpenseTotal(start,end){
+  return transactions
+    .filter(x=>{
+      if(x.type!=="expense" || !x.date) return false;
+      const d=new Date(x.date+"T00:00:00");
+      return d>=start && d<end;
+    })
+    .reduce((s,x)=>s+Number(x.amount||0),0);
+}
+
+function monthlySpendCapacity(){
+  /* Категории задают месячный потолок расходов.
+     Доход минус накопления задает второй потолок.
+     Берём меньший из двух, чтобы категория не создавала деньги из воздуха. */
+  const incomeAfterSavings=Math.max(
+    0,
+    Number(salary||0) * (1-savingsPercent/100)
+  );
+
+  const categoryPlan=Math.max(0,budget());
+
+  return Math.min(
+    categoryPlan,
+    incomeAfterSavings
+  );
+}
 
 function periodDailyLimit(){
 
   const info=paymentPeriodInfo();
+  const periodStart=info.periodStart;
+  const periodEnd=info.periodEnd;
 
-  /* 20% накоплений откладывается из каждой выплаты.
-     Категории остаются отдельными лимитами: не вычитаем их второй раз
-     из дневного лимита, иначе одна и та же сумма учитывалась бы дважды. */
-  const periodIncome=
-    info.previous
-      ?paymentAmount(info.previous)
-      :0;
+  /* Плановые/фактические выплаты текущего месяца.
+     Аванс и основная зарплата имеют разные суммы, поэтому дневной лимит
+     распределяется пропорционально размеру соответствующей выплаты. */
+  const monthPayments=monthPaymentSchedule(0);
+  const totalPaymentIncome=monthPayments.reduce(
+    (s,p)=>s+paymentAmount(p),
+    0
+  );
 
-  const savingsPart=
-    periodIncome*savingsPercent/100;
+  if(totalPaymentIncome<=0)
+    return 0;
 
-  const spendable=
-    Math.max(
-      0,
-      periodIncome-savingsPart
-    );
+  const currentPayment=info.previous;
+  const currentAmount=currentPayment
+    ?paymentAmount(currentPayment)
+    :0;
 
-  return spendable/info.days;
+  const monthlyCapacity=monthlySpendCapacity();
+
+  /* Сколько месячного бюджета приходится на текущий период. */
+  const periodCapacity=
+    monthlyCapacity * (currentAmount/totalPaymentIncome);
+
+  const spentInPeriod=periodExpenseTotal(periodStart,periodEnd);
+  const remainingPeriod=Math.max(
+    0,
+    periodCapacity-spentInPeriod
+  );
+
+  return remainingPeriod/info.days;
 }
 
 
