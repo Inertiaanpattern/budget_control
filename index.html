@@ -2100,7 +2100,7 @@ function bankIconKeyFor(a){
 const BANK_LOGO_DOMAINS={
   sber:"sberbank.ru",
   tbank:"tbank.ru",
-  vtb:"vtb.ru",
+  vtb:"www.vtb.ru",
   alfa:"alfabank.ru",
   avangard:"avangard.ru",
   ozon:"ozon.ru"
@@ -2153,6 +2153,10 @@ function logoFor(a){
 
   if(url){
     const fallback=encodeURIComponent(bankFallbackSvg(key,a?.name||"С"));
+    if(key==="vtb") {
+      const direct="https://www.vtb.ru/favicon.ico";
+      return `<img class="bank-logo" src="${url}" alt="" onerror="this.onerror=null;this.src='${direct}'" onload="if(this.naturalWidth===0)this.src='${direct}'">`;
+    }
     return `<img class="bank-logo" src="${url}" alt="" onerror="this.outerHTML=decodeURIComponent('${fallback}')">`;
   }
 
