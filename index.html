@@ -640,6 +640,63 @@ button{
 .sync-status.error{
   color:var(--danger)
 }
+
+.history-filters{
+  display:flex;
+  gap:7px;
+  overflow:auto;
+  padding-bottom:3px;
+  margin-bottom:10px
+}
+.history-filter{
+  flex:0 0 auto;
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--muted);
+  border-radius:12px;
+  padding:9px 12px;
+  font-size:12px;
+  font-weight:700
+}
+.history-filter.active{
+  background:var(--pp);
+  color:#64484f;
+  border-color:#e1c3ca
+}
+.history-date{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:800;
+  padding:12px 0 5px
+}
+.history-row{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:12px 0;
+  border-bottom:1px solid var(--border);
+  cursor:pointer
+}
+.history-row:last-child{border-bottom:0}
+.history-dot{
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--pp);
+  font-weight:800
+}
+.history-main{flex:1;min-width:0}
+.history-name{font-size:14px;font-weight:750}
+.history-meta{font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-amount{font-size:14px;font-weight:800;white-space:nowrap}
+.history-amount.expense{color:var(--text)}
+.history-amount.income{color:#66856f}
+.clickable-card{cursor:pointer;transition:transform .12s,box-shadow .12s}
+.clickable-card:active{transform:scale(.99);box-shadow:0 0 0 2px var(--pl)}
+.back-button{margin-bottom:10px}
 </style>
 </head>
 
@@ -649,6 +706,7 @@ button{
 
 <section id="home" class="screen active">
   <div class="header">
+    <div class="header-title">Бабки</div>
     <div class="month">Сентябрь 2026</div>
   </div>
 
@@ -680,8 +738,8 @@ button{
 
   <div style="height:18px"></div>
 
-  <div class="card">
-    <div class="card-title">Сентябрь</div>
+  <div class="card clickable-card" id="monthlySpendingCard" title="Открыть историю операций">
+    <div class="card-title">Сентябрь · история операций</div>
     <div class="stat-row">
       <span>План расходов</span>
       <span class="stat-value" id="monthPlan">0 ₽</span>
@@ -784,6 +842,20 @@ button{
 </section>
 
 
+<section id="history" class="screen">
+  <button class="inline-button back-button" id="historyBackButton">← Назад</button>
+  <div class="section-heading" id="historyTitle">История операций</div>
+
+  <div class="history-filters">
+    <button class="history-filter active" data-history-filter="all">Все</button>
+    <button class="history-filter" data-history-filter="expense">Расходы</button>
+    <button class="history-filter" data-history-filter="income">Поступления</button>
+  </div>
+
+  <div class="card" id="historyList"></div>
+</section>
+
+
 <section id="settings" class="screen">
   <div class="section-heading">Настройки</div>
 
@@ -871,8 +943,8 @@ button{
       Дневной лимит смотрит на реальные деньги на дебетовых счетах
       и количество дней до следующей выплаты.
       Кредитные карты не увеличивают доступный баланс.
-      Цели автоматически добавляются в лимит выбранной категории
-      на текущий месяц. Долги не увеличивают доступный бюджет.
+      Долги и цели показываются отдельно, чтобы не путать их
+      с уже потраченными деньгами.
     </div>
   </div>
 </section>
@@ -900,6 +972,9 @@ button{
         placeholder="0 ₽"
       >
 
+      <div class="field-label">Дата операции</div>
+      <input id="operationDate" class="text-input" type="date">
+
       <div class="field-label">Источник дохода</div>
       <input
         id="incomeName"
@@ -922,6 +997,9 @@ button{
         inputmode="decimal"
         placeholder="0 ₽"
       >
+
+      <div class="field-label">Дата операции</div>
+      <input id="operationDateExpense" class="text-input" type="date">
 
       <div class="field-label">Счёт, с которого списаны деньги</div>
       <select id="expenseAccount" class="select"></select>
@@ -981,6 +1059,7 @@ button{
       <button class="primary" id="saveExpenseButton">
         Записать
       </button>
+      <button class="danger-button" id="deleteOperationButton" style="display:none;width:100%;margin-top:9px">Удалить операцию</button>
     </div>
 
   </div>
@@ -1223,16 +1302,6 @@ button{
       placeholder="0"
     >
 
-    <div class="field-label">Категория бюджета</div>
-
-    <select id="goalCategory" class="select">
-      <option value="">Выбери категорию</option>
-    </select>
-
-    <div class="small-note">
-      Babki автоматически добавит нужную сумму на эту цель в лимит категории текущего месяца.
-    </div>
-
     <div class="field-label">Уже накоплено</div>
 
     <input
@@ -1379,6 +1448,9 @@ let goals=[];
 let debts=[];
 
 let editingCategory=null;
+let editingTransactionIndex=null;
+let historyAccountId=null;
+let historyFilter="all";
 let editingAccount=null;
 let editingGoal=null;
 let editingDebt=null;
@@ -1471,62 +1543,9 @@ const catSpent=n=>
     );
 
 
-function goalMonthsForCurrentBudget(g){
-
-  if(!g || !g.date)
-    return 1;
-
-  const targetDate=new Date(g.date+"T00:00:00");
-  const targetYear=targetDate.getFullYear();
-  const targetMonth=targetDate.getMonth();
-
-  const monthDiff=
-    (targetYear-budgetYear)*12+
-    (targetMonth-budgetMonth);
-
-  /*
-     День покупки не считаем отдельным месяцем накопления:
-     если купить в декабре, деньги должны быть собраны к началу декабря.
-     Поэтому сентябрь -> декабрь = 3 месяца накопления.
-  */
-  return Math.max(1,monthDiff);
-}
-
-
-function goalMonthlyContribution(g){
-
-  const target=Number(g?.target)||0;
-  const saved=Number(g?.saved)||0;
-  const left=Math.max(0,target-saved);
-
-  if(left<=0)
-    return 0;
-
-  return left/goalMonthsForCurrentBudget(g);
-}
-
-
-function goalCategoryAddition(categoryName){
-
-  return goals
-    .filter(g=>g.category===categoryName)
-    .reduce(
-      (sum,g)=>sum+goalMonthlyContribution(g),
-      0
-    );
-}
-
-
-function effectivePlan(c){
-
-  return Number(c?.plan||0)+
-    goalCategoryAddition(c?.name);
-}
-
-
 const budget=()=>
   categories.reduce(
-    (s,x)=>s+effectivePlan(x),
+    (s,x)=>s+Number(x.plan||0),
     0
   );
 
@@ -1760,15 +1779,14 @@ function renderCats(){
 
     const s=catSpent(c.name);
 
-    const plan=effectivePlan(c);
-    const r=plan-s;
+    const r=c.plan-s;
 
-    const p=plan
+    const p=c.plan
       ?Math.min(
         100,
         Math.max(
           0,
-          s/plan*100
+          s/c.plan*100
         )
       )
       :0;
@@ -1788,7 +1806,7 @@ function renderCats(){
           </div>
 
           <div class="category-limit">
-            Лимит: ${money(plan)}
+            Лимит: ${money(c.plan)}
           </div>
 
         </div>
@@ -1810,7 +1828,7 @@ function renderCats(){
       </div>
 
       <div class="category-meta">
-        ${money(s)} из ${money(plan)}
+        ${money(s)} из ${money(c.plan)}
       </div>
 
       <div class="category-bar">
@@ -1904,7 +1922,8 @@ function renderAccounts(){
           <div
             class="account-row"
             data-transfer-index="${i}"
-            title="Зажмите счёт и перетащите его на другой счёт для перевода"
+            data-account-history="${i}"
+            title="Нажмите для истории · зажмите и перетащите для перевода"
           >
 
             <div class="account-main">
@@ -2132,8 +2151,29 @@ function renderGoals(){
             )
             :0;
 
-        const monthly=
-          goalMonthlyContribution(g);
+        let monthly=left;
+
+        if(g.date){
+
+          const days=
+            Math.max(
+              1,
+              Math.ceil(
+                (
+                  new Date(
+                    g.date+"T00:00:00"
+                  )-new Date()
+                )/86400000
+              )
+            );
+
+          monthly=
+            left/
+            Math.max(
+              1,
+              Math.ceil(days/30)
+            );
+        }
 
 
         return `
@@ -2148,12 +2188,11 @@ function renderGoals(){
                 </div>
 
                 <div class="goal-meta">
-                  ${g.category?`Категория: ${g.category}`:"Категория не выбрана"}
+                  ${g.link?`🔗 ${g.link}`:""}
                   ${g.date
                     ?` · до ${new Date(g.date+"T00:00:00").toLocaleDateString("ru-RU")}`
                     :""
                   }
-                  ${g.link?` · 🔗 ${g.link}`:""}
                 </div>
 
               </div>
@@ -2276,6 +2315,64 @@ function periodDailyLimit(){
   );
 }
 
+
+function accountIndexForTransaction(t){
+  if(!t) return -1;
+  const ref=t.account;
+  let i=accounts.findIndex(a=>a.id===ref);
+  if(i<0 && typeof ref==="string") i=accounts.findIndex(a=>a.name===ref);
+  if(i<0 && Number.isInteger(ref)) i=ref;
+  return i;
+}
+
+function accountNameForTransaction(t){
+  const i=accountIndexForTransaction(t);
+  return i>=0 && accounts[i] ? (accounts[i].name||"Счёт") : "Счёт удалён";
+}
+
+function formatHistoryDate(value){
+  if(!value) return "Без даты";
+  const parts=String(value).split("-");
+  if(parts.length===3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+  return value;
+}
+
+function openHistory(accountId=null){
+  historyAccountId=accountId;
+  historyFilter="all";
+  document.querySelectorAll("[data-history-filter]").forEach(b=>b.classList.toggle("active",b.dataset.historyFilter==="all"));
+  renderHistory();
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById("history").classList.add("active");
+  document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));
+}
+
+function renderHistory(){
+  const list=historyList;
+  let items=transactions.map((t,i)=>({...t,__index:i}));
+  if(historyAccountId!==null) items=items.filter(t=>t.account===historyAccountId || accountIndexForTransaction(t)===historyAccountId);
+  if(historyFilter!=="all") items=items.filter(t=>t.type===historyFilter);
+  items.sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")) || Number(b.__index)-Number(a.__index));
+  historyTitle.textContent=historyAccountId!==null && accounts[historyAccountId] ? `История · ${accounts[historyAccountId].name||"Счёт"}` : "История операций";
+  if(!items.length){list.innerHTML='<div class="empty">Операций пока нет.</div>';return;}
+  let html="", lastDate=null;
+  items.forEach(t=>{
+    if(t.date!==lastDate){html+=`<div class="history-date">${formatHistoryDate(t.date)}</div>`;lastDate=t.date;}
+    const income=t.type==="income";
+    const name=income ? (t.name||"Доход") : (t.category||"Расход");
+    const meta=income ? `Поступление · ${accountNameForTransaction(t)}` : `${t.category||"Расход"} · ${accountNameForTransaction(t)}`;
+    html+=`<div class="history-row" data-ti="${t.__index}">
+      <div class="history-dot">${income?"＋":"−"}</div>
+      <div class="history-main"><div class="history-name">${name}</div><div class="history-meta">${meta}</div></div>
+      <div class="history-amount ${income?"income":"expense"}">${income?"+":"−"}${money(t.amount||0)}</div>
+    </div>`;
+  });
+  list.innerHTML=html;
+}
+
+function recalcAccountBalancesFromTransactions(){
+  // Балансы уже хранятся в счетах, поэтому при редактировании сначала отменяем старое движение, затем применяем новое.
+}
 
 function home(){
 
@@ -2404,14 +2501,6 @@ function populate(){
         c=>`<option>${c.name}</option>`
       )
       .join("");
-
-  goalCategory.innerHTML=
-    `<option value="">Выбери категорию</option>`+
-    categories
-      .map(
-        c=>`<option value="${c.name}">${c.name}</option>`
-      )
-      .join("");
 }
 
 
@@ -2424,7 +2513,7 @@ function calc(){
 
   const r=
     c
-      ?effectivePlan(c)-catSpent(c.name)
+      ?c.plan-catSpent(c.name)
       :0;
 
   categoryRemaining.textContent=
@@ -3829,10 +3918,64 @@ document
   });
 
 
+monthlySpendingCard.addEventListener("click",()=>openHistory());
+historyBackButton.addEventListener("click",()=>screen("home",document.querySelector('.nav button[data-screen="home"]')));
+
+document.querySelectorAll("[data-history-filter]").forEach(button=>{
+  button.addEventListener("click",()=>{
+    historyFilter=button.dataset.historyFilter;
+    document.querySelectorAll("[data-history-filter]").forEach(b=>b.classList.toggle("active",b===button));
+    renderHistory();
+  });
+});
+
+historyList.addEventListener("click",e=>{
+  const row=e.target.closest("[data-ti]");
+  if(!row) return;
+  openEditTransaction(Number(row.dataset.ti));
+});
+
+function openEditTransaction(index){
+  const t=transactions[index];
+  if(!t) return;
+  editingTransactionIndex=index;
+  operationModalTitle.textContent=t.type==="income"?"Редактировать доход":"Редактировать расход";
+  incomeFields.style.display=t.type==="income"?"block":"none";
+  expenseFields.style.display=t.type==="expense"?"block":"none";
+  debtFields.style.display="none";
+  deleteOperationButton.style.display="block";
+  saveExpenseButton.textContent="Сохранить изменения";
+  const date=t.date||today();
+  operationDate.value=date;
+  operationDateExpense.value=date;
+  if(t.type==="income") {
+    incomeAmount.value=t.amount||"";
+    incomeName.value=t.name||"Доход";
+    incomeAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}">${a.name||"Счёт"} · ${money(a.balance||0)}</option>`).join("");
+    const ai=accountIndexForTransaction(t); if(ai>=0) incomeAccount.value=String(ai);
+  } else {
+    amount.value=t.amount||"";
+    expenseAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}">${a.name||"Счёт"} · ${money(a.balance||0)}</option>`).join("");
+    const ai=accountIndexForTransaction(t); if(ai>=0) expenseAccount.value=String(ai);
+    populate();
+    categorySelect.value=t.category||"";
+    calc();
+  }
+  open("expenseOverlay");
+}
+
+function closeOperationModal(){
+  close("expenseOverlay");
+  editingTransactionIndex=null;
+  deleteOperationButton.style.display="none";
+}
+
 /* РАСХОД / ДОХОД */
 
 quickExpenseButton.addEventListener("click", () => {
 
+  editingTransactionIndex=null;
+  deleteOperationButton.style.display="none";
   operationModalTitle.textContent = "Расход";
 
   incomeFields.style.display = "none";
@@ -3842,6 +3985,7 @@ quickExpenseButton.addEventListener("click", () => {
   saveExpenseButton.textContent = "Записать";
 
   amount.value = "";
+  operationDateExpense.value=today();
 
   expenseAccount.innerHTML =
     accounts.length
@@ -3863,6 +4007,8 @@ quickExpenseButton.addEventListener("click", () => {
 
 quickIncomeButton.addEventListener("click", () => {
 
+  editingTransactionIndex=null;
+  deleteOperationButton.style.display="none";
   operationModalTitle.textContent = "Доход";
 
   incomeFields.style.display = "block";
@@ -3873,6 +4019,7 @@ quickIncomeButton.addEventListener("click", () => {
 
   incomeAmount.value = "";
   incomeName.value = "";
+  operationDate.value=today();
 
   incomeAccount.innerHTML =
     accounts.length
@@ -3892,9 +4039,7 @@ quickIncomeButton.addEventListener("click", () => {
 });
 
 
-closeExpenseButton.addEventListener("click", () => {
-  close("expenseOverlay");
-});
+closeExpenseButton.addEventListener("click", closeOperationModal);
 
 
 amount.addEventListener("input", calc);
@@ -3906,103 +4051,69 @@ categorySelect.addEventListener("change", calc);
 
 saveExpenseButton.addEventListener("click", () => {
 
+  const editing = editingTransactionIndex !== null;
+
   /* ДОХОД */
-
   if(incomeFields.style.display !== "none"){
-
-    const value =
-      Number(incomeAmount.value || 0);
-
-    if(value <= 0)
-      return;
-
-    const accountIndex =
-      Number(incomeAccount.value);
-
-    if(
-      !Number.isInteger(accountIndex) ||
-      !accounts[accountIndex]
-    ){
-      alert("Выбери счёт, куда пришли деньги.");
-      return;
+    const value=Number(incomeAmount.value||0);
+    if(value<=0) return;
+    const accountIndex=Number(incomeAccount.value);
+    if(!Number.isInteger(accountIndex)||!accounts[accountIndex]){alert("Выбери счёт, куда пришли деньги.");return;}
+    const date=operationDate.value||today();
+    const updated={id:editing?transactions[editingTransactionIndex].id:Date.now(),type:"income",amount:value,name:incomeName.value.trim()||"Доход",account:accounts[accountIndex].id,date};
+    if(editing){
+      const old=transactions[editingTransactionIndex];
+      const oldAi=accountIndexForTransaction(old);
+      if(oldAi>=0) accounts[oldAi].balance=Number(accounts[oldAi].balance||0)-Number(old.amount||0);
+      accounts[accountIndex].balance=Number(accounts[accountIndex].balance||0)+value;
+      transactions[editingTransactionIndex]=updated;
+    }else{
+      accounts[accountIndex].balance=Number(accounts[accountIndex].balance||0)+value;
+      transactions.push(updated);
     }
-
-    accounts[accountIndex].balance =
-      Number(accounts[accountIndex].balance || 0) +
-      value;
-
-    transactions.push({
-      id:Date.now(),
-      type:"income",
-      amount:value,
-      name:incomeName.value.trim() || "Доход",
-      account:accounts[accountIndex].id,
-      date:today()
-    });
-
-    save(AK,accounts);
-    save(TY,transactions);
-
-    close("expenseOverlay");
-
-    renderAccounts();
-    renderDebts();
-    home();
-
+    save(AK,accounts);save(TY,transactions);
+    closeOperationModal();renderAccounts();renderDebts();renderCats();home();
+    if(document.getElementById("history").classList.contains("active")) renderHistory();
     return;
   }
-
 
   /* РАСХОД */
-
-  const value =
-    Number(amount.value || 0);
-
-  if(value <= 0)
-    return;
-
-  const category =
-    categorySelect.value;
-
-  if(!category)
-    return;
-
-  const accountIndex =
-    Number(expenseAccount.value);
-
-  if(
-    !Number.isInteger(accountIndex) ||
-    !accounts[accountIndex]
-  ){
-    alert("Выбери счёт, с которого списаны деньги.");
-    return;
+  const value=Number(amount.value||0);
+  if(value<=0) return;
+  const category=categorySelect.value;
+  if(!category) return;
+  const accountIndex=Number(expenseAccount.value);
+  if(!Number.isInteger(accountIndex)||!accounts[accountIndex]){alert("Выбери счёт, с которого списаны деньги.");return;}
+  const date=operationDateExpense.value||today();
+  const updated={id:editing?transactions[editingTransactionIndex].id:Date.now(),type:"expense",amount:value,category,account:accounts[accountIndex].id,date};
+  if(editing){
+    const old=transactions[editingTransactionIndex];
+    const oldAi=accountIndexForTransaction(old);
+    if(oldAi>=0) accounts[oldAi].balance=Number(accounts[oldAi].balance||0)+Number(old.amount||0);
+    accounts[accountIndex].balance=Number(accounts[accountIndex].balance||0)-value;
+    transactions[editingTransactionIndex]=updated;
+  }else{
+    accounts[accountIndex].balance=Number(accounts[accountIndex].balance||0)-value;
+    transactions.push(updated);
   }
+  save(AK,accounts);save(TY,transactions);
+  closeOperationModal();renderAccounts();renderDebts();renderCats();home();
+  if(document.getElementById("history").classList.contains("active")) renderHistory();
+});
 
-  const account =
-    accounts[accountIndex];
-
-  account.balance =
-    Number(account.balance || 0) - value;
-
-  transactions.push({
-    id:Date.now(),
-    type:"expense",
-    amount:value,
-    category,
-    account:account.id,
-    date:today()
-  });
-
-  save(AK,accounts);
-  save(TY,transactions);
-
-  close("expenseOverlay");
-
-  renderAccounts();
-  renderDebts();
-  renderCats();
-  home();
-
+deleteOperationButton.addEventListener("click",()=>{
+  if(editingTransactionIndex===null) return;
+  const t=transactions[editingTransactionIndex];
+  if(!t) return;
+  if(!confirm("Удалить эту операцию?")) return;
+  const ai=accountIndexForTransaction(t);
+  if(ai>=0){
+    if(t.type==="income") accounts[ai].balance=Number(accounts[ai].balance||0)-Number(t.amount||0);
+    else accounts[ai].balance=Number(accounts[ai].balance||0)+Number(t.amount||0);
+  }
+  transactions.splice(editingTransactionIndex,1);
+  save(AK,accounts);save(TY,transactions);
+  closeOperationModal();renderAccounts();renderDebts();renderCats();home();renderHistory();
 });
 
 
@@ -4259,6 +4370,15 @@ saveAccountButton.addEventListener(
   }
 );
 
+
+accountsList.addEventListener("click",e=>{
+  const edit=e.target.closest("[data-ai]");
+  if(edit) return;
+  const row=e.target.closest(".account-row");
+  if(!row || transferDragActive) return;
+  const i=Number(row.dataset.accountHistory);
+  if(Number.isInteger(i)) openHistory(i);
+});
 
 /* ПЕРЕВОД */
 
@@ -4803,7 +4923,6 @@ addGoalButton.addEventListener(
     goalLink.value = "";
     goalTarget.value = "";
     goalSaved.value = "";
-    goalCategory.value = "";
     goalDate.value = "";
 
     open("goalOverlay");
@@ -4844,9 +4963,6 @@ goalsList.addEventListener("click", e => {
     goalSaved.value =
       g.saved || 0;
 
-    goalCategory.value =
-      g.category || "";
-
     goalDate.value =
       g.date || "";
 
@@ -4865,9 +4981,6 @@ goalsList.addEventListener("click", e => {
     save(GK,goals);
 
     renderGoals();
-    renderCats();
-    updateFinance();
-    home();
 
   }
 
@@ -4884,15 +4997,6 @@ saveGoalButton.addEventListener(
   "click",
   () => {
 
-    const category=
-      goalCategory.value || "";
-
-    if(!category){
-      alert("Выбери категорию бюджета для цели.");
-      goalCategory.focus();
-      return;
-    }
-
     const g={
 
       name:
@@ -4903,12 +5007,10 @@ saveGoalButton.addEventListener(
         goalLink.value.trim(),
 
       target:
-        Math.max(0,Number(goalTarget.value || 0)),
+        Number(goalTarget.value || 0),
 
       saved:
-        Math.max(0,Number(goalSaved.value || 0)),
-
-      category,
+        Number(goalSaved.value || 0),
 
       date:
         goalDate.value || null
@@ -4928,9 +5030,6 @@ saveGoalButton.addEventListener(
     close("goalOverlay");
 
     renderGoals();
-    renderCats();
-    updateFinance();
-    home();
 
   }
 );
