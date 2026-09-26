@@ -1573,6 +1573,9 @@ const FK="babki_finance_settings_v1";
 const SK="babki_savings_goal_percent_v1";
 const GK="babki_goals_v1";
 const DK="babki_personal_debts_v1";
+// Иконки счетов хранятся отдельно от самих счетов, чтобы обновления кода
+// или синхронизация не могли случайно затереть выбранные пользователем логотипы.
+const AIK="babki_account_icons_v1";
 
 
 /* GOOGLE SHEETS */
@@ -1592,6 +1595,7 @@ let savingsPercent=20;
 
 let transactions=[];
 let accounts=[];
+let accountIcons={};
 let goals=[];
 let debts=[];
 
@@ -1795,9 +1799,37 @@ function load(){
 
   const a=read(AK,null);
 
+  // Иконки читаются из отдельного хранилища. Это важно: если в будущем
+  // структура accounts изменится или Google вернет старую версию счетов,
+  // пользовательские логотипы все равно останутся на месте.
+  const savedAccountIcons=read(AIK,{});
+  accountIcons=
+    savedAccountIcons && typeof savedAccountIcons==="object"
+      ?savedAccountIcons
+      :{};
+
   if(Array.isArray(a)){
 
     accounts=ensureAccountIds(a);
+
+    // Однократно переносим уже существующие icon из accounts в отдельное
+    // хранилище, не меняя сами пользовательские данные.
+    let iconsChanged=false;
+    accounts.forEach(account=>{
+      if(
+        account &&
+        account.id &&
+        typeof account.icon==="string" &&
+        account.icon &&
+        !Object.prototype.hasOwnProperty.call(accountIcons,account.id)
+      ){
+        accountIcons[account.id]=account.icon;
+        iconsChanged=true;
+      }
+    });
+
+    if(iconsChanged)
+      save(AIK,accountIcons);
 
     save(
       AK,
@@ -2144,11 +2176,23 @@ function bankFallbackSvg(key,label="С"){
 
 function logoFor(a){
 
-  if(a && typeof a.icon==="string" && a.icon.startsWith("data:image/")){
-    return `<img class="bank-logo" src="${a.icon}" alt="">`;
+  const savedIcon=
+    a && a.id && Object.prototype.hasOwnProperty.call(accountIcons,a.id)
+      ?accountIcons[a.id]
+      :a?.icon;
+
+  if(typeof savedIcon==="string" && savedIcon.startsWith("data:image/")){
+    return `<img class="bank-logo" src="${savedIcon}" alt="">`;
   }
 
-  const key=bankIconKeyFor(a);
+  const iconForAccount=
+    savedIcon ||
+    "auto";
+
+  const key=
+    iconForAccount!=="auto"
+      ?iconForAccount
+      :bankIconKeyFor(a);
   const url=bankLogoUrl(key);
 
   if(url){
@@ -4803,18 +4847,20 @@ saveAccountButton.addEventListener(
         ? accounts[editingAccount]
         : null;
 
+    const accountId=
+      old?.id ||
+      (
+        "acc_" +
+        Date.now() +
+        "_" +
+        Math.random()
+          .toString(36)
+          .slice(2,8)
+      );
+
     const account = {
 
-      id:
-        old?.id ||
-        (
-          "acc_" +
-          Date.now() +
-          "_" +
-          Math.random()
-            .toString(36)
-            .slice(2,8)
-        ),
+      id:accountId,
 
       name:
         accountNameInput.value.trim() ||
@@ -4854,6 +4900,14 @@ saveAccountButton.addEventListener(
     }
 
 
+    // Логотип сохраняем отдельно от счета. Поэтому даже если состав объекта
+    // accounts изменится при следующем обновлении приложения, иконка не пропадет.
+    accountIcons[accountId]=
+      selectedBankIcon || "auto";
+    save(AIK,accountIcons);
+
+    // Для совместимости оставляем icon и внутри счета, но отдельное хранилище
+    // является главным источником пользовательского выбора.
     save(
       AK,
       accounts
