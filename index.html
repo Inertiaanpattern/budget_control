@@ -2422,7 +2422,7 @@ function renderGoals(){
 }
 
 
-function nextPaymentInfo(){
+function paymentSchedule(){
 
   const now=new Date();
   const todayStart=new Date(
@@ -2431,75 +2431,166 @@ function nextPaymentInfo(){
     now.getDate()
   );
 
-  const dates=[];
+  const schedule=[];
 
-  /* Аванс и основная зарплата — оба считаются выплатами. */
-  [advanceDate,mainSalaryDate].forEach(value=>{
-    const day=Number(value);
-    if(!Number.isFinite(day)||day<1)
-      return;
+  const addPayment=(day,amount,type,monthOffset=0)=>{
+    const d=Number(day);
+    if(!Number.isFinite(d)||d<1) return;
 
-    const safeDay=Math.min(31,Math.max(1,day));
-    let candidate=new Date(
+    const safeDay=Math.min(31,Math.max(1,d));
+    const date=new Date(
       todayStart.getFullYear(),
-      todayStart.getMonth(),
+      todayStart.getMonth()+monthOffset,
       safeDay
     );
 
-    /* Если выплата этого месяца уже прошла — берём следующий месяц. */
-    if(candidate<=todayStart){
-      candidate=new Date(
-        todayStart.getFullYear(),
-        todayStart.getMonth()+1,
-        safeDay
-      );
-    }
+    schedule.push({
+      date,
+      amount:Math.max(0,Number(amount)||0),
+      type
+    });
+  };
 
-    dates.push(candidate);
-  });
+  const advanceAmount=Math.max(0,Number(advance)||0);
+  const salaryAmount=Math.max(
+    0,
+    Number(salary||0)-advanceAmount
+  );
 
-  /* На всякий случай: если даты выплат не заданы, оставляем 15-е число. */
-  if(!dates.length){
-    dates.push(
-      new Date(
-        todayStart.getFullYear(),
-        todayStart.getMonth()+1,
-        15
-      )
+  /* salary — общий доход за месяц, advance — часть этой суммы. */
+  if(Number.isFinite(Number(advanceDate)) && Number(advanceDate)>0)
+    addPayment(advanceDate,advanceAmount,"advance");
+
+  if(Number.isFinite(Number(mainSalaryDate)) && Number(mainSalaryDate)>0)
+    addPayment(mainSalaryDate,salaryAmount,"salary");
+
+  /* Если дата аванса не задана, основная выплата остается единственной. */
+  if(!schedule.length)
+    addPayment(15,Number(salary||0),"salary");
+
+  return schedule;
+}
+
+
+function paymentPeriodInfo(){
+
+  const now=new Date();
+  const todayStart=new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
+
+  const current=paymentSchedule();
+
+  let previous=current
+    .filter(p=>p.date<=todayStart)
+    .sort((a,b)=>b.date-a.date)[0];
+
+  let next=current
+    .filter(p=>p.date>todayStart)
+    .sort((a,b)=>a.date-b.date)[0];
+
+  /* Если до первой выплаты месяца, ищем последнюю выплату прошлого месяца
+     и используем ее как начало текущего периода. */
+  if(!previous){
+    const previousMonth=new Date(
+      todayStart.getFullYear(),
+      todayStart.getMonth()-1,
+      1
     );
+
+    const prevSchedule=[];
+    const addPrevious=(day,amount,type)=>{
+      const d=Number(day);
+      if(!Number.isFinite(d)||d<1) return;
+      prevSchedule.push({
+        date:new Date(
+          previousMonth.getFullYear(),
+          previousMonth.getMonth(),
+          Math.min(31,Math.max(1,d))
+        ),
+        amount:Math.max(0,Number(amount)||0),
+        type
+      });
+    };
+
+    if(Number.isFinite(Number(advanceDate)) && Number(advanceDate)>0)
+      addPrevious(advanceDate,advance,"advance");
+
+    if(Number.isFinite(Number(mainSalaryDate)) && Number(mainSalaryDate)>0)
+      addPrevious(
+        mainSalaryDate,
+        Math.max(0,Number(salary||0)-Number(advance||0)),
+        "salary"
+      );
+
+    previous=prevSchedule.sort((a,b)=>b.date-a.date)[0];
   }
 
-  const next=dates.sort((a,b)=>a-b)[0];
+  if(!next){
+    /* Защита для конца месяца: если все даты уже прошли, следующая —
+       первая выплата следующего месяца. */
+    const firstDay=current
+      .slice()
+      .sort((a,b)=>a.date-b.date)[0];
+
+    if(firstDay){
+      next={
+        ...firstDay,
+        date:new Date(
+          todayStart.getFullYear(),
+          todayStart.getMonth()+1,
+          firstDay.date.getDate()
+        )
+      };
+    }
+  }
 
   const days=Math.max(
     1,
-    Math.ceil((next-todayStart)/86400000)
+    Math.ceil((next.date-todayStart)/86400000)
   );
 
   return {
-    date:next,
+    previous,
+    next,
     days
+  };
+}
+
+
+function nextPaymentInfo(){
+  const info=paymentPeriodInfo();
+  return {
+    date:info.next.date,
+    days:info.days
   };
 }
 
 
 function periodDailyLimit(){
 
-  const cash=
-    accounts
-      .filter(a=>a.type!=="credit")
-      .reduce(
-        (s,a)=>s+Number(a.balance||0),
-        0
-      );
+  const info=paymentPeriodInfo();
 
-  const info=
-    nextPaymentInfo();
+  /* 20% накоплений откладывается из каждой выплаты.
+     Категории остаются отдельными лимитами: не вычитаем их второй раз
+     из дневного лимита, иначе одна и та же сумма учитывалась бы дважды. */
+  const periodIncome=
+    info.previous
+      ?Number(info.previous.amount||0)
+      :0;
 
-  return Math.max(
-    0,
-    cash/info.days
-  );
+  const savingsPart=
+    periodIncome*savingsPercent/100;
+
+  const spendable=
+    Math.max(
+      0,
+      periodIncome-savingsPart
+    );
+
+  return spendable/info.days;
 }
 
 
@@ -2554,17 +2645,22 @@ function home(){
     )+"%";
 
 
-  const info=
-    nextPaymentInfo();
+  const period=
+    paymentPeriodInfo();
+
+  const paymentName=
+    period.next.type==="advance"
+      ?"аванса"
+      :"зарплаты";
 
   dailyDescription.textContent=
-    `До следующей выплаты: ${info.days} ${
-      info.days===1
+    `До ${paymentName}: ${period.days} ${
+      period.days===1
         ?"день"
-        :info.days<5
+        :period.days<5
           ?"дня"
           :"дней"
-    } · реальные деньги на счетах`;
+    } · с учетом ${savingsPercent}% накоплений`;
 
   updateFinance();
 }
