@@ -2074,6 +2074,9 @@ function renderCats(){
 
 function bankIconKeyFor(a){
 
+  if(a && typeof a.icon === "string" && a.icon.startsWith("data:image/"))
+    return "custom";
+
   if(a && a.icon && a.icon!="auto")
     return a.icon;
 
@@ -2084,40 +2087,76 @@ function bankIconKeyFor(a){
   if(name.includes("втб")||name.includes("vtb")) return "vtb";
   if(name.includes("альфа")||name.includes("alfa")) return "alfa";
   if(name.includes("авангард")||name.includes("avangard")) return "avangard";
-  if(name.includes("озон")||name.includes("ozon")) return "wallet";
+  if(name.includes("озон")||name.includes("ozon")) return "ozon";
 
   return "initial";
 }
 
-function bankIconSvg(key,label="С"){
+/*
+  Официальные логотипы: берем favicon с сайта самого банка.
+  Если интернет недоступен или у банка нет подходящей favicon,
+  срабатывает аккуратный текстовый fallback.
+*/
+const BANK_LOGO_DOMAINS={
+  sber:"sberbank.ru",
+  tbank:"tbank.ru",
+  vtb:"vtb.ru",
+  alfa:"alfabank.ru",
+  avangard:"avangard.ru",
+  ozon:"ozon.ru"
+};
 
-  const map={
-    sber:["#21A038","С"],
-    tbank:["#FFDD2D","T"],
-    vtb:["#1B5BD7","ВТБ"],
-    alfa:["#EF3124","A"],
-    avangard:["#1B9B55","А"],
-    wallet:["#8C6FF0","▱"],
-    initial:["#E8DDE0",String(label||"С").slice(0,2).toUpperCase()]
+function bankLogoUrl(key){
+  const domain=BANK_LOGO_DOMAINS[key];
+  return domain
+    ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
+    : "";
+}
+
+function bankFallbackSvg(key,label="С"){
+  const initials={
+    sber:"С",
+    tbank:"Т",
+    vtb:"ВТБ",
+    alfa:"A",
+    avangard:"А",
+    ozon:"O",
+    wallet:"▱",
+    initial:String(label||"С").slice(0,2).toUpperCase()
   };
-
-  const [bg,text]=map[key]||map.initial;
-
+  const bg={
+    sber:"#21A038",
+    tbank:"#FFDD2D",
+    vtb:"#1B5BD7",
+    alfa:"#EF3124",
+    avangard:"#1B9B55",
+    ozon:"#005BFF",
+    wallet:"#8C6FF0",
+    initial:"#E8DDE0"
+  }[key]||"#E8DDE0";
+  const text=initials[key]||initials.initial;
+  const textColor=key==="tbank"?"#222":"#fff";
   return `<svg viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <rect x="0" y="0" width="42" height="42" rx="13" fill="${bg}"/>
-    <text x="21" y="26" text-anchor="middle" font-family="Arial,sans-serif" font-size="${text.length>2?9:15}" font-weight="800" fill="${key==='tbank'?'#222':'#fff'}">${text}</text>
+    <text x="21" y="26" text-anchor="middle" font-family="Arial,sans-serif" font-size="${text.length>2?9:15}" font-weight="800" fill="${textColor}">${text}</text>
   </svg>`;
 }
 
 function logoFor(a){
 
-  const key=bankIconKeyFor(a);
-
   if(a && typeof a.icon==="string" && a.icon.startsWith("data:image/")){
     return `<img class="bank-logo" src="${a.icon}" alt="">`;
   }
 
-  return `<div class="bank-logo">${bankIconSvg(key,(a?.name||"С"))}</div>`;
+  const key=bankIconKeyFor(a);
+  const url=bankLogoUrl(key);
+
+  if(url){
+    const fallback=encodeURIComponent(bankFallbackSvg(key,a?.name||"С"));
+    return `<img class="bank-logo" src="${url}" alt="" onerror="this.outerHTML=decodeURIComponent('${fallback}')">`;
+  }
+
+  return `<div class="bank-logo bank-fallback">${bankFallbackSvg(key,a?.name||"С")}</div>`;
 }
 
 function renderAccounts(){
