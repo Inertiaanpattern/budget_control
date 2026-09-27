@@ -2450,7 +2450,7 @@ function renderAccounts(){
             <div class="account-actions">
 
               <div class="account-balance ${debt?"negative":""}">
-                ${money(a.balance||0)}
+                ${new Intl.NumberFormat("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Math.round((Number(a.balance)||0)*100)/100)}
               </div>
 
               <button
