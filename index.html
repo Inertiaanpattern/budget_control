@@ -526,7 +526,24 @@ button{
   height:42px;
   border-radius:13px;
   object-fit:contain;
-  background:#eee
+  background:#eee;
+  display:block;
+  flex:0 0 42px
+}
+
+/* Пользовательские логотипы не изменяются при сохранении.
+   Для standalone-режима iOS задаём более резкое масштабирование. */
+.bank-logo-uploaded{
+  image-rendering:auto;
+  -webkit-image-rendering:-webkit-optimize-contrast;
+  image-rendering:-webkit-optimize-contrast;
+}
+
+@media (display-mode: standalone){
+  .bank-logo-uploaded{
+    -webkit-image-rendering:-webkit-optimize-contrast;
+    image-rendering:-webkit-optimize-contrast;
+  }
 }
 
 .bank-icon-picker{
@@ -2427,7 +2444,7 @@ function logoFor(a){
       :a?.icon;
 
   if(typeof savedIcon==="string" && savedIcon.startsWith("data:image/")){
-    return `<img class="bank-logo" src="${savedIcon}" alt="">`;
+    return `<img class="bank-logo bank-logo-uploaded" src="${savedIcon}" alt="" width="42" height="42" decoding="sync" draggable="false">`;
   }
 
   const iconForAccount=
