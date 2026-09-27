@@ -662,7 +662,7 @@ button{
 #calculatorOverlay{z-index:10000}
 
 #calculatorOverlay.open{
-  z-index:100
+  z-index:10000
 }
 
 .modal{
@@ -1123,7 +1123,10 @@ button{
 
       <div class="stat-row">
         <span>Основная зарплата</span>
-        <span class="stat-value" id="mainSalaryDisplay"></span>
+        <div class="category-actions">
+          <span class="stat-value" id="mainSalaryDisplay"></span>
+          <button class="icon-action" id="editMainSalaryButton" title="Изменить" aria-label="Изменить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button>
+        </div>
       </div>
     </div>
 
@@ -2433,9 +2436,11 @@ function logoFor(a){
 
   if(url){
     const fallback=encodeURIComponent(bankFallbackSvg(key,a?.name||"С"));
+    /* ВТБ не тянем удалённым favicon: на iOS/Safari и в режиме
+       «На экран Домой» он периодически не загружается. Показываем
+       встроенный SVG сразу, поэтому логотип не зависит от сети/кэша. */
     if(key==="vtb") {
-      const direct="https://www.vtb.ru/favicon.ico";
-      return `<img class="bank-logo" src="${url}" alt="" onerror="this.onerror=null;this.src='${direct}'" onload="if(this.naturalWidth===0)this.src='${direct}'">`;
+      return `<div class="bank-logo bank-fallback">${bankFallbackSvg("vtb",a?.name||"ВТБ")}</div>`;
     }
     return `<img class="bank-logo" src="${url}" alt="" onerror="this.outerHTML=decodeURIComponent('${fallback}')">`;
   }
@@ -3240,17 +3245,23 @@ function editFin(t){
   financeTitle.textContent=
     t==="totalIncome"
       ?"Общий доход"
-      :"Аванс";
+      :t==="salary"
+        ?"Основная зарплата"
+        :"Аванс";
 
   financeLabel.textContent=
     t==="totalIncome"
       ?"Общий месячный доход"
-      :"Сумма аванса";
+      :t==="salary"
+        ?"Сумма основной зарплаты"
+        :"Сумма аванса";
 
   financeInput.value=
     t==="totalIncome"
       ?totalIncome
-      :advance;
+      :t==="salary"
+        ?salary
+        :advance;
 
   open("financeOverlay");
 
@@ -4331,6 +4342,45 @@ function backupBeforeGoogleApply(){
   }
 }
 
+function mergeSyncKeepingLocalChanges(local,google,snapshot){
+  const merged=JSON.parse(JSON.stringify(google));
+  const snap=snapshot?normalizeSyncData(snapshot):null;
+
+  // Счета: если баланс/название/тип/лимит менялись на телефоне
+  // после последнего общего снимка, телефон является источником истины.
+  const localAccounts=normalizeSyncData(local).accounts;
+  const googleAccounts=normalizeSyncData(google).accounts;
+  const snapAccounts=snap?snap.accounts:[];
+  const byId=(arr,id)=>arr.find(x=>String(x.id)===String(id));
+  const accountIds=new Set([...localAccounts,...googleAccounts].map(a=>String(a.id)));
+  merged.accounts=[...accountIds].map(id=>{
+    const l=byId(localAccounts,id), g=byId(googleAccounts,id), b=byId(snapAccounts,id);
+    if(!l) return g;
+    if(!g) return l;
+    if(!b) return l;
+    const localChanged=JSON.stringify(l)!==JSON.stringify(b);
+    return localChanged?l:g;
+  }).filter(Boolean);
+
+  // Настройки дохода обрабатываем отдельно, чтобы старая сумма из Google
+  // не возвращала прежнюю зарплату после изменения на телефоне.
+  if(snap){
+    const l=normalizeSyncData(local).settings;
+    const b=snap.settings;
+    if(JSON.stringify(l)!==JSON.stringify(b)) merged.settings=l;
+  }else{
+    merged.settings=normalizeSyncData(local).settings;
+  }
+
+  // Иконки, лимиты, операции и цели также сохраняем с телефона, если они
+  // отличаются от последнего общего снимка.
+  for(const key of ["plans","transactions","goals","debts","debtSchedules","accountIcons"]){
+    if(!snap || JSON.stringify(normalizeSyncData(local)[key])!==JSON.stringify(snap[key]))
+      merged[key]=normalizeSyncData(local)[key];
+  }
+  return normalizeSyncData(merged);
+}
+
 async function safeSyncWithGoogle(manual=false){
   if(syncInProgress) return;
   syncInProgress=true;
@@ -4365,7 +4415,11 @@ async function safeSyncWithGoogle(manual=false){
         save(SYNC_SNAPSHOT_KEY,local);
         setSyncStatus("Телефон и Google совпадают ✓","success");
       }else{
-        setSyncStatus("Есть различия. Ничего не перезаписываю — сначала выбери, какую версию сохранить.","error");
+        // При отсутствии снимка не отдаём приоритет старому Google:
+        // текущие данные телефона должны переживать обновление приложения.
+        await googlePush();
+        save(SYNC_SNAPSHOT_KEY,local);
+        setSyncStatus("Текущие данные телефона сохранены в Google ✓","success");
       }
       return;
     }
@@ -4395,8 +4449,15 @@ async function safeSyncWithGoogle(manual=false){
       return;
     }
 
-    /* Изменения произошли с обеих сторон. Автоматически ничего не выбираем. */
-    setSyncStatus("Изменения есть и на телефоне, и в Google. Ничего не перезаписываю автоматически.","error");
+    /* Изменения произошли с обеих сторон. Объединяем по полям:
+       то, что изменилось на телефоне после последнего снимка, сохраняем
+       с телефона. Это особенно важно для баланса отдельного счёта. */
+    const merged=mergeSyncKeepingLocalChanges(local,google,snap);
+    applyGoogleData(merged);
+    await googlePush();
+    save(SYNC_SNAPSHOT_KEY,merged);
+    renderCats(); renderAccounts(); renderDebts(); renderGoals(); updateFinance();
+    setSyncStatus("Изменения объединены, баланс и настройки телефона сохранены ✓","success");
   }catch(error){
     console.error("Babki safe sync:",error);
     setSyncStatus("Автосинхронизация не выполнена: "+(error?.message||"ошибка"),"error");
@@ -5582,6 +5643,11 @@ editSalaryButton.addEventListener(
   () => editFin("totalIncome")
 );
 
+editMainSalaryButton.addEventListener(
+  "click",
+  () => editFin("salary")
+);
+
 editAdvanceButton.addEventListener(
   "click",
   () => editFin("advance")
@@ -5606,6 +5672,9 @@ saveFinanceButton.addEventListener(
 
     if(financeType === "totalIncome")
       totalIncome = value;
+
+    if(financeType === "salary")
+      totalIncome = value + Math.max(0,advance);
 
     if(financeType === "advance")
       advance = value;
