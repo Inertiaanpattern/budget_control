@@ -1800,6 +1800,10 @@ const money=v=>
   )+" ₽";
 
 
+const moneyPlain=v=>
+  new Intl.NumberFormat("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Math.round((Number(v)||0)*100)/100);
+
+
 const cat=n=>
   categories.find(x=>x.name===n);
 
@@ -2473,7 +2477,7 @@ function renderAccounts(){
             <div class="account-actions">
 
               <div class="account-balance ${debt?"negative":""}">
-                ${money(a.balance||0)}
+                ${moneyPlain(a.balance||0)}
               </div>
 
               <button
@@ -2489,6 +2493,13 @@ function renderAccounts(){
                 title="Изменить счёт"
                 aria-label="Изменить счёт"
               >${uiIcon("edit")}</button>
+
+              <button
+                class="icon-action danger"
+                data-account-delete="${i}"
+                title="Удалить счёт"
+                aria-label="Удалить счёт"
+              >${uiIcon("delete")}</button>
 
             </div>
 
@@ -5252,6 +5263,20 @@ addAccountButton.addEventListener(
 
 accountsList.addEventListener("click", e => {
 
+  const deleteButton=e.target.closest("[data-account-delete]");
+  if(deleteButton){
+    e.preventDefault(); e.stopPropagation();
+    const i=Number(deleteButton.dataset.accountDelete);
+    if(!Number.isInteger(i) || !accounts[i]) return;
+    const a=accounts[i];
+    if(!confirm(`Удалить счёт «${a.name||"Счёт"}»?\n\nИстория операций сохранится, но этот счёт больше не будет доступен для новых операций.`)) return;
+    const id=a.id; accounts.splice(i,1);
+    if(id) delete accountIcons[id];
+    save(AIK,accountIcons); save(AK,accounts);
+    renderAccounts(); renderDebts(); renderHistory(); home();
+    return;
+  }
+
   const button =
     e.target.closest("[data-ai]");
 
@@ -5941,6 +5966,7 @@ debtsList.addEventListener(
         )
         .map(a => ({
           id:"card_"+a.name,
+          accountId:a.id,
           kind:"credit"
         }))
         .concat(
