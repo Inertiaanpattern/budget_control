@@ -746,6 +746,52 @@ button{
   margin-bottom:2px
 }
 
+.nav-date-icon{
+  width:21px;
+  height:21px;
+  box-sizing:border-box;
+  margin:0 auto 2px;
+  border:1.7px solid currentColor;
+  border-radius:5px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  overflow:hidden;
+}
+
+.nav-date-top{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:5px;
+  border-bottom:1.4px solid currentColor;
+}
+
+.nav-date-top::before,
+.nav-date-top::after{
+  content:"";
+  position:absolute;
+  top:-2px;
+  width:2px;
+  height:5px;
+  border-radius:2px;
+  background:currentColor;
+}
+
+.nav-date-top::before{left:5px}
+.nav-date-top::after{right:5px}
+
+.nav-date-number{
+  margin-top:5px;
+  font-size:9px;
+  line-height:1;
+  font-weight:800;
+  letter-spacing:-.2px;
+}
+
 .nav-icon-svg svg{
   width:21px;
   height:21px;
@@ -1580,7 +1626,10 @@ button{
   <div class="nav-inner">
 
     <button class="active" data-screen="home">
-      <span class="nav-icon">⌂</span>
+      <span class="nav-icon nav-date-icon" id="navTodayDate" aria-hidden="true">
+        <span class="nav-date-top"></span>
+        <span class="nav-date-number">27</span>
+      </span>
       Сегодня
     </button>
 
@@ -1599,7 +1648,9 @@ button{
     </button>
 
     <button data-screen="debts">
-      <span class="nav-icon">↺</span>
+      <span class="nav-icon nav-icon-svg">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9a5 5 0 0 1 10 0v3.2l1.7 2.3H5.3L7 12.2Z"/><path d="M9.5 17.2a2.7 2.7 0 0 0 5 0"/><path d="M8.2 5.2 6.7 3.8M15.8 5.2l1.5-1.4"/><path d="M12 9v2.2l1.5 1"/></svg>
+      </span>
       Долги
     </button>
 
@@ -1729,6 +1780,14 @@ const today=()=>{
   let d=new Date();
   return d.toISOString().slice(0,10);
 };
+
+function updateNavTodayDate(){
+  const el=document.querySelector("#navTodayDate .nav-date-number");
+  if(el) el.textContent=String(new Date().getDate());
+}
+
+updateNavTodayDate();
+setInterval(updateNavTodayDate,60000);
 
 
 function save(k,v){
