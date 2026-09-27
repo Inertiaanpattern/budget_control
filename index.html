@@ -470,10 +470,44 @@ button{
   color:#ffffffa6
 }
 
+.account-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  column-gap:12px;
+}
+
 .account-main{
+  min-width:0;
   display:flex;
   align-items:center;
-  gap:12px
+  gap:12px;
+}
+
+.account-left{
+  min-width:0;
+}
+
+.account-actions{
+  display:grid;
+  grid-template-columns:104px 34px 34px;
+  align-items:center;
+  justify-content:end;
+  column-gap:6px;
+  min-width:182px;
+}
+
+.account-balance{
+  width:104px;
+  text-align:right;
+  white-space:nowrap;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+}
+
+.account-actions .icon-action{
+  width:34px;
+  min-width:34px;
 }
 
 .bank-logo{
@@ -612,6 +646,11 @@ button{
 
 .overlay.open{
   display:flex
+}
+
+/* Калькулятор открывается поверх любого редактора, в том числе счёта. */
+#calculatorOverlay.open{
+  z-index:100
 }
 
 .modal{
@@ -5594,6 +5633,7 @@ saveDateButton.addEventListener(
     save(
       FK,
       {
+        totalIncome,
         salary,
         advance,
         advanceDate,
@@ -5907,7 +5947,8 @@ debtsList.addEventListener(
             Number(a.balance || 0) < 0
         )
         .map(a => ({
-          id:"card_"+a.name,
+          id:"card_"+a.id,
+          accountId:a.id,
           kind:"credit"
         }))
         .concat(
