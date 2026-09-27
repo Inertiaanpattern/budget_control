@@ -560,6 +560,44 @@ button{
   font-weight:800
 }
 
+.debt-total-card{
+  padding:14px 15px;
+  margin-bottom:10px;
+  border-radius:17px;
+  background:var(--pp);
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex-wrap:wrap
+}
+.debt-total-card strong{
+  font-size:19px
+}
+.debt-total-card .debt-meta{
+  flex-basis:100%;
+  margin-top:0
+}
+.debt-schedule-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) 38px;
+  gap:7px;
+  align-items:center;
+  margin-top:8px
+}
+.debt-schedule-row .text-input{
+  min-width:0;
+  padding:11px 10px
+}
+.debt-schedule-remove{
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:12px;
+  background:#f5dddd;
+  color:var(--danger);
+  font-size:18px
+}
+
 .debt-meta,
 .goal-meta{
   font-size:12px;
@@ -1513,6 +1551,18 @@ button{
       type="date"
     >
 
+    <div class="field-label">Связать с лимитом</div>
+
+    <select id="debtLimitCategory" class="select">
+      <option value="">Не связывать</option>
+      ${categories.map(c=>`<option value="${c.name}">${c.name}</option>`).join("")}
+    </select>
+
+    <div class="field-label">График платежей</div>
+    <div class="small-note">Добавь месяцы и суммы. Эти платежи автоматически прибавятся к лимиту выбранной категории.</div>
+    <div id="debtScheduleList"></div>
+    <button type="button" class="inline-button" id="addDebtScheduleRowButton" style="margin-top:9px">＋ Добавить платёж</button>
+
     <button
       class="primary"
       id="saveDebtButton"
@@ -1576,6 +1626,7 @@ const DK="babki_personal_debts_v1";
 // Иконки счетов хранятся отдельно от самих счетов, чтобы обновления кода
 // или синхронизация не могли случайно затереть выбранные пользователем логотипы.
 const AIK="babki_account_icons_v1";
+const ASK="babki_active_screen_v1";
 
 
 /* GOOGLE SHEETS */
@@ -1733,7 +1784,7 @@ const catSpent=n=>
 
 const budget=()=>
   categories.reduce(
-    (s,x)=>s+Number(x.plan||0),
+    (s,x)=>s+effectiveCategoryPlan(x.name),
     0
   );
 
@@ -1965,9 +2016,9 @@ function saveBudgetHistorySnapshot(){
     year:budgetYear,
     month:budgetMonth+1,
     categories:Object.fromEntries(
-      categories.map(c=>[c.name,Number(c.plan||0)])
+      categories.map(c=>[c.name,effectiveCategoryPlan(c.name)])
     ),
-    total:categories.reduce((s,c)=>s+Number(c.plan||0),0)
+    total:categories.reduce((s,c)=>s+effectiveCategoryPlan(c.name),0)
   };
   save(BH,h);
 }
@@ -2065,14 +2116,15 @@ function renderCats(){
 
     const s=catSpent(c.name);
 
-    const r=c.plan-s;
+    const plan=effectiveCategoryPlan(c.name);
+    const r=plan-s;
 
-    const p=c.plan
+    const p=plan
       ?Math.min(
         100,
         Math.max(
           0,
-          s/c.plan*100
+          s/plan*100
         )
       )
       :0;
@@ -2114,8 +2166,12 @@ function renderCats(){
       </div>
 
       <div class="category-meta">
-        ${money(s)} из ${money(c.plan)}
+        ${money(s)} из ${money(plan)}
       </div>
+
+      ${debtScheduleTotalForCategory(c.name,budgetMonthKey())>0
+        ?`<div class="category-meta">В лимит включено по графику: ${money(debtScheduleTotalForCategory(c.name,budgetMonthKey()))}</div>`
+        :""}
 
       <div class="category-bar">
         <div
@@ -2334,6 +2390,53 @@ function renderAccounts(){
 }
 
 
+function budgetMonthKeyForDate(value){
+  const d=new Date(String(value||"")+"T00:00:00");
+  if(Number.isNaN(d.getTime())) return null;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+}
+
+function debtScheduleTotalForCategory(categoryName, monthKey=budgetMonthKey()){
+  return debts.reduce((sum,d)=>{
+    if(!d || d.limitCategory!==categoryName || !Array.isArray(d.schedule)) return sum;
+    return sum + d.schedule.reduce((s,p)=>{
+      if(!p || String(p.month)!==String(monthKey)) return s;
+      return s + Math.max(0,Number(p.amount)||0);
+    },0);
+  },0);
+}
+
+function effectiveCategoryPlan(categoryName){
+  const base=Number(cat(categoryName)?.plan||0);
+  return base + debtScheduleTotalForCategory(categoryName);
+}
+
+function debtScheduleTotal(d){
+  return Array.isArray(d?.schedule)
+    ?d.schedule.reduce((s,p)=>s+Math.max(0,Number(p?.amount)||0),0)
+    :0;
+}
+
+function renderDebtScheduleRows(schedule=[]){
+  const rows=Array.isArray(schedule)&&schedule.length ? schedule : [{month:budgetMonthKey(),amount:""}];
+  return rows.map((p,i)=>`
+    <div class="debt-schedule-row" data-schedule-row="${i}">
+      <input class="text-input debt-schedule-month" type="month" value="${String(p?.month||budgetMonthKey())}">
+      <input class="text-input debt-schedule-amount" type="number" inputmode="decimal" placeholder="Сумма" value="${Number(p?.amount||0)||""}">
+      <button type="button" class="small-button debt-schedule-remove" title="Удалить">×</button>
+    </div>
+  `).join("");
+}
+
+function readDebtSchedule(){
+  return [...document.querySelectorAll("#debtScheduleList .debt-schedule-row")]
+    .map(row=>({
+      month:row.querySelector(".debt-schedule-month")?.value||"",
+      amount:Number(row.querySelector(".debt-schedule-amount")?.value||0)
+    }))
+    .filter(x=>x.month && x.amount>0);
+}
+
 function renderDebts(){
 
   const cards=
@@ -2359,8 +2462,17 @@ function renderDebts(){
     cards.concat(debts);
 
 
+  const totalDebt=all.reduce((s,d)=>s+Math.max(0,Number(d.amount)||0),0);
+  const totalBlock=`
+    <div class="debt-total-card">
+      <div>Итого долгов</div>
+      <strong>${money(totalDebt)}</strong>
+      <div class="debt-meta">В текущем месяце по графику: ${money(debts.reduce((s,d)=>s+((Array.isArray(d.schedule)?d.schedule:[]).reduce((x,p)=>x+(String(p?.month)===String(budgetMonthKey())?Math.max(0,Number(p?.amount)||0):0),0)),0))}</div>
+    </div>
+  `;
+
   debtsList.innerHTML=
-    all.length
+    totalBlock + (all.length
       ?all.map((d,i)=>{
 
         const due=
@@ -2425,6 +2537,10 @@ function renderDebts(){
                     :""
                 }
 
+                ${Array.isArray(d.schedule)&&d.schedule.length
+                  ?`<div class="debt-meta">В графике: ${d.schedule.length} платежей · ${money(debtScheduleTotal(d))} всего${d.limitCategory?` · лимит «${d.limitCategory}»`:""}</div>`
+                  :""}
+
               </div>
 
               <div>
@@ -2462,7 +2578,7 @@ function renderDebts(){
         `;
 
       }).join("")
-      :'<div class="empty">Пока нет долгов и обязательств.</div>';
+      :'<div class="empty">Пока нет долгов и обязательств.</div>');
 }
 
 
@@ -2857,6 +2973,9 @@ function deleteTransaction(index){
 }
 
 function screen(id,b){
+
+  if(!document.getElementById(id)) return;
+  localStorage.setItem(ASK,id);
 
   document
     .querySelectorAll(".screen")
@@ -3303,7 +3422,18 @@ function normalizeSyncData(data){
 
       dueDate:x.dueDate
         ?String(x.dueDate)
-        :null
+        :null,
+
+      limitCategory:x.limitCategory
+        ?String(x.limitCategory)
+        :null,
+
+      schedule:Array.isArray(x.schedule)
+        ?x.schedule.map(p=>({
+            month:String(p?.month||""),
+            amount:Number(p?.amount||0)
+          })).filter(p=>p.month&&p.amount>0)
+        :[]
 
     }))
     .sort(
@@ -5723,6 +5853,8 @@ addDebtButton.addEventListener(
     manualDebtName.value = "";
     manualDebtAmount.value = "";
     manualDebtDueDate.value = "";
+    debtLimitCategory.value = "";
+    debtScheduleList.innerHTML = renderDebtScheduleRows();
     saveDebtButton.textContent = "Сохранить долг";
 
     open("debtOverlay");
@@ -5736,6 +5868,22 @@ closeDebtButton.addEventListener(
   () => close("debtOverlay")
 );
 
+
+addDebtScheduleRowButton.addEventListener("click",()=>{
+  const current=readDebtSchedule();
+  current.push({month:budgetMonthKey(),amount:""});
+  debtScheduleList.innerHTML=renderDebtScheduleRows(current);
+});
+
+debtScheduleList.addEventListener("click",e=>{
+  const button=e.target.closest(".debt-schedule-remove");
+  if(!button) return;
+  const rows=[...debtScheduleList.querySelectorAll(".debt-schedule-row")];
+  const index=rows.indexOf(button.closest(".debt-schedule-row"));
+  const current=readDebtSchedule();
+  if(index>=0) current.splice(index,1);
+  debtScheduleList.innerHTML=renderDebtScheduleRows(current);
+});
 
 saveDebtButton.addEventListener(
   "click",
@@ -5759,7 +5907,14 @@ saveDebtButton.addEventListener(
 
       dueDate:
         manualDebtDueDate.value ||
-        null
+        null,
+
+      limitCategory:
+        debtLimitCategory.value ||
+        null,
+
+      schedule:
+        readDebtSchedule()
 
     };
 
@@ -5837,6 +5992,8 @@ debtsList.addEventListener(
       manualDebtName.value = d.name || "";
       manualDebtAmount.value = d.amount || 0;
       manualDebtDueDate.value = d.dueDate || "";
+      debtLimitCategory.value = d.limitCategory || "";
+      debtScheduleList.innerHTML = renderDebtScheduleRows(d.schedule||[]);
       saveDebtButton.textContent = "Сохранить изменения";
 
       open("debtOverlay");
@@ -5951,6 +6108,19 @@ renderDebts();
 renderGoals();
 updateFinance();
 home();
+
+// После обновления/перезагрузки возвращаем последнюю открытую вкладку,
+// а не принудительно «Сегодня». Старые данные localStorage не меняются.
+const savedScreen=localStorage.getItem(ASK);
+const validScreens=["home","budget","accounts","debts","goals","settings","budgetHistory","history"];
+if(savedScreen && validScreens.includes(savedScreen)){
+  const navButton=document.querySelector(`.nav button[data-screen="${savedScreen}"]`);
+  if(navButton) screen(savedScreen,navButton);
+  else {
+    document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+    document.getElementById(savedScreen)?.classList.add("active");
+  }
+}
 
 </script>
 
