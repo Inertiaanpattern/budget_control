@@ -437,7 +437,7 @@ button{
   width:42px;
   height:42px;
   border-radius:13px;
-  object-fit:cover;
+  object-fit:contain;
   background:#eee
 }
 
@@ -1679,6 +1679,38 @@ const read=(k,f)=>{
 };
 
 
+/*
+ * Пользовательские логотипы хранятся как исходные Data URL.
+ * Здесь принципиально НЕТ canvas, resize, JPEG/WebP-конвертации
+ * или иной обработки изображения. Строка возвращается без изменений.
+ */
+function cleanAccountIcons(source){
+
+  const result={};
+
+  if(!source || typeof source!=="object")
+    return result;
+
+  Object.keys(source).forEach(id=>{
+    const value=source[id];
+
+    if(typeof value!=="string")
+      return;
+
+    if(value === "auto" || !value)
+      result[String(id)] = value || "auto";
+    else if(value.startsWith("data:image/"))
+      result[String(id)] = value;
+    else if(
+      ["sber","tbank","vtb","alfa","avangard","wallet","ozon"].includes(value)
+    )
+      result[String(id)] = value;
+  });
+
+  return result;
+}
+
+
 const spent=()=>
   transactions
     .filter(x=>x.type==="expense")
@@ -1803,10 +1835,7 @@ function load(){
   // структура accounts изменится или Google вернет старую версию счетов,
   // пользовательские логотипы все равно останутся на месте.
   const savedAccountIcons=read(AIK,{});
-  accountIcons=
-    savedAccountIcons && typeof savedAccountIcons==="object"
-      ?savedAccountIcons
-      :{};
+  accountIcons=cleanAccountIcons(savedAccountIcons);
 
   if(Array.isArray(a)){
 
@@ -3034,6 +3063,12 @@ function localSyncData(){
 
     accounts:ensureAccountIds(accounts),
 
+    /*
+     * Иконки синхронизируются отдельным полем.
+     * Data URL передаётся как есть — без перекодирования.
+     */
+    accountIcons:cleanAccountIcons(accountIcons),
+
     transactions:
       Array.isArray(transactions)
         ?transactions
@@ -3130,6 +3165,34 @@ function normalizeSyncData(data){
       (a,b)=>
         a.id.localeCompare(b.id)
     );
+
+
+  const normalizedAccountIcons=
+    cleanAccountIcons(
+      d.accountIcons
+    );
+
+
+  /*
+   * Старые версии синхронизации могли хранить иконку внутри accounts.
+   * Если отдельного accountIcons ещё нет, берём legacy icon оттуда
+   * без какого-либо изменения строки.
+   */
+  if(Array.isArray(d.accounts)){
+    d.accounts.forEach(x=>{
+      const id=String(x?.id||"");
+      const icon=x?.icon;
+
+      if(
+        id &&
+        !Object.prototype.hasOwnProperty.call(normalizedAccountIcons,id) &&
+        typeof icon==="string" &&
+        (icon==="auto" || icon.startsWith("data:image/"))
+      ){
+        normalizedAccountIcons[id]=icon;
+      }
+    });
+  }
 
 
   const normalizedTransactions=
@@ -3289,6 +3352,8 @@ function normalizeSyncData(data){
     plans:normalizedPlans,
 
     accounts:normalizedAccounts,
+
+    accountIcons:normalizedAccountIcons,
 
     transactions:
       normalizedTransactions,
@@ -3772,6 +3837,46 @@ function applyGoogleData(data){
     ensureAccountIds(
       normalized.accounts
     );
+
+  /*
+   * Восстанавливаем отдельное хранилище иконок.
+   * Если Google ещё старой версии и поля accountIcons нет,
+   * НЕ затираем уже имеющиеся локальные иконки.
+   */
+  const localIconsBeforeGoogle=
+    cleanAccountIcons(
+      accountIcons
+    );
+
+  const googleIcons=
+    cleanAccountIcons(
+      normalized.accountIcons
+    );
+
+  accountIcons=
+    Object.keys(googleIcons).length
+      ?googleIcons
+      :localIconsBeforeGoogle;
+
+  /*
+   * Legacy icon внутри accounts переносим в отдельное хранилище.
+   * Сам Data URL остаётся побайтно той же строкой.
+   */
+  accounts.forEach(a=>{
+    if(
+      a?.id &&
+      typeof a.icon==="string" &&
+      !Object.prototype.hasOwnProperty.call(accountIcons,a.id) &&
+      (a.icon==="auto" || a.icon.startsWith("data:image/"))
+    ){
+      accountIcons[a.id]=a.icon;
+    }
+  });
+
+  save(
+    AIK,
+    accountIcons
+  );
 
   save(
     AK,
@@ -4729,11 +4834,29 @@ uploadBankIconButton.addEventListener("click",()=>bankIconFileInput.click());
 bankIconFileInput.addEventListener("change",()=>{
   const file=bankIconFileInput.files?.[0];
   if(!file) return;
+
+  /*
+   * Сохраняем оригинальный файл 1:1 как Data URL.
+   * Никакого canvas, изменения размера, JPEG/WebP или quality-параметров.
+   */
   const reader=new FileReader();
+
   reader.onload=()=>{
-    selectedBankIcon=String(reader.result||"");
+    const originalDataUrl=String(reader.result||"");
+
+    if(!originalDataUrl.startsWith("data:image/")){
+      alert("Не удалось прочитать изображение.");
+      return;
+    }
+
+    selectedBankIcon=originalDataUrl;
     updateBankIconPicker();
   };
+
+  reader.onerror=()=>{
+    alert("Не удалось загрузить изображение.");
+  };
+
   reader.readAsDataURL(file);
 });
 
@@ -4788,7 +4911,10 @@ accountsList.addEventListener("click", e => {
   accountNameInput.value =
     a.name || "";
 
-  selectedBankIcon = a.icon || "auto";
+  selectedBankIcon =
+    a?.id && Object.prototype.hasOwnProperty.call(accountIcons,a.id)
+      ? accountIcons[a.id]
+      : (a.icon || "auto");
   updateBankIconPicker();
 
   accountBalanceInput.value =
@@ -4887,6 +5013,10 @@ saveAccountButton.addEventListener(
             )
           : 0,
 
+      /*
+       * Legacy mirror only. Для пользовательской картинки это та же
+       * самая Data URL строка, которая пришла из FileReader.
+       */
       icon:
         selectedBankIcon || "auto"
     };
