@@ -416,7 +416,67 @@ button{
 .debt-name,
 .goal-name{
   font-size:14px;
-  font-weight:700
+  font-weight:700;
+  white-space:normal;
+  overflow-wrap:normal;
+  word-break:normal;
+  hyphens:none;
+  line-height:1.25
+}
+
+/* Название может занимать две строки, но финансовые цифры и действия
+   всегда остаются в своих фиксированных колонках. */
+.account-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  align-items:center;
+  column-gap:12px
+}
+
+.account-main{
+  min-width:0
+}
+
+.account-row .account-left{
+  min-width:0
+}
+
+.account-row .account-balance{
+  width:104px;
+  text-align:right;
+  white-space:nowrap;
+  flex:0 0 104px;
+}
+
+.account-row .account-actions{
+  width:34px;
+  justify-content:center;
+  flex:0 0 34px
+}
+
+.category-top{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:start;
+  column-gap:12px
+}
+
+.category-actions{
+  display:grid;
+  grid-template-columns:104px 34px;
+  align-items:center;
+  column-gap:8px;
+  flex:0 0 auto
+}
+
+.category-remaining{
+  width:104px;
+  text-align:right;
+  white-space:nowrap
+}
+
+.category-name{
+  max-width:100%
 }
 
 .category-limit{
@@ -837,37 +897,6 @@ button{
   padding:18px 4px;
   font-size:13px
 }
-
-.debt-detail-summary{
-  background:var(--pp);
-  border-radius:18px;
-  padding:14px;
-  margin-bottom:14px
-}
-.debt-schedule-month{
-  margin-top:16px;
-  padding-top:12px;
-  border-top:1px solid var(--border)
-}
-.debt-schedule-month-title{
-  font-size:13px;
-  font-weight:800;
-  margin-bottom:8px
-}
-.debt-payment-row{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:9px 0;
-  border-bottom:1px solid var(--border)
-}
-.debt-payment-row:last-child{border-bottom:0}
-.debt-payment-main{flex:1;min-width:0}
-.debt-payment-date{font-size:12px;font-weight:750}
-.debt-payment-note{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.debt-payment-amount{font-size:13px;font-weight:800;white-space:nowrap}
-.debt-detail-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.debt-detail-actions .secondary{margin:0}
 
 .grid2{
   display:grid;
@@ -1651,44 +1680,6 @@ button{
 </div>
 
 
-<!-- ГРАФИК ПЛАТЕЖЕЙ КОНКРЕТНОГО ДОЛГА -->
-<div class="overlay" id="debtDetailOverlay">
-  <div class="modal">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title" id="debtDetailTitle">График платежей</div>
-        <div class="small-note" id="debtDetailSubtitle"></div>
-      </div>
-      <button class="close" id="closeDebtDetailButton">×</button>
-    </div>
-
-    <div class="debt-detail-summary">
-      <div class="stat-row"><span>Текущая задолженность</span><span class="stat-value" id="debtDetailAmount">0 ₽</span></div>
-      <div class="stat-row"><span>Категория лимита</span><span class="stat-value" id="debtDetailCategory">Кредиты | Долги</span></div>
-      <div class="small-note">Платежи из этого графика автоматически добавляются в лимит выбранной категории в соответствующем месяце.</div>
-    </div>
-
-    <div class="field-label">Категория лимита</div>
-    <select id="debtDetailCategoryInput" class="text-input"></select>
-
-    <div class="field-label">Добавить платёж вручную</div>
-    <div class="grid2">
-      <input id="debtPaymentDateInput" class="text-input" type="date">
-      <input id="debtPaymentAmountInput" class="text-input" type="number" inputmode="decimal" placeholder="Сумма">
-    </div>
-    <input id="debtPaymentNoteInput" class="text-input" placeholder="Комментарий (необязательно)" style="margin-top:8px">
-    <button class="primary" id="addDebtPaymentButton" style="margin-top:10px">＋ Добавить платёж</button>
-
-    <div class="field-label" style="margin-top:18px">Загрузить график</div>
-    <div class="small-note">CSV или TSV из Excel / Google Sheets. Нужны минимум два столбца: дата и сумма. Третий столбец можно использовать как комментарий.</div>
-    <input id="debtScheduleFileInput" type="file" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values" style="display:none">
-    <button class="secondary" id="uploadDebtScheduleButton" style="margin-top:10px">Загрузить файл</button>
-
-    <div id="debtScheduleList"></div>
-  </div>
-</div>
-
-
 <!-- НИЖНЯЯ НАВИГАЦИЯ -->
 
 <div class="nav">
@@ -2136,9 +2127,6 @@ function load(){
 
   if(Array.isArray(d))
     debts=d;
-
-  debtSchedules=normalizeDebtSchedules(read(DSK,{}));
-  save(DSK,debtSchedules);
 }
 
 
@@ -2285,8 +2273,6 @@ function renderCats(){
     const s=catSpent(c.name);
 
     const limit=effectiveCategoryLimit(c);
-    const goalAdd=goalCategoryAddition(c.name);
-    const scheduleAdd=scheduleMonthAmount(c.name);
     const r=limit-s;
 
     const p=limit
@@ -2294,7 +2280,7 @@ function renderCats(){
         100,
         Math.max(
           0,
-          s/limit*100
+          s/c.plan*100
         )
       )
       :0;
@@ -2315,8 +2301,7 @@ function renderCats(){
 
           <div class="category-limit">
             Лимит: ${money(limit)}
-            ${goalAdd>0 ? `<span class="small-note"> · цели +${money(goalAdd)}</span>` : ""}
-            ${scheduleAdd>0 ? `<span class="small-note"> · графики +${money(scheduleAdd)}</span>` : ""}
+            ${goalCategoryAddition(c.name)>0 ? `<span class="small-note"> · цели +${money(goalCategoryAddition(c.name))}</span>` : ""}
           </div>
 
         </div>
@@ -2638,7 +2623,7 @@ function renderDebts(){
             :d.amount;
 
         return `
-          <div class="debt-row" data-open-debt="${d.kind}:${d.id}">
+          <div class="debt-row">
 
             <div class="debt-top">
 
@@ -2754,8 +2739,8 @@ function goalCategoryAddition(categoryName){
   );
 }
 
-function effectiveCategoryLimit(c,year=budgetYear,month=budgetMonth){
-  return Number(c.plan||0)+goalCategoryAddition(c.name)+scheduleMonthAmount(c.name,year,month);
+function effectiveCategoryLimit(c){
+  return Number(c.plan||0)+goalCategoryAddition(c.name);
 }
 
 function renderGoals(){
@@ -3319,205 +3304,6 @@ function setSyncStatus(text,type=""){
 
 
 /* -------------------------
-   ДАННЫЕ ГРАФИКОВ ПЛАТЕЖЕЙ
-------------------------- */
-
-function normalizeDebtSchedules(source){
-  const out={};
-  if(!source || typeof source!=="object") return out;
-
-  if(Array.isArray(source)){
-    out.legacy=source.map(normalizeDebtPayment).filter(Boolean);
-    return out;
-  }
-
-  Object.keys(source).forEach(key=>{
-    if(Array.isArray(source[key])){
-      out[String(key)]=source[key].map(normalizeDebtPayment).filter(Boolean);
-    }
-  });
-
-  return out;
-}
-
-function normalizeDebtPayment(x){
-  if(!x || typeof x!=="object") return null;
-  const amount=Number(x.amount);
-  if(!Number.isFinite(amount) || amount<=0) return null;
-  return {
-    id:String(x.id||("pay_"+Date.now()+"_"+Math.random().toString(36).slice(2,8))),
-    date:x.date ? String(x.date).slice(0,10) : "",
-    amount:Math.round(amount*100)/100,
-    note:String(x.note||x.name||"")
-  };
-}
-
-function debtScheduleKey(item){
-  if(!item) return "";
-  if(item.kind==="credit") return "card_"+String(item.accountId||item.id||"");
-  return "debt_"+String(item.id||"");
-}
-
-function debtItemByScheduleKey(key){
-  if(String(key).startsWith("card_")){
-    const id=String(key).slice(5);
-    const a=accounts.find(x=>String(x.id)===id && x.type==="credit");
-    if(!a) return null;
-    return {id:"card_"+a.id,accountId:a.id,kind:"credit",name:a.name+" — кредитная карта",amount:Math.max(0,-Number(a.balance||0)),scheduleCategory:a.scheduleCategory||"Кредиты | Долги"};
-  }
-  if(String(key).startsWith("debt_")){
-    const id=String(key).slice(5);
-    const d=debts.find(x=>String(x.id)===id);
-    if(!d) return null;
-    return {...d,kind:"personal",scheduleCategory:d.scheduleCategory||"Кредиты | Долги"};
-  }
-  const legacyDebt=debts.find(x=>String(x.id)===String(key));
-  if(legacyDebt) return {...legacyDebt,kind:"personal",scheduleCategory:legacyDebt.scheduleCategory||"Кредиты | Долги"};
-  return null;
-}
-
-function scheduleMonthAmount(categoryName,year=budgetYear,month=budgetMonth){
-  if(!categoryName) return 0;
-  const wantedYear=Number(year);
-  const wantedMonth=Number(month);
-  let total=0;
-  Object.entries(debtSchedules||{}).forEach(([key,list])=>{
-    const item=debtItemByScheduleKey(key);
-    if(!item || item.scheduleCategory!==categoryName || !Array.isArray(list)) return;
-    list.forEach(p=>{
-      if(!p?.date) return;
-      const d=new Date(String(p.date)+"T00:00:00");
-      if(d.getFullYear()===wantedYear && d.getMonth()===wantedMonth) total+=Number(p.amount||0);
-    });
-  });
-  return total;
-}
-
-function scheduleMonthBreakdown(categoryName,year=budgetYear,month=budgetMonth){
-  const result=[];
-  Object.entries(debtSchedules||{}).forEach(([key,list])=>{
-    const item=debtItemByScheduleKey(key);
-    if(!item || item.scheduleCategory!==categoryName || !Array.isArray(list)) return;
-    const sum=list.reduce((s,p)=>{
-      if(!p?.date) return s;
-      const d=new Date(String(p.date)+"T00:00:00");
-      return d.getFullYear()===Number(year)&&d.getMonth()===Number(month) ? s+Number(p.amount||0) : s;
-    },0);
-    if(sum>0) result.push({name:item.name,amount:sum});
-  });
-  return result;
-}
-
-function populateDebtScheduleCategorySelect(current){
-  const el=document.getElementById("debtDetailCategoryInput");
-  if(!el) return;
-  el.innerHTML=categories.map(c=>`<option value="${String(c.name).replace(/"/g,"&quot;")}">${c.name}</option>`).join("");
-  el.value=current||"Кредиты | Долги";
-}
-
-function saveDebtScheduleCategory(key,category){
-  const item=debtItemByScheduleKey(key);
-  if(!item) return;
-  if(item.kind==="credit"){
-    const a=accounts.find(x=>String(x.id)===String(item.accountId));
-    if(!a) return;
-    a.scheduleCategory=category;
-    save(AK,accounts);
-  }else{
-    const d=debts.find(x=>String(x.id)===String(item.id));
-    if(!d) return;
-    d.scheduleCategory=category;
-    save(DK,debts);
-  }
-}
-
-function scheduleForKey(key){
-  if(!debtSchedules[key]) debtSchedules[key]=[];
-  if(!Array.isArray(debtSchedules[key])) debtSchedules[key]=[];
-  return debtSchedules[key];
-}
-
-function renderDebtScheduleDetail(){
-  const key=window._babkiDebtScheduleKey;
-  const item=debtItemByScheduleKey(key);
-  if(!item) return;
-  const list=scheduleForKey(key).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-  const catName=item.scheduleCategory||"Кредиты | Долги";
-  document.getElementById("debtDetailTitle").textContent=item.name;
-  document.getElementById("debtDetailSubtitle").textContent="График платежей";
-  document.getElementById("debtDetailAmount").textContent=money(item.amount);
-  document.getElementById("debtDetailCategory").textContent=catName;
-  populateDebtScheduleCategorySelect(catName);
-  const total=list.reduce((s,p)=>s+Number(p.amount||0),0);
-  const detailList=document.getElementById("debtScheduleList");
-  if(!list.length){
-    detailList.innerHTML='<div class="empty">Пока нет платежей. Добавь первый вручную или загрузи график файлом.</div>';
-    return;
-  }
-  const groups={};
-  list.forEach(p=>{
-    const d=p.date?new Date(p.date+"T00:00:00"):null;
-    const keyMonth=d?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`:"Без даты";
-    (groups[keyMonth] ||= []).push(p);
-  });
-  detailList.innerHTML=Object.keys(groups).sort().map(mk=>{
-    const arr=groups[mk];
-    const label=mk==="Без даты"?mk:new Intl.DateTimeFormat("ru-RU",{month:"long",year:"numeric"}).format(new Date(Number(mk.slice(0,4)),Number(mk.slice(5,7))-1,1));
-    return `<div class="debt-schedule-month"><div class="debt-schedule-month-title">${label}</div>${arr.map(p=>`<div class="debt-payment-row"><div class="debt-payment-main"><div class="debt-payment-date">${p.date?new Date(p.date+"T00:00:00").toLocaleDateString("ru-RU"):"Без даты"}</div>${p.note?`<div class="debt-payment-note">${p.note}</div>`:""}</div><div class="debt-payment-amount">${money(p.amount)}</div><button class="icon-action danger" data-delete-payment="${p.id}" title="Удалить платёж" aria-label="Удалить платёж">${uiIcon("delete")}</button></div>`).join("")}</div>`;
-  }).join("")+`<div class="small-note" style="margin-top:12px">Всего по графику: <b>${money(total)}</b></div>`;
-}
-
-function openDebtSchedule(item){
-  const key=debtScheduleKey(item);
-  if(!key) return;
-  window._babkiDebtScheduleKey=key;
-  const input=document.getElementById("debtPaymentDateInput");
-  if(input) input.value=today();
-  document.getElementById("debtPaymentAmountInput").value="";
-  document.getElementById("debtPaymentNoteInput").value="";
-  renderDebtScheduleDetail();
-  open("debtDetailOverlay");
-}
-
-function parseDebtScheduleFile(text){
-  const lines=String(text||"").replace(/^\uFEFF/,"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-  if(!lines.length) return [];
-  const delimiter=lines[0].includes("\t")?"\t":(lines[0].includes(";")?";":",");
-  const rows=lines.map(line=>{
-    const cells=[]; let cur=""; let quoted=false;
-    for(let i=0;i<line.length;i++){
-      const ch=line[i];
-      if(ch==='"'){ if(quoted && line[i+1]==='"'){cur+='"';i++;} else quoted=!quoted; }
-      else if(ch===delimiter && !quoted){cells.push(cur.trim());cur="";}
-      else cur+=ch;
-    }
-    cells.push(cur.trim()); return cells;
-  });
-  const first=rows[0].map(x=>x.toLowerCase());
-  const dateIndex=first.findIndex(x=>/дата|date/.test(x));
-  const amountIndex=first.findIndex(x=>/сумм|amount|платеж|payment/.test(x));
-  const hasHeader=dateIndex>=0||amountIndex>=0;
-  const di=hasHeader?Math.max(0,dateIndex):0;
-  const ai=hasHeader?Math.max(0,amountIndex):1;
-  const start=hasHeader?1:0;
-  const out=[];
-  for(let i=start;i<rows.length;i++){
-    const r=rows[i];
-    let date=String(r[di]||"").trim();
-    let amountText=String(r[ai]||"").replace(/\s/g,"").replace(/₽/g,"");
-    if(amountText.includes(",")&&!amountText.includes(".")) amountText=amountText.replace(",",".");
-    else amountText=amountText.replace(/,/g,"");
-    const amount=Number(amountText);
-    if(!Number.isFinite(amount)||amount<=0) continue;
-    if(/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(date)){const [dd,mm,yy]=date.split(".");date=`${yy}-${mm.padStart(2,"0")}-${dd.padStart(2,"0")}`;}
-    if(/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(date)) date=date.replace(/\//g,"-");
-    const note=r.find((v,idx)=>idx!==di&&idx!==ai&&v)?.trim()||"";
-    out.push({id:"pay_"+Date.now()+"_"+i,date,amount:Math.round(amount*100)/100,note});
-  }
-  return out;
-}
-
-/* -------------------------
    ДАННЫЕ ДЛЯ СИНХРОНИЗАЦИИ
 ------------------------- */
 
@@ -3558,7 +3344,9 @@ function localSyncData(){
         :[],
 
     debtSchedules:
-      normalizeDebtSchedules(debtSchedules),
+      debtSchedules && typeof debtSchedules==="object"
+        ?debtSchedules
+        :{},
 
     settings:{
       salary:Number(salary)||0,
@@ -3634,10 +3422,6 @@ function normalizeSyncData(data){
 
       creditLimit:Number(
         x.creditLimit||0
-      ),
-
-      scheduleCategory:String(
-        x.scheduleCategory||"Кредиты | Долги"
       )
 
     }))
@@ -3787,11 +3571,7 @@ function normalizeSyncData(data){
 
       dueDate:x.dueDate
         ?String(x.dueDate)
-        :null,
-
-      scheduleCategory:String(
-        x.scheduleCategory||"Кредиты | Долги"
-      )
+        :null
 
     }))
     .sort(
@@ -3853,7 +3633,9 @@ function normalizeSyncData(data){
       normalizedDebts,
 
     debtSchedules:
-      normalizeDebtSchedules(d.debtSchedules),
+      d.debtSchedules && typeof d.debtSchedules==="object"
+        ?d.debtSchedules
+        :{},
 
     settings:
       normalizedSettings
@@ -4508,9 +4290,6 @@ function mergeLegacyGoogleWithLocal(google){
 
     debts:
       local.debts,
-
-    debtSchedules:
-      local.debtSchedules,
 
     settings:
       local.settings
@@ -6119,12 +5898,7 @@ saveDebtButton.addEventListener(
 
       dueDate:
         manualDebtDueDate.value ||
-        null,
-
-      scheduleCategory:
-        editingDebt !== null
-          ?(debts[editingDebt].scheduleCategory||"Кредиты | Долги")
-          :"Кредиты | Долги"
+        null
 
     };
 
@@ -6173,12 +5947,8 @@ debtsList.addEventListener(
             Number(a.balance || 0) < 0
         )
         .map(a => ({
-          id:"card_"+a.id,
-          accountId:a.id,
-          kind:"credit",
-          name:a.name+" — кредитная карта",
-          amount:Math.max(0,-Number(a.balance||0)),
-          scheduleCategory:a.scheduleCategory||"Кредиты | Долги"
+          id:"card_"+a.name,
+          kind:"credit"
         }))
         .concat(
           debts.map(d => ({
@@ -6186,16 +5956,6 @@ debtsList.addEventListener(
             kind:"personal"
           }))
         );
-
-    const row=e.target.closest("[data-open-debt]");
-    if(row && !editButton && !deleteButton){
-      const parts=String(row.dataset.openDebt||"").split(":");
-      let item=null;
-      if(parts[0]==="credit") item=all.find(x=>x.kind==="credit" && String(x.id)===String(parts[1]));
-      else item=all.find(x=>x.kind==="personal" && String(x.id)===String(parts[1]));
-      if(item) openDebtSchedule(item);
-      return;
-    }
 
     if(editButton){
       const item =
@@ -6270,68 +6030,6 @@ debtsList.addEventListener(
 
   }
 );
-
-document.getElementById("closeDebtDetailButton").addEventListener("click",()=>close("debtDetailOverlay"));
-
-document.getElementById("debtDetailCategoryInput").addEventListener("change",e=>{
-  const key=window._babkiDebtScheduleKey;
-  saveDebtScheduleCategory(key,e.target.value);
-  renderDebtScheduleDetail();
-  renderDebts();
-  renderCats();
-  updateFinance();
-});
-
-document.getElementById("addDebtPaymentButton").addEventListener("click",()=>{
-  const key=window._babkiDebtScheduleKey;
-  if(!key) return;
-  const date=document.getElementById("debtPaymentDateInput").value;
-  const amount=Number(document.getElementById("debtPaymentAmountInput").value||0);
-  const note=document.getElementById("debtPaymentNoteInput").value.trim();
-  if(!date || amount<=0){ alert("Укажи дату и сумму платежа."); return; }
-  scheduleForKey(key).push({id:"pay_"+Date.now()+"_"+Math.random().toString(36).slice(2,8),date,amount:Math.round(amount*100)/100,note});
-  save(DSK,normalizeDebtSchedules(debtSchedules));
-  document.getElementById("debtPaymentAmountInput").value="";
-  document.getElementById("debtPaymentNoteInput").value="";
-  renderDebtScheduleDetail();
-  renderCats();
-  updateFinance();
-});
-
-document.getElementById("uploadDebtScheduleButton").addEventListener("click",()=>document.getElementById("debtScheduleFileInput").click());
-
-document.getElementById("debtScheduleFileInput").addEventListener("change",e=>{
-  const file=e.target.files?.[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    const key=window._babkiDebtScheduleKey;
-    const rows=parseDebtScheduleFile(reader.result);
-    if(!rows.length){ alert("Не удалось найти платежи. Проверь, что в файле есть дата и сумма."); return; }
-    scheduleForKey(key).push(...rows);
-    save(DSK,normalizeDebtSchedules(debtSchedules));
-    renderDebtScheduleDetail();
-    renderCats();
-    updateFinance();
-    alert(`Загружено платежей: ${rows.length}`);
-  };
-  reader.readAsText(file,"utf-8");
-  e.target.value="";
-});
-
-document.getElementById("debtScheduleList").addEventListener("click",e=>{
-  const btn=e.target.closest("[data-delete-payment]");
-  if(!btn) return;
-  const key=window._babkiDebtScheduleKey;
-  const list=scheduleForKey(key);
-  const i=list.findIndex(p=>String(p.id)===String(btn.dataset.deletePayment));
-  if(i<0) return;
-  list.splice(i,1);
-  save(DSK,normalizeDebtSchedules(debtSchedules));
-  renderDebtScheduleDetail();
-  renderCats();
-  updateFinance();
-});
 
 /* GOOGLE */
 
