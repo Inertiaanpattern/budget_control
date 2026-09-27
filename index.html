@@ -414,12 +414,30 @@ button{
 .category-name,
 .account-name,
 .debt-name,
-.goal-name{
-  font-size:14px;
-  font-weight:700;
+.goal-name,
+.history-name,
+.history-meta,
+.category-limit,
+.category-meta,
+.goal-meta,
+.debt-meta,
+.stat-row > span,
+.stat-value,
+.category-remaining,
+.account-balance,
+.debt-amount,
+.goal-amount{
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
+}
+
+.category-name,
+.account-name,
+.debt-name,
+.goal-name{
+  font-size:13px;
+  font-weight:700;
 }
 
 .stat-row > span,
@@ -428,7 +446,7 @@ button{
 .account-balance,
 .debt-amount,
 .goal-amount{
-  white-space:nowrap;
+  font-size:13px;
   font-variant-numeric:tabular-nums;
 }
 
@@ -825,6 +843,15 @@ button{
   letter-spacing:-.2px;
 }
 
+.nav-icon-svg{
+  width:22px;
+  height:22px;
+  margin:0 auto 2px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
 .nav-icon-svg svg{
   width:22px;
   height:22px;
@@ -838,7 +865,7 @@ button{
 }
 
 .nav button:nth-child(3) .nav-icon-svg svg{transform:scale(1.02)}
-.nav button:nth-child(4) .nav-icon-svg svg{transform:scale(1.04)}
+.nav button:nth-child(4) .nav-icon-svg svg{transform:scale(1.12)}
 .nav button:nth-child(5) .nav-icon-svg svg{transform:scale(1.08)}
 .nav button:nth-child(6) .nav-icon-svg svg{transform:scale(.96)}
 
@@ -4106,10 +4133,30 @@ function applyGoogleData(data){
       normalized.accountIcons
     );
 
-  accountIcons=
-    Object.keys(googleIcons).length
-      ?googleIcons
-      :localIconsBeforeGoogle;
+  /*
+   * Google может вернуть неполный набор accountIcons (например, если
+   * старый backend ещё не знает обо всех пользовательских картинках).
+   * Никогда не удаляем локальные иконки из-за такого ответа.
+   */
+  accountIcons={
+    ...localIconsBeforeGoogle,
+    ...googleIcons
+  };
+
+  /* Если Google прислал пустое/неполное значение для конкретного счёта,
+     локальная пользовательская иконка всё равно остаётся сохранённой. */
+  Object.keys(localIconsBeforeGoogle).forEach(id=>{
+    const localIcon=localIconsBeforeGoogle[id];
+    const googleIcon=googleIcons[id];
+
+    if(
+      typeof localIcon==="string" &&
+      localIcon.startsWith("data:image/") &&
+      (!googleIcon || !String(googleIcon).startsWith("data:image/"))
+    ){
+      accountIcons[id]=localIcon;
+    }
+  });
 
   /*
    * Legacy icon внутри accounts переносим в отдельное хранилище.
