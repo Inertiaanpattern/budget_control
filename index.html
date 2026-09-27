@@ -472,7 +472,7 @@ button{
 
 .account-row{
   display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-columns:minmax(0,1fr) 124px;
   align-items:center;
   column-gap:12px;
 }
@@ -488,21 +488,31 @@ button{
   min-width:0;
 }
 
+/* Баланс и действия расположены так же, как в блоке «Долги»:
+   сумма сверху, иконки под ней. */
 .account-actions{
-  display:grid;
-  grid-template-columns:104px 34px 34px;
-  align-items:center;
-  justify-content:end;
-  column-gap:6px;
-  min-width:182px;
+  width:124px;
+  min-width:124px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  justify-content:flex-start;
+  gap:4px;
 }
 
 .account-balance{
-  width:104px;
+  width:124px;
   text-align:right;
   white-space:nowrap;
   font-weight:800;
   font-variant-numeric:tabular-nums;
+}
+
+.account-actions .actions-row{
+  width:100%;
+  justify-content:flex-end;
+  gap:4px;
+  margin-top:0;
 }
 
 .account-actions .icon-action{
@@ -649,6 +659,8 @@ button{
 }
 
 /* Калькулятор открывается поверх любого редактора, в том числе счёта. */
+#calculatorOverlay{z-index:10000}
+
 #calculatorOverlay.open{
   z-index:100
 }
@@ -2492,19 +2504,30 @@ function renderAccounts(){
                 ${new Intl.NumberFormat("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Math.round((Number(a.balance)||0)*100)/100)}
               </div>
 
-              <button
-                class="icon-action"
-                data-transfer-from="${i}"
-                title="Перевести со счёта"
-                aria-label="Перевести со счёта"
-              >${uiIcon("transfer")}</button>
+              <div class="actions-row">
 
-              <button
-                class="icon-action"
-                data-ai="${i}"
-                title="Изменить счёт"
-                aria-label="Изменить счёт"
-              >${uiIcon("edit")}</button>
+                <button
+                  class="icon-action"
+                  data-transfer-from="${i}"
+                  title="Перевести со счёта"
+                  aria-label="Перевести со счёта"
+                >${uiIcon("transfer")}</button>
+
+                <button
+                  class="icon-action"
+                  data-ai="${i}"
+                  title="Изменить счёт"
+                  aria-label="Изменить счёт"
+                >${uiIcon("edit")}</button>
+
+                <button
+                  class="icon-action danger"
+                  data-account-delete="${i}"
+                  title="Удалить счёт"
+                  aria-label="Удалить счёт"
+                >${uiIcon("delete")}</button>
+
+              </div>
 
             </div>
 
@@ -5265,6 +5288,26 @@ addAccountButton.addEventListener(
 
 
 accountsList.addEventListener("click", e => {
+
+  const deleteButton = e.target.closest("[data-account-delete]");
+  if(deleteButton){
+    const index = Number(deleteButton.dataset.accountDelete);
+    const account = accounts[index];
+    if(!Number.isInteger(index) || !account) return;
+
+    const ok = confirm(`Удалить счёт «${account.name || "Счёт"}»?`);
+    if(!ok) return;
+
+    const accountId = account.id;
+    accounts.splice(index,1);
+    if(accountId) delete accountIcons[accountId];
+    save(AK,accounts);
+    save(AIK,accountIcons);
+    renderAccounts();
+    renderDebts();
+    updateFinance();
+    return;
+  }
 
   const button =
     e.target.closest("[data-ai]");
