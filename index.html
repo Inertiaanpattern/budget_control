@@ -235,8 +235,8 @@ button{
   align-items:center;
   justify-content:center;
 }
-.history-edit{background:var(--pp);color:#64484f}
-.history-delete{background:#f5dddd;color:var(--danger)}
+.history-edit{background:transparent;color:#8f747b}
+.history-delete{background:transparent;color:#b46f79}
 
 .stat-row{
   display:flex;
@@ -294,14 +294,14 @@ button{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  background:var(--pp);
-  color:#64484f;
+  background:transparent;
+  color:#8f747b;
   cursor:pointer;
 }
 
 .icon-action.danger{
-  background:#f5dddd;
-  color:var(--danger);
+  background:transparent;
+  color:#b46f79;
 }
 
 .icon-action svg,
@@ -509,66 +509,20 @@ button{
   display:block
 }
 
-/* Весь счёт можно зажать и перетащить для перевода */
+/* Счёт прокручивается как обычный список. Перевод запускается отдельной кнопкой. */
 .account-row{
   position:relative;
-  touch-action:none;
+  touch-action:pan-y;
   user-select:none;
   -webkit-user-select:none;
   -webkit-touch-callout:none;
-  cursor:grab;
-  transition:background .18s, box-shadow .18s, transform .18s, opacity .18s;
 }
-.account-row:active{cursor:grabbing}
-.account-row.transfer-source{
-  background:var(--pp);
-  border-radius:16px;
-  padding-left:10px;
-  padding-right:10px;
-  margin-left:-10px;
-  margin-right:-10px;
-  box-shadow:0 0 0 2px var(--pink), 0 8px 22px #00000014;
+.account-row .account-actions{
+  gap:6px;
 }
-.account-row.transfer-source::after{
-  content:"⇄  Перетащите на другой счёт";
-  position:absolute;
-  right:8px;
-  top:-10px;
-  padding:5px 9px;
-  border-radius:10px;
-  background:var(--dark);
-  color:#fff;
-  font-size:10px;
-  font-weight:700;
-  pointer-events:none;
-  white-space:nowrap;
-  box-shadow:0 4px 12px #0002;
+.account-row .account-actions .icon-action{
+  flex:0 0 auto;
 }
-.account-row.transfer-target{
-  background:var(--pp);
-  border-radius:16px;
-  padding-left:10px;
-  padding-right:10px;
-  margin-left:-10px;
-  margin-right:-10px;
-  box-shadow:0 0 0 2px var(--pink);
-}
-.transfer-ghost{
-  position:fixed;
-  z-index:9999;
-  pointer-events:none;
-  transform:translate(-50%,-50%) scale(.96);
-  opacity:.94;
-  box-shadow:0 12px 30px #0003;
-  background:#fff;
-  border-radius:16px;
-  padding:0 10px;
-  min-width:260px;
-  max-width:calc(100vw - 30px);
-}
-.transfer-ghost .small-button{display:none}
-.transfer-ghost .account-row{padding:13px 0 !important; margin:0 !important; border:0 !important; box-shadow:none !important; background:transparent !important}
-.transfer-ghost::after{display:none}
 
 .bank-fallback{
   display:flex;
@@ -601,6 +555,29 @@ button{
 .debt-amount,
 .goal-amount{
   font-weight:800
+}
+
+.debt-right{
+  width:124px;
+  min-width:124px;
+  text-align:right;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  flex-shrink:0
+}
+
+.debt-amount{
+  min-width:124px;
+  text-align:right;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+
+.debt-right .actions-row{
+  width:100%;
+  justify-content:flex-end;
+  gap:4px;
 }
 
 .debt-meta,
@@ -1717,6 +1694,7 @@ const categories=[
 
 const money=v=>
   new Intl.NumberFormat("ru-RU",{
+    minimumFractionDigits:2,
     maximumFractionDigits:2
   }).format(
     Math.round((Number(v)||0)*100)/100
@@ -2358,7 +2336,6 @@ function renderAccounts(){
           <div
             class="account-row"
             data-transfer-index="${i}"
-            title="Зажмите счёт и перетащите его на другой счёт для перевода"
           >
 
             <div class="account-main">
@@ -2391,6 +2368,13 @@ function renderAccounts(){
               <div class="account-balance ${debt?"negative":""}">
                 ${money(a.balance||0)}
               </div>
+
+              <button
+                class="icon-action"
+                data-transfer-from="${i}"
+                title="Перевести со счёта"
+                aria-label="Перевести со счёта"
+              >${uiIcon("transfer")}</button>
 
               <button
                 class="icon-action"
@@ -2533,7 +2517,7 @@ function renderDebts(){
 
               </div>
 
-              <div>
+              <div class="debt-right">
 
                 <div class="debt-amount negative">
                   ${money(d.amount)}
@@ -5341,271 +5325,16 @@ transferButton.addEventListener(
   () => prepareTransfer()
 );
 
-/* ДОЛГОЕ НАЖАТИЕ + ПЕРЕТАСКИВАНИЕ ВСЕГО СЧЁТА */
-let transferDragTimer = null;
-let transferDragActive = false;
-let transferDragFrom = null;
-let transferDragRow = null;
-let transferDragGhost = null;
-let transferDragTarget = null;
-let transferDragStartX = 0;
-let transferDragStartY = 0;
-
-function clearTransferDrag(){
-  if(transferDragTimer){
-    clearTimeout(transferDragTimer);
-    transferDragTimer = null;
-  }
-
-  if(transferDragRow)
-    transferDragRow.classList.remove("transfer-source");
-
-  if(transferDragTarget)
-    transferDragTarget.classList.remove("transfer-target");
-
-  if(transferDragGhost){
-    transferDragGhost.remove();
-    transferDragGhost = null;
-  }
-
-  transferDragActive = false;
-  transferDragFrom = null;
-  transferDragRow = null;
-  transferDragTarget = null;
-}
-
-function getTransferTarget(x,y){
-  const el = document.elementFromPoint(x,y);
-  const row = el && el.closest(".account-row");
-
-  if(!row || !accountsList.contains(row))
-    return null;
-
-  const index = Number(row.dataset.transferIndex);
-
-  if(!Number.isInteger(index) || index === transferDragFrom)
-    return null;
-
-  return row;
-}
-
-function startTransferDrag(){
-  if(!transferDragRow)
-    return;
-
-  transferDragActive = true;
-  transferDragRow.classList.add("transfer-source");
-
-  transferDragGhost = transferDragRow.cloneNode(true);
-  transferDragGhost.classList.add("transfer-ghost");
-  transferDragGhost.classList.remove("transfer-source");
-  transferDragGhost.removeAttribute("data-transfer-index");
-  transferDragGhost.style.width = Math.min(390, Math.max(260, transferDragRow.getBoundingClientRect().width)) + "px";
-
-  document.body.appendChild(transferDragGhost);
-  moveTransferGhost(transferDragStartX,transferDragStartY);
-}
-
-function moveTransferGhost(x,y){
-  if(!transferDragGhost)
-    return;
-
-  transferDragGhost.style.left = x + "px";
-  transferDragGhost.style.top = y + "px";
-
-  const row = getTransferTarget(x,y);
-
-  if(transferDragTarget && transferDragTarget !== row)
-    transferDragTarget.classList.remove("transfer-target");
-
-  transferDragTarget = row;
-
-  if(transferDragTarget)
-    transferDragTarget.classList.add("transfer-target");
-}
-
-function finishTransferDrag(x,y){
-  if(!transferDragRow)
-    return;
-
-  const wasActive = transferDragActive;
-  const from = transferDragFrom;
-  const row = wasActive ? getTransferTarget(x,y) : null;
-  const to = row ? Number(row.dataset.transferIndex) : null;
-
-  clearTransferDrag();
-
-  if(wasActive)
-    suppressAccountClickUntil=Date.now()+900;
-
-  if(
-    wasActive &&
-    Number.isInteger(from) &&
-    Number.isInteger(to) &&
-    from !== to
-  ){
-    prepareTransfer(from,to);
-  }
-}
-
-function beginTransferFromEvent(target,x,y){
-  const row = target && target.closest(".account-row");
-
-  /* Кнопка редактирования остаётся обычной кнопкой. */
-  if(!row || target.closest(".small-button"))
-    return;
-
-  const index = Number(row.dataset.transferIndex);
-
-  if(!Number.isInteger(index))
-    return;
-
-  clearTransferDrag();
-
-  transferDragFrom = index;
-  transferDragRow = row;
-  transferDragStartX = x;
-  transferDragStartY = y;
-
-  transferDragTimer = setTimeout(
-    startTransferDrag,
-    500
-  );
-}
-
-/* iPhone / touch */
+/* Перевод со счёта — отдельная кнопка, чтобы обычный свайп не блокировался. */
 accountsList.addEventListener(
-  "touchstart",
+  "click",
   e => {
-    if(e.touches.length !== 1)
-      return;
+    const button=e.target.closest("[data-transfer-from]");
+    if(!button) return;
 
-    const touch = e.touches[0];
-    beginTransferFromEvent(
-      e.target,
-      touch.clientX,
-      touch.clientY
-    );
-  },
-  {passive:false}
-);
-
-accountsList.addEventListener(
-  "touchmove",
-  e => {
-    if(!transferDragRow || e.touches.length !== 1)
-      return;
-
-    const touch = e.touches[0];
-    const dx = touch.clientX - transferDragStartX;
-    const dy = touch.clientY - transferDragStartY;
-    const distance = Math.hypot(dx,dy);
-
-    if(!transferDragActive){
-      /* Пока ждём долгое нажатие, не отменяем его из-за мелкого движения пальца. */
-      if(distance > 45)
-        clearTransferDrag();
-      return;
-    }
-
-    e.preventDefault();
-    moveTransferGhost(touch.clientX,touch.clientY);
-  },
-  {passive:false}
-);
-
-accountsList.addEventListener(
-  "touchend",
-  e => {
-    if(!transferDragRow)
-      return;
-
-    const touch =
-      e.changedTouches && e.changedTouches[0];
-
-    if(!touch){
-      clearTransferDrag();
-      return;
-    }
-
-    finishTransferDrag(
-      touch.clientX,
-      touch.clientY
-    );
-  },
-  {passive:false}
-);
-
-accountsList.addEventListener(
-  "touchcancel",
-  () => clearTransferDrag(),
-  {passive:true}
-);
-
-/* Компьютер */
-accountsList.addEventListener(
-  "pointerdown",
-  e => {
-    if(e.pointerType === "touch")
-      return;
-
-    if(e.pointerType === "mouse" && e.button !== 0)
-      return;
-
-    beginTransferFromEvent(
-      e.target,
-      e.clientX,
-      e.clientY
-    );
-  }
-);
-
-accountsList.addEventListener(
-  "pointermove",
-  e => {
-    if(e.pointerType === "touch" || !transferDragRow)
-      return;
-
-    const dx = e.clientX - transferDragStartX;
-    const dy = e.clientY - transferDragStartY;
-
-    if(!transferDragActive){
-      if(Math.hypot(dx,dy) > 20)
-        clearTransferDrag();
-      return;
-    }
-
-    e.preventDefault();
-    moveTransferGhost(e.clientX,e.clientY);
-  }
-);
-
-accountsList.addEventListener(
-  "pointerup",
-  e => {
-    if(e.pointerType === "touch" || !transferDragRow)
-      return;
-
-    finishTransferDrag(
-      e.clientX,
-      e.clientY
-    );
-  }
-);
-
-accountsList.addEventListener(
-  "pointercancel",
-  e => {
-    if(e.pointerType !== "touch")
-      clearTransferDrag();
-  }
-);
-
-accountsList.addEventListener(
-  "contextmenu",
-  e => {
-    if(e.target.closest(".account-row"))
-      e.preventDefault();
+    const from=Number(button.dataset.transferFrom);
+    if(Number.isInteger(from) && accounts[from])
+      prepareTransfer(from);
   }
 );
 
