@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>Бабки в шапку</title>
-<link rel="icon" type="image/png" sizes="1024x1024" href="IMG_5931.png">
-<link rel="apple-touch-icon" sizes="1024x1024" href="IMG_5931.png">
+<link rel="icon" type="image/png" sizes="1024x1024" href="./IMG_5931.png?v=3">
+<link rel="apple-touch-icon" sizes="1024x1024" href="./IMG_5931.png?v=3">
 
 <style>
 :root{
@@ -6006,6 +6006,11 @@ saveBudgetHistorySnapshot();
 populate();
 
 renderCats();
+const calculatorInput = document.getElementById("calculatorInput");
+const calculatorResult = document.getElementById("calculatorResult");
+const closeCalculatorButton = document.getElementById("closeCalculatorButton");
+const applyCalculatorButton = document.getElementById("applyCalculatorButton");
+
 function setupCalculators(){
   const ids=[
     "incomeAmount","amount","debtAmount","manualDebtAmount",
