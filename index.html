@@ -195,8 +195,10 @@ button{
   border-radius:12px;
   background:var(--pp);
   color:#64484f;
-  font-size:18px;
-  font-weight:800
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
 }
 
 .history-filter.active{
@@ -222,12 +224,19 @@ button{
 .history-amount{font-weight:800;white-space:nowrap}
 .history-amount.income{color:#66856f}
 .history-amount.expense{color:var(--danger)}
-.history-edit{
-  width:32px;height:32px;border:0;border-radius:10px;background:var(--pp);color:#64484f;font-size:15px
+.history-edit,.history-delete{
+  width:32px;
+  height:32px;
+  min-width:32px;
+  padding:0;
+  border:0;
+  border-radius:10px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 }
-.history-delete{
-  width:32px;height:32px;border:0;border-radius:10px;background:#f5dddd;color:var(--danger);font-size:15px
-}
+.history-edit{background:var(--pp);color:#64484f}
+.history-delete{background:#f5dddd;color:var(--danger)}
 
 .stat-row{
   display:flex;
@@ -273,6 +282,40 @@ button{
   height:34px;
   border-radius:11px;
   font-size:17px
+}
+
+.icon-action{
+  width:34px;
+  height:34px;
+  min-width:34px;
+  padding:0;
+  border:0;
+  border-radius:11px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--pp);
+  color:#64484f;
+  cursor:pointer;
+}
+
+.icon-action.danger{
+  background:#f5dddd;
+  color:var(--danger);
+}
+
+.icon-action svg,
+.calc-button svg,
+.history-edit svg,
+.history-delete svg{
+  width:17px;
+  height:17px;
+  display:block;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:1.9;
+  stroke-linecap:round;
+  stroke-linejoin:round;
 }
 
 .clear-limits-button{
@@ -985,7 +1028,7 @@ button{
         <span>Аванс</span>
         <div class="category-actions">
           <span class="stat-value" id="advanceDisplay"></span>
-          <button class="small-button" id="editAdvanceButton">✎</button>
+          <button class="icon-action" id="editAdvanceButton" title="Изменить" aria-label="Изменить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button>
         </div>
       </div>
 
@@ -993,7 +1036,7 @@ button{
         <span>Основная зарплата</span>
         <div class="category-actions">
           <span class="stat-value" id="mainSalaryDisplay"></span>
-          <button class="small-button" id="editSalaryButton">✎</button>
+          <button class="icon-action" id="editSalaryButton" title="Изменить" aria-label="Изменить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button>
         </div>
       </div>
     </div>
@@ -1006,7 +1049,7 @@ button{
         <span>Дата аванса</span>
         <div class="category-actions">
           <span class="stat-value" id="advanceDateDisplay"></span>
-          <button class="small-button" id="editAdvanceDateButton">✎</button>
+          <button class="icon-action" id="editAdvanceDateButton" title="Изменить" aria-label="Изменить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button>
         </div>
       </div>
 
@@ -1014,7 +1057,7 @@ button{
         <span>Дата основной зарплаты</span>
         <div class="category-actions">
           <span class="stat-value" id="mainSalaryDateDisplay"></span>
-          <button class="small-button" id="editMainSalaryDateButton">✎</button>
+          <button class="icon-action" id="editMainSalaryDateButton" title="Изменить" aria-label="Изменить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button>
         </div>
       </div>
     </div>
@@ -1027,7 +1070,7 @@ button{
         <span>Цель накоплений</span>
         <div class="category-actions">
           <span class="stat-value" id="savingsPercentDisplay"></span>
-          <button class="small-button" id="editSavingsButton">✎</button>
+          <button class="icon-action" id="editSavingsButton" title="Изменить" aria-label="Изменить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button>
         </div>
       </div>
     </div>
@@ -1050,7 +1093,7 @@ button{
     </button>
 
     <div class="sync-status" id="syncStatus">
-      Синхронизируются все данные приложения.
+      Синхронизация автоматическая. Изменения не перезаписываются, если версии расходятся.
     </div>
   </div>
 
@@ -1179,8 +1222,8 @@ button{
       <button class="primary" id="saveExpenseButton">
         Записать
       </button>
-      <button class="danger-button" id="deleteOperationButton" style="display:none;margin-top:8px;width:100%">
-        Удалить операцию
+      <button class="danger-button" id="deleteOperationButton" title="Удалить операцию" aria-label="Удалить операцию" style="display:none;margin-top:8px;width:100%;height:46px;padding:0;align-items:center;justify-content:center">
+        <svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;display:block;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>
       </button>
     </div>
 
@@ -1475,6 +1518,16 @@ button{
       type="date"
     >
 
+    <div class="field-label">Категория лимита</div>
+
+    <select id="goalCategory" class="text-input">
+      <option value="">Не учитывать в лимитах</option>
+    </select>
+
+    <div class="small-note" style="margin-top:7px">
+      Ежемесячная сумма на цель будет автоматически добавляться к лимиту выбранной категории.
+    </div>
+
     <div class="modal-button">
       <button class="primary" id="saveGoalButton">
         Сохранить цель
@@ -1583,7 +1636,13 @@ const DK="babki_personal_debts_v1";
 // Иконки счетов хранятся отдельно от самих счетов, чтобы обновления кода
 // или синхронизация не могли случайно затереть выбранные пользователем логотипы.
 const AIK="babki_account_icons_v1";
+const DSK="babki_debt_schedules_v1";
 const SCREEN_KEY="babki_last_screen_v1";
+const SYNC_SNAPSHOT_KEY="babki_google_sync_snapshot_v1";
+const SYNC_BACKUP_KEY="babki_pre_sync_backup_v1";
+let appReady=false;
+let autoSyncTimer=null;
+let syncInProgress=false;
 
 
 /* GOOGLE SHEETS */
@@ -1606,6 +1665,7 @@ let accounts=[];
 let accountIcons={};
 let goals=[];
 let debts=[];
+let debtSchedules={};
 
 let editingCategory=null;
 let editingAccount=null;
@@ -1673,8 +1733,23 @@ const today=()=>{
 };
 
 
-const save=(k,v)=>
+function save(k,v){
   localStorage.setItem(k,JSON.stringify(v));
+
+  /* После полной загрузки приложения изменения синхронизируются
+     автоматически, но с защитой от параллельных/циклических записей. */
+  if(appReady && !syncInProgress &&
+     [TY,CK,AK,FK,SK,GK,DK,AIK,DSK].includes(k)){
+    queueAutoSync();
+  }
+}
+
+function queueAutoSync(){
+  clearTimeout(autoSyncTimer);
+  autoSyncTimer=setTimeout(()=>{
+    safeSyncWithGoogle(true).catch(()=>{});
+  },1800);
+}
 
 
 const read=(k,f)=>{
@@ -1741,7 +1816,7 @@ const catSpent=n=>
 
 const budget=()=>
   categories.reduce(
-    (s,x)=>s+Number(x.plan||0),
+    (s,x)=>s+effectiveCategoryLimit(x),
     0
   );
 
@@ -2065,6 +2140,13 @@ function updateFinance(){
 }
 
 
+function uiIcon(type){
+  if(type==="edit") return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>`;
+  if(type==="delete") return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>`;
+  if(type==="calculator") return `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8"/><path d="M8 11h1M12 11h1M16 11h0M8 15h1M12 15h1M16 15h0M8 18h1M12 18h1M16 18h0"/></svg>`;
+  return "";
+}
+
 function renderCats(){
 
   categoryList.innerHTML="";
@@ -2073,9 +2155,10 @@ function renderCats(){
 
     const s=catSpent(c.name);
 
-    const r=c.plan-s;
+    const limit=effectiveCategoryLimit(c);
+    const r=limit-s;
 
-    const p=c.plan
+    const p=limit
       ?Math.min(
         100,
         Math.max(
@@ -2100,7 +2183,8 @@ function renderCats(){
           </div>
 
           <div class="category-limit">
-            Лимит: ${money(c.plan)}
+            Лимит: ${money(limit)}
+            ${goalCategoryAddition(c.name)>0 ? `<span class="small-note"> · цели +${money(goalCategoryAddition(c.name))}</span>` : ""}
           </div>
 
         </div>
@@ -2113,16 +2197,18 @@ function renderCats(){
           </div>
 
           <button
-            class="small-button"
+            class="icon-action"
             data-ci="${i}"
-          >✎</button>
+            title="Изменить категорию"
+            aria-label="Изменить категорию"
+          >${uiIcon("edit")}</button>
 
         </div>
 
       </div>
 
       <div class="category-meta">
-        ${money(s)} из ${money(c.plan)}
+        ${money(s)} из ${money(limit)}
       </div>
 
       <div class="category-bar">
@@ -2307,9 +2393,11 @@ function renderAccounts(){
               </div>
 
               <button
-                class="small-button"
+                class="icon-action"
                 data-ai="${i}"
-              >✎</button>
+                title="Изменить счёт"
+                aria-label="Изменить счёт"
+              >${uiIcon("edit")}</button>
 
             </div>
 
@@ -2352,7 +2440,8 @@ function renderDebts(){
           Number(a.balance||0)<0
       )
       .map(a=>({
-        id:"card_"+a.name,
+        id:"card_"+a.id,
+        accountId:a.id,
         name:a.name+" — кредитная карта",
         amount:Math.max(
           0,
@@ -2453,17 +2542,17 @@ function renderDebts(){
                 ${
                   `<div class="actions-row">
                     <button
-                      class="inline-button"
+                      class="icon-action"
                       data-dei="${i}"
-                    >
-                      ✎ Изменить
-                    </button>
-                        <button
-                          class="danger-button"
-                          data-di="${i}"
-                        >
-                          Удалить
-                    </button>
+                      title="Изменить долг"
+                      aria-label="Изменить долг"
+                    >${uiIcon("edit")}</button>
+                    <button
+                      class="icon-action danger"
+                      data-di="${i}"
+                      title="Удалить долг"
+                      aria-label="Удалить долг"
+                    >${uiIcon("delete")}</button>
                   </div>`
                 }
 
@@ -2478,6 +2567,58 @@ function renderDebts(){
       :'<div class="empty">Пока нет долгов и обязательств.</div>';
 }
 
+
+function populateGoalCategories(){
+
+  const goalCategoryEl=document.getElementById("goalCategory");
+  if(!goalCategoryEl) return;
+
+  const current=goalCategoryEl.value || "";
+
+  goalCategoryEl.innerHTML=
+    '<option value="">Не учитывать в лимитах</option>'+
+    categories.map(c=>
+      `<option value="${String(c.name).replace(/"/g,"&quot;")}">${c.name}</option>`
+    ).join("");
+
+  goalCategoryEl.value=current;
+}
+
+function goalMonthlyAmount(g){
+
+  const target=Number(g?.target)||0;
+  const saved=Number(g?.saved)||0;
+  const left=Math.max(0,target-saved);
+
+  if(!left) return 0;
+
+  if(!g?.date) return left;
+
+  const end=new Date(g.date+"T00:00:00");
+  const now=new Date();
+  now.setHours(0,0,0,0);
+
+  const months=
+    (end.getFullYear()-now.getFullYear())*12+
+    (end.getMonth()-now.getMonth())+
+    1;
+
+  return left/Math.max(1,months);
+}
+
+function goalCategoryAddition(categoryName){
+
+  if(!categoryName) return 0;
+
+  return goals.reduce((sum,g)=>
+    sum+(g.category===categoryName ? goalMonthlyAmount(g) : 0),
+    0
+  );
+}
+
+function effectiveCategoryLimit(c){
+  return Number(c.plan||0)+goalCategoryAddition(c.name);
+}
 
 function renderGoals(){
 
@@ -2505,29 +2646,7 @@ function renderGoals(){
             )
             :0;
 
-        let monthly=left;
-
-        if(g.date){
-
-          const days=
-            Math.max(
-              1,
-              Math.ceil(
-                (
-                  new Date(
-                    g.date+"T00:00:00"
-                  )-new Date()
-                )/86400000
-              )
-            );
-
-          monthly=
-            left/
-            Math.max(
-              1,
-              Math.ceil(days/30)
-            );
-        }
+        const monthly=goalMonthlyAmount(g);
 
 
         return `
@@ -2547,6 +2666,7 @@ function renderGoals(){
                     ?` · до ${new Date(g.date+"T00:00:00").toLocaleDateString("ru-RU")}`
                     :""
                   }
+                  ${g.category ? ` · ${g.category}` : ""}
                 </div>
 
               </div>
@@ -2569,6 +2689,7 @@ function renderGoals(){
               Накоплено ${money(saved)}
               из ${money(target)}
               · откладывать ${money(monthly)} в месяц
+              ${g.category ? ` · в лимит «${g.category}»` : ""}
             </div>
 
             <div class="goal-progress">
@@ -2581,18 +2702,18 @@ function renderGoals(){
             <div class="actions-row">
 
               <button
-                class="inline-button"
+                class="icon-action"
                 data-gi="${i}"
-              >
-                ✎ Изменить
-              </button>
+                title="Изменить цель"
+                aria-label="Изменить цель"
+              >${uiIcon("edit")}</button>
 
               <button
-                class="danger-button"
+                class="icon-action danger"
                 data-gd="${i}"
-              >
-                Удалить
-              </button>
+                title="Удалить цель"
+                aria-label="Удалить цель"
+              >${uiIcon("delete")}</button>
 
             </div>
 
@@ -2803,8 +2924,8 @@ function renderHistory(){
         <div class="history-meta">${accountNameById(x.account)}</div>
       </div>
       <div class="history-amount ${isIncome?"income":"expense"}">${amount}</div>
-      <button class="history-edit" data-history-edit="${index}" title="Изменить">✎</button>
-      <button class="history-delete" data-history-delete="${index}" title="Удалить">×</button>
+      <button class="history-edit" data-history-edit="${index}" title="Изменить" aria-label="Изменить">${uiIcon("edit")}</button>
+      <button class="history-delete" data-history-delete="${index}" title="Удалить" aria-label="Удалить">${uiIcon("delete")}</button>
     </div>`);
   });
   historyList.innerHTML=html.join("");
@@ -3099,6 +3220,11 @@ function localSyncData(){
         ?debts
         :[],
 
+    debtSchedules:
+      debtSchedules && typeof debtSchedules==="object"
+        ?debtSchedules
+        :{},
+
     settings:{
       salary:Number(salary)||0,
       advance:Number(advance)||0,
@@ -3277,7 +3403,11 @@ function normalizeSyncData(data){
 
       date:x.date
         ?String(x.date)
-        :null
+        :null,
+
+      category:String(
+        x.category||""
+      )
 
     }))
     .sort(
@@ -3378,6 +3508,11 @@ function normalizeSyncData(data){
 
     debts:
       normalizedDebts,
+
+    debtSchedules:
+      d.debtSchedules && typeof d.debtSchedules==="object"
+        ?d.debtSchedules
+        :{},
 
     settings:
       normalizedSettings
@@ -3940,6 +4075,12 @@ function applyGoogleData(data){
     debts
   );
 
+  debtSchedules=
+    data.debtSchedules && typeof data.debtSchedules==="object"
+      ?data.debtSchedules
+      :debtSchedules;
+  save(DSK,debtSchedules);
+
 
   if(
     normalized.settings &&
@@ -4015,6 +4156,9 @@ function mergeLegacyGoogleWithLocal(google){
         ?google.accounts
         :local.accounts,
 
+    accountIcons:
+      google.accountIcons||local.accountIcons,
+
     transactions:
       local.transactions,
 
@@ -4035,6 +4179,88 @@ function mergeLegacyGoogleWithLocal(google){
 /* -------------------------
    ПОЛНАЯ СИНХРОНИЗАЦИЯ
 ------------------------- */
+
+function backupBeforeGoogleApply(){
+  try{
+    localStorage.setItem(SYNC_BACKUP_KEY,JSON.stringify(localSyncData()));
+  }catch(e){
+    console.warn("Не удалось сделать резервную копию перед синхронизацией",e);
+  }
+}
+
+async function safeSyncWithGoogle(manual=false){
+  if(syncInProgress) return;
+  syncInProgress=true;
+  try{
+    setSyncStatus(manual?"Проверяю данные в Google…":"Автосинхронизация…");
+    const local=normalizeSyncData(localSyncData());
+    const googleRaw=await googleLoad();
+    const google=normalizeSyncData(googleRaw||{});
+    const snapshot=read(SYNC_SNAPSHOT_KEY,null);
+
+    const localEmpty=!local.accounts.length&&!local.transactions.length&&!local.goals.length&&!local.debts.length;
+    const googleEmpty=!google.accounts.length&&!google.transactions.length&&!google.goals.length&&!google.debts.length;
+
+    if(googleEmpty && !localEmpty){
+      await googlePush();
+      save(SYNC_SNAPSHOT_KEY,local);
+      setSyncStatus("Данные телефона сохранены в Google ✓","success");
+      return;
+    }
+
+    if(localEmpty && !googleEmpty){
+      backupBeforeGoogleApply();
+      applyGoogleData(google);
+      save(SYNC_SNAPSHOT_KEY,google);
+      renderCats(); renderAccounts(); renderDebts(); renderGoals(); updateFinance();
+      setSyncStatus("Данные восстановлены из Google ✓","success");
+      return;
+    }
+
+    if(!snapshot){
+      if(JSON.stringify(local)===JSON.stringify(google)){
+        save(SYNC_SNAPSHOT_KEY,local);
+        setSyncStatus("Телефон и Google совпадают ✓","success");
+      }else{
+        setSyncStatus("Есть различия. Ничего не перезаписываю — сначала выбери, какую версию сохранить.","error");
+      }
+      return;
+    }
+
+    const snap=normalizeSyncData(snapshot);
+    const localChanged=JSON.stringify(local)!==JSON.stringify(snap);
+    const googleChanged=JSON.stringify(google)!==JSON.stringify(snap);
+
+    if(localChanged && !googleChanged){
+      await googlePush();
+      save(SYNC_SNAPSHOT_KEY,local);
+      setSyncStatus("Изменения телефона сохранены в Google ✓","success");
+      return;
+    }
+
+    if(!localChanged && googleChanged){
+      backupBeforeGoogleApply();
+      applyGoogleData(google);
+      save(SYNC_SNAPSHOT_KEY,google);
+      renderCats(); renderAccounts(); renderDebts(); renderGoals(); updateFinance();
+      setSyncStatus("Изменения из Google загружены ✓","success");
+      return;
+    }
+
+    if(!localChanged && !googleChanged){
+      setSyncStatus("Все данные синхронизированы ✓","success");
+      return;
+    }
+
+    /* Изменения произошли с обеих сторон. Автоматически ничего не выбираем. */
+    setSyncStatus("Изменения есть и на телефоне, и в Google. Ничего не перезаписываю автоматически.","error");
+  }catch(error){
+    console.error("Babki safe sync:",error);
+    setSyncStatus("Автосинхронизация не выполнена: "+(error?.message||"ошибка"),"error");
+  }finally{
+    syncInProgress=false;
+  }
+}
 
 async function syncWithGoogle(){
 
@@ -4067,6 +4293,11 @@ async function syncWithGoogle(){
         Array.isArray(google.accounts)
           ?google.accounts
           :[],
+
+      accountIcons:
+        google.accountIcons && typeof google.accountIcons==="object"
+          ?google.accountIcons
+          :{},
 
       transactions:
         Array.isArray(google.transactions)
@@ -5624,6 +5855,8 @@ addGoalButton.addEventListener(
     goalTarget.value = "";
     goalSaved.value = "";
     goalDate.value = "";
+    populateGoalCategories();
+    goalCategory.value = "";
 
     open("goalOverlay");
 
@@ -5666,6 +5899,9 @@ goalsList.addEventListener("click", e => {
     goalDate.value =
       g.date || "";
 
+    populateGoalCategories();
+    goalCategory.value = g.category || "";
+
     open("goalOverlay");
 
   }
@@ -5681,6 +5917,7 @@ goalsList.addEventListener("click", e => {
     save(GK,goals);
 
     renderGoals();
+    renderCats();
 
   }
 
@@ -5713,7 +5950,10 @@ saveGoalButton.addEventListener(
         Number(goalSaved.value || 0),
 
       date:
-        goalDate.value || null
+        goalDate.value || null,
+
+      category:
+        goalCategory.value || ""
 
     };
 
@@ -5730,6 +5970,7 @@ saveGoalButton.addEventListener(
     close("goalOverlay");
 
     renderGoals();
+    renderCats();
 
   }
 );
@@ -5856,18 +6097,24 @@ debtsList.addEventListener(
         return;
 
       if(item.kind === "credit"){
-        const accountName=item.name.replace(/ — кредитная карта$/i,"");
-        const account=accounts.find(a=>a.name===accountName && a.type==="credit");
-        if(!account) return;
+        const accountIndex=accounts.findIndex(a=>String(a.id)===String(item.accountId) && a.type==="credit");
+        if(accountIndex<0) return;
 
-        editingDebt = null;
-        debtModalTitle.textContent = "Кредитная карта";
-        manualDebtName.value = account.name || "";
-        manualDebtAmount.value = Math.max(0,-Number(account.balance||0));
-        manualDebtDueDate.value = "";
-        saveDebtButton.textContent = "Закрыть";
-        saveDebtButton.dataset.creditAccountId=String(account.id);
-        open("debtOverlay");
+        /* Кредитная задолженность управляется через сам счёт.
+           Открываем настоящий редактор счёта, а не пустое окно долга. */
+        editingAccount=accountIndex;
+        const account=accounts[accountIndex];
+        accountModalTitle.textContent="Изменить счёт";
+        accountTypeInput.value=account.type||"credit";
+        accountNameInput.value=account.name||"";
+        selectedBankIcon=account.id && Object.prototype.hasOwnProperty.call(accountIcons,account.id)
+          ?accountIcons[account.id]:(account.icon||"auto");
+        updateBankIconPicker();
+        accountBalanceInput.value=account.balance||0;
+        creditLimitInput.value=account.creditLimit||0;
+        creditFields.style.display="block";
+        saveAccountButton.textContent="Сохранить";
+        open("accountOverlay");
         return;
       }
 
@@ -5920,7 +6167,7 @@ debtsList.addEventListener(
 
 syncButton.addEventListener(
   "click",
-  syncWithGoogle
+  () => safeSyncWithGoogle(true)
 );
 
 
@@ -5949,8 +6196,9 @@ function setupCalculators(){
     const button=document.createElement("button");
     button.type="button";
     button.className="calc-button";
-    button.textContent="∑";
+    button.innerHTML=uiIcon("calculator");
     button.title="Открыть калькулятор";
+    button.setAttribute("aria-label","Открыть калькулятор");
     button.addEventListener("click",()=>openCalculator(input));
     wrap.appendChild(button);
   });
@@ -5998,6 +6246,12 @@ renderDebts();
 renderGoals();
 updateFinance();
 home();
+
+appReady=true;
+
+/* При запуске сначала проверяем Google. Если локальные данные пусты
+   после обновления кода, они восстанавливаются из Google, а не затирают его. */
+setTimeout(()=>safeSyncWithGoogle(false).catch(()=>{}),2200);
 
 </script>
 
