@@ -3401,7 +3401,11 @@ function updateRoundingUI(forceState=null){
   const preview=document.getElementById("roundingPreview");
   if(!box || !toggle || !preview) return;
 
-  const account=accounts.find(a=>String(a.id)===String(expenseAccount?.value));
+  const selectedAccountValue=String(expenseAccount?.value ?? "");
+  const selectedAccountIndex=Number(selectedAccountValue);
+  const account=Number.isInteger(selectedAccountIndex) && selectedAccountIndex>=0 && selectedAccountIndex<accounts.length
+    ? accounts[selectedAccountIndex]
+    : accounts.find(a=>String(a.id)===selectedAccountValue);
   const inv=investmentAccount();
   const value=Number(amount?.value||0);
   const subscription=categorySelect?.value==="Подписки";
