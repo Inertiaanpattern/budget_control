@@ -2230,6 +2230,19 @@ function load(){
    * Теперь сохранённые пользователем значения только читаются.
    */
 
+  /* Одноразовое восстановление значения, испорченного старой миграцией.
+     Если до исправления кода 114000 уже успело превратиться в 88000
+     при авансе 26000, возвращаем 114000 один раз. После этого любые
+     значения, которые пользователь задаст сам, больше не меняем. */
+  const FINANCE_REPAIR_V1="babki_finance_repair_v1";
+  if(read(FINANCE_REPAIR_V1,null)!==true){
+    if(Number(salary)===88000 && Number(advance)===26000){
+      salary=114000;
+      save(FK,{salary,advance,totalIncome:salary+advance,advanceDate,mainSalaryDate});
+    }
+    save(FINANCE_REPAIR_V1,true);
+  }
+
   const sp=read(SK,null);
 
   if(Number.isFinite(+sp)){
@@ -2391,7 +2404,9 @@ function renderCats(){
 
   categoryList.innerHTML="";
 
-  categories.forEach((c,i)=>{
+  sortedCategories().forEach(c=>{
+
+    const i=categories.indexOf(c);
 
     const s=catSpent(c.name);
 
@@ -2856,7 +2871,7 @@ function populateGoalCategories(){
 
   goalCategoryEl.innerHTML=
     '<option value="">Не учитывать в лимитах</option>'+
-    categories.map(c=>
+    sortedCategories().map(c=>
       `<option value="${String(c.name).replace(/"/g,"&quot;")}">${c.name}</option>`
     ).join("");
 
@@ -3372,7 +3387,7 @@ function close(id){
 function populate(){
 
   categorySelect.innerHTML=
-    categories
+    sortedCategories()
       .map(
         c=>`<option>${c.name}</option>`
       )
