@@ -403,13 +403,49 @@ button{
 }
 
 .account-row{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) max-content;
-  align-items:center;
-  column-gap:6px;
   width:100%;
   box-sizing:border-box;
   overflow:hidden;
+}
+
+.account-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  width:100%;
+}
+
+.account-right{
+  width:124px;
+  min-width:124px;
+  text-align:right;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  flex-shrink:0;
+}
+
+.account-right .account-balance{
+  width:100%;
+  text-align:right;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+
+.account-right .actions-row{
+  width:100%;
+  justify-content:flex-end;
+  gap:4px;
+  margin-top:8px;
+}
+
+.account-info{
+  min-width:0;
+}
+
+.account-main{
+  min-width:0;
 }
 
 .category-left,
@@ -596,12 +632,6 @@ button{
   user-select:none;
   -webkit-user-select:none;
   -webkit-touch-callout:none;
-}
-.account-row .account-actions{
-  gap:6px;
-}
-.account-row .account-actions .icon-action{
-  flex:0 0 auto;
 }
 
 .bank-fallback{
@@ -2551,57 +2581,56 @@ function renderAccounts(){
             data-transfer-index="${i}"
           >
 
-            <div class="account-main">
+            <div class="account-top">
 
-              <div>
-                ${logoFor(a)}
-              </div>
+              <div class="account-left account-main">
 
-              <div class="account-left">
-
-                <div class="account-name">
-                  ${a.name||"Счёт"}
+                <div>
+                  ${logoFor(a)}
                 </div>
 
-                <div class="account-type">
-                  ${type}
-                  ${
-                    a.type==="credit"&&a.creditLimit
-                      ?` · лимит ${money(a.creditLimit)}`
-                      :""
-                  }
+                <div class="account-info">
+
+                  <div class="account-name">
+                    ${a.name||"Счёт"}
+                  </div>
+
+                  <div class="account-type">
+                    ${type}
+                    ${
+                      a.type==="credit"&&a.creditLimit
+                        ?` · лимит ${money(a.creditLimit)}`
+                        :""
+                    }
+                  </div>
+
                 </div>
 
               </div>
 
-            </div>
+              <div class="account-right">
 
-            <div class="account-actions">
+                <div class="account-balance ${debt?"negative":""}">
+                  ${moneyPlain(a.balance||0)}
+                </div>
 
-              <div class="account-balance ${debt?"negative":""}">
-                ${moneyPlain(a.balance||0)}
+                <div class="actions-row">
+                  <button
+                    class="icon-action"
+                    data-ai="${i}"
+                    title="Изменить счёт"
+                    aria-label="Изменить счёт"
+                  >${uiIcon("edit")}</button>
+
+                  <button
+                    class="icon-action danger"
+                    data-account-delete="${i}"
+                    title="Удалить счёт"
+                    aria-label="Удалить счёт"
+                  >${uiIcon("delete")}</button>
+                </div>
+
               </div>
-
-              <button
-                class="icon-action"
-                data-transfer-from="${i}"
-                title="Перевести со счёта"
-                aria-label="Перевести со счёта"
-              >${uiIcon("transfer")}</button>
-
-              <button
-                class="icon-action"
-                data-ai="${i}"
-                title="Изменить счёт"
-                aria-label="Изменить счёт"
-              >${uiIcon("edit")}</button>
-
-              <button
-                class="icon-action danger"
-                data-account-delete="${i}"
-                title="Удалить счёт"
-                aria-label="Удалить счёт"
-              >${uiIcon("delete")}</button>
 
             </div>
 
