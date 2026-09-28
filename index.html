@@ -1332,6 +1332,14 @@ button{
         <div class="category-info-main" id="monthRemainingAfter">—</div>
       </div>
 
+      <div class="category-info" id="roundingBox" style="display:none">
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700">
+          <input id="roundingEnabled" type="checkbox" style="width:18px;height:18px;accent-color:var(--pink)">
+          Округлить до 50 ₽ и перевести остаток в Инвесткопилку
+        </label>
+        <div class="small-note" id="roundingPreview" style="margin-top:8px">—</div>
+      </div>
+
     </div>
 
 
@@ -2207,18 +2215,15 @@ function load(){
       mainSalaryDate=+f.mainSalaryDate;
   }
 
-  /* Миграция старого формата: раньше salary хранила уже общий доход.
-     Теперь salary = основная зарплата, advance = отдельный аванс. */
-  const FM="babki_finance_format_v2";
-  const hadSavedFinance = localStorage.getItem(FK)!==null;
-  if(hadSavedFinance && read(FM,null)!==true){
-    if(Number.isFinite(+salary) && Number.isFinite(+advance) && salary>=advance && salary>0){
-      salary=Math.max(0,salary-advance);
-    }
-    save(FM,true);
-    save(FK,{salary,advance,advanceDate,mainSalaryDate});
-  }
-
+  /*
+   * ВАЖНО: salary — это самостоятельное значение ОСНОВНОЙ зарплаты.
+   * advance — самостоятельное значение аванса.
+   *
+   * Ничего не вычитаем из salary при загрузке приложения.
+   * Ранее здесь была одноразовая миграция, которая при повторном
+   * запуске могла снова уменьшать зарплату на сумму аванса.
+   * Теперь сохранённые пользователем значения только читаются.
+   */
 
   const sp=read(SK,null);
 
@@ -3187,9 +3192,12 @@ function renderHistory(){
     const isIncome=x.type==="income";
     const isTransfer=x.type==="transfer";
     const title=isTransfer ? "Перевод между своими счетами" : (isIncome ? (x.name||"Доход") : (x.category||"Расход"));
-    const meta=isTransfer
+    const baseMeta=isTransfer
       ? `${accountNameById(x.account)} → ${accountNameById(x.toAccount)}`
       : accountNameById(x.account);
+    const meta=(!isTransfer && !isIncome && transactionRounding(x)>0)
+      ? `${baseMeta} · округление +${money(transactionRounding(x))} → ${accountNameById(x.roundingAccount)}`
+      : baseMeta;
     const amount=(isTransfer?"⇄ ":(isIncome?"+":"−"))+money(x.amount||0);
     html.push(`<div class="history-row" data-history-index="${index}">
       <div class="history-main">
@@ -3204,12 +3212,38 @@ function renderHistory(){
   historyList.innerHTML=html.join("");
 }
 
+function roundingAmount(value){
+  const v=Math.max(0,Number(value)||0);
+  const rounded=Math.ceil((v-1e-9)/50)*50;
+  return Math.max(0,Math.round((rounded-v)*100)/100);
+}
+
+function isTBankAccount(a){
+  const text=String(a?.bank||a?.name||"").toLowerCase();
+  return text.includes("т-банк") || text.includes("тинькофф") || text.includes("t-bank") || text.includes("tbank");
+}
+
+function investmentAccount(){
+  return accounts.find(a=>a && a.type==="investment");
+}
+
+function transactionRounding(t){
+  return t?.type==="expense" && t.roundingEnabled===true
+    ? Number(t.roundingAmount||0)
+    : 0;
+}
+
 function reverseTransactionEffect(t){
   const a=accounts.find(x=>String(x.id)===String(t.account));
   if(!a) return;
   const v=Number(t.amount||0);
   if(t.type==="income") a.balance=Number(a.balance||0)-v;
-  else if(t.type==="expense") a.balance=Number(a.balance||0)+v;
+  else if(t.type==="expense") a.balance=Number(a.balance||0)+v+transactionRounding(t);
+
+  if(t.type==="expense" && transactionRounding(t)>0){
+    const inv=accounts.find(x=>String(x.id)===String(t.roundingAccount));
+    if(inv) inv.balance=Number(inv.balance||0)-transactionRounding(t);
+  }
 }
 
 function applyTransactionEffect(t){
@@ -3217,7 +3251,13 @@ function applyTransactionEffect(t){
   if(!a) return false;
   const v=Number(t.amount||0);
   if(t.type==="income") a.balance=Number(a.balance||0)+v;
-  else if(t.type==="expense") a.balance=Number(a.balance||0)-v;
+  else if(t.type==="expense") a.balance=Number(a.balance||0)-v-transactionRounding(t);
+
+  if(t.type==="expense" && transactionRounding(t)>0){
+    const inv=accounts.find(x=>String(x.id)===String(t.roundingAccount));
+    if(!inv) return false;
+    inv.balance=Number(inv.balance||0)+transactionRounding(t);
+  }
   return true;
 }
 
@@ -3241,6 +3281,7 @@ function editTransaction(index){
     amount.value=t.amount||0;
     expenseAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}" ${String(a.id)===String(t.account)?"selected":""}>${a.name||"Счёт"} · ${money(a.balance||0)}</option>`).join("");
     categorySelect.value=t.category||categories[0]?.name||"";
+    updateRoundingUI(t.roundingEnabled===true);
     calc();
   }
   open("expenseOverlay");
@@ -3333,6 +3374,37 @@ function populate(){
       .join("");
 }
 
+
+function updateRoundingUI(forceState=null){
+  const box=document.getElementById("roundingBox");
+  const toggle=document.getElementById("roundingEnabled");
+  const preview=document.getElementById("roundingPreview");
+  if(!box || !toggle || !preview) return;
+
+  const account=accounts.find(a=>String(a.id)===String(expenseAccount?.value));
+  const inv=investmentAccount();
+  const value=Number(amount?.value||0);
+  const subscription=categorySelect?.value==="Подписки";
+  const eligible=!!account && isTBankAccount(account) && !!inv;
+
+  box.style.display=eligible ? "block" : "none";
+
+  if(!eligible){
+    preview.textContent="";
+    return;
+  }
+
+  if(forceState!==null) toggle.checked=!!forceState;
+
+  const extra=toggle.checked ? roundingAmount(value) : 0;
+  if(value>0 && extra>0){
+    preview.textContent=`Покупка ${money(value)} → со счёта уйдёт ${money(value+extra)}. ${money(extra)} автоматически попадут в «${inv.name||"Инвесткопилку"}».`;
+  }else if(value>0){
+    preview.textContent=subscription ? "Для этой подписки округление можно отключить." : "Округление отключено.";
+  }else{
+    preview.textContent="Шаг округления — 50 ₽. Например, 347 ₽ → 350 ₽, 3 ₽ уйдут в Инвесткопилку.";
+  }
+}
 
 function calc(){
 
@@ -3501,6 +3573,9 @@ function localSyncData(){
     settings:{
       salary:Number(salary)||0,
       advance:Number(advance)||0,
+      totalIncome:
+        Math.max(0,Number(salary)||0) +
+        Math.max(0,Number(advance)||0),
       advanceDate:
         advanceDate===null
           ?null
@@ -3641,6 +3716,16 @@ function normalizeSyncData(data){
 
       date:String(
         x.date||""
+      ),
+
+      roundingEnabled:x.roundingEnabled===true,
+
+      roundingAmount:Number(
+        x.roundingAmount||0
+      ),
+
+      roundingAccount:String(
+        x.roundingAccount||""
       )
 
     }))
@@ -3746,6 +3831,10 @@ function normalizeSyncData(data){
     advance:Number(
       s.advance||0
     ),
+
+    totalIncome:
+      Math.max(0,Number(s.salary)||0) +
+      Math.max(0,Number(s.advance)||0),
 
     advanceDate:
       s.advanceDate===null ||
@@ -4393,6 +4482,7 @@ function applyGoogleData(data){
       {
         salary,
         advance,
+        totalIncome: Math.max(0,Number(salary)||0) + Math.max(0,Number(advance)||0),
         advanceDate,
         mainSalaryDate
       }
@@ -5058,6 +5148,7 @@ quickExpenseButton.addEventListener("click", () => {
       : `<option value="">Сначала добавь счёт</option>`;
 
   open("expenseOverlay");
+  updateRoundingUI(true);
 
   setTimeout(() => {
     amount.focus();
@@ -5152,6 +5243,11 @@ categorySelect.addEventListener("change", calc);
 
 /* СОХРАНЕНИЕ РАСХОДА / ДОХОДА */
 
+expenseAccount.addEventListener("change",()=>updateRoundingUI());
+categorySelect.addEventListener("change",()=>{ updateRoundingUI(); calc(); });
+amount.addEventListener("input",()=>{ updateRoundingUI(); calc(); });
+document.getElementById("roundingEnabled")?.addEventListener("change",()=>updateRoundingUI());
+
 saveExpenseButton.addEventListener("click", () => {
 
   const isIncome = incomeFields.style.display !== "none";
@@ -5191,8 +5287,20 @@ saveExpenseButton.addEventListener("click", () => {
       date
     };
 
-    if(isIncome) updated.name=name;
-    else updated.category=category;
+    if(isIncome){
+      updated.name=name;
+      delete updated.roundingEnabled;
+      delete updated.roundingAmount;
+      delete updated.roundingAccount;
+    }else{
+      updated.category=category;
+      const inv=investmentAccount();
+      const roundingEnabled=document.getElementById("roundingEnabled")?.checked===true;
+      const extra=(isTBankAccount(accounts[accountIndex]) && inv && roundingEnabled) ? roundingAmount(value) : 0;
+      updated.roundingEnabled=extra>0;
+      updated.roundingAmount=extra;
+      updated.roundingAccount=extra>0 ? inv.id : null;
+    }
 
     updated.type=isIncome ? "income" : "expense";
 
@@ -5230,7 +5338,19 @@ saveExpenseButton.addEventListener("click", () => {
     account.balance=Number(account.balance||0)+value;
   }else{
     transaction.category=category;
-    account.balance=Number(account.balance||0)-value;
+
+    const inv=investmentAccount();
+    const roundingEnabled=!document.getElementById("roundingBox")?.style.display || document.getElementById("roundingBox")?.style.display!=="none"
+      ? document.getElementById("roundingEnabled")?.checked===true
+      : false;
+    const extra=(isTBankAccount(account) && inv && roundingEnabled) ? roundingAmount(value) : 0;
+
+    transaction.roundingEnabled=extra>0;
+    transaction.roundingAmount=extra;
+    transaction.roundingAccount=extra>0 ? inv.id : null;
+
+    account.balance=Number(account.balance||0)-value-extra;
+    if(extra>0) inv.balance=Number(inv.balance||0)+extra;
   }
 
   transactions.push(transaction);
@@ -5768,6 +5888,7 @@ saveFinanceButton.addEventListener(
       {
         salary,
         advance,
+        totalIncome: Math.max(0,Number(salary)||0) + Math.max(0,Number(advance)||0),
         advanceDate,
         mainSalaryDate
       }
@@ -5828,6 +5949,7 @@ saveDateButton.addEventListener(
       {
         salary,
         advance,
+        totalIncome: Math.max(0,Number(salary)||0) + Math.max(0,Number(advance)||0),
         advanceDate,
         mainSalaryDate
       }
