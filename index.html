@@ -1605,6 +1605,13 @@ button{
       <button class="close" id="closeTransferButton">×</button>
     </div>
 
+    <div class="field-label">Дата операции</div>
+    <input
+      id="transferDate"
+      class="text-input"
+      type="date"
+    >
+
     <div class="field-label">Откуда</div>
     <select id="transferFrom" class="select"></select>
 
@@ -3161,7 +3168,7 @@ function openHistory(accountId=null, returnScreen="home"){
 function renderHistory(){
   const rows=transactions
     .map((x,index)=>({x,index}))
-    .filter(({x})=>historyAccountId===null || String(x.account)===String(historyAccountId))
+    .filter(({x})=>historyAccountId===null || String(x.account)===String(historyAccountId) || String(x.toAccount||"")===String(historyAccountId))
     .filter(({x})=>historyFilter==="all" || x.type===historyFilter)
     .sort((a,b)=>String(b.x.date||"").localeCompare(String(a.x.date||"")) || b.index-a.index);
 
@@ -3178,16 +3185,20 @@ function renderHistory(){
       html.push(`<div class="history-date">${formatHistoryDate(x.date)}</div>`);
     }
     const isIncome=x.type==="income";
-    const title=isIncome ? (x.name||"Доход") : (x.category||"Расход");
-    const amount=(isIncome?"+":"−")+money(x.amount||0);
+    const isTransfer=x.type==="transfer";
+    const title=isTransfer ? "Перевод между своими счетами" : (isIncome ? (x.name||"Доход") : (x.category||"Расход"));
+    const meta=isTransfer
+      ? `${accountNameById(x.account)} → ${accountNameById(x.toAccount)}`
+      : accountNameById(x.account);
+    const amount=(isTransfer?"⇄ ":(isIncome?"+":"−"))+money(x.amount||0);
     html.push(`<div class="history-row" data-history-index="${index}">
       <div class="history-main">
         <div class="history-name">${title}</div>
-        <div class="history-meta">${accountNameById(x.account)}</div>
+        <div class="history-meta">${meta}</div>
       </div>
-      <div class="history-amount ${isIncome?"income":"expense"}">${amount}</div>
-      <button class="history-edit" data-history-edit="${index}" title="Изменить" aria-label="Изменить">${uiIcon("edit")}</button>
-      <button class="history-delete" data-history-delete="${index}" title="Удалить" aria-label="Удалить">${uiIcon("delete")}</button>
+      <div class="history-amount ${isIncome?"income":""} ${isTransfer?"":"expense"}">${amount}</div>
+      ${isTransfer ? "" : `<button class="history-edit" data-history-edit="${index}" title="Изменить" aria-label="Изменить">${uiIcon("edit")}</button>
+      <button class="history-delete" data-history-delete="${index}" title="Удалить" aria-label="Удалить">${uiIcon("delete")}</button>`}
     </div>`);
   });
   historyList.innerHTML=html.join("");
@@ -5624,6 +5635,7 @@ function prepareTransfer(fromIndex=null, toIndex=null){
     transferTo.value = String(toIndex);
 
   transferAmount.value = "";
+  transferDate.value = today();
   open("transferOverlay");
 }
 
@@ -5664,6 +5676,8 @@ saveTransferButton.addEventListener(
     const value =
       Number(transferAmount.value || 0);
 
+    const date = transferDate.value || today();
+
     if(from === to){
 
       alert(
@@ -5691,7 +5705,17 @@ saveTransferButton.addEventListener(
     accounts[from].balance -= value;
     accounts[to].balance += value;
 
+    transactions.push({
+      id:Date.now(),
+      type:"transfer",
+      amount:value,
+      account:accounts[from].id,
+      toAccount:accounts[to].id,
+      date
+    });
+
     save(AK,accounts);
+    save(TY,transactions);
 
     close("transferOverlay");
 
