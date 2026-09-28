@@ -1956,6 +1956,11 @@ const moneyPlain=v=>
 const cat=n=>
   categories.find(x=>x.name===n);
 
+const sortedCategories=()=>
+  [...categories].sort((a,b)=>
+    a.name.localeCompare(b.name,"ru",{sensitivity:"base"})
+  );
+
 
 const today=()=>{
   let d=new Date();
