@@ -1439,8 +1439,10 @@ button{
 
     <select id="accountTypeInput" class="select">
       <option value="debit">Дебетовая карта</option>
-      <option value="credit">Кредитная карта</option>
       <option value="cash">Наличные</option>
+      <option value="savings">Накопительный счёт</option>
+      <option value="investment">Инвесткопилка</option>
+      <option value="credit">Кредитная карта</option>
     </select>
 
     <div class="field-label">Банк / название</div>
@@ -2565,7 +2567,11 @@ function renderAccounts(){
             ?"Кредитная карта"
             :a.type==="cash"
               ?"Наличные"
-              :"Дебетовая карта";
+              :a.type==="savings"
+                ?"Накопительный счёт"
+                :a.type==="investment"
+                  ?"Инвесткопилка"
+                  :"Дебетовая карта";
 
         const debt=
           a.type==="credit"
@@ -2649,7 +2655,11 @@ function renderAccounts(){
 
   const spendable=
     accounts
-      .filter(a=>a.type!=="credit")
+      .filter(a=>
+        a.type!=="credit" &&
+        a.type!=="savings" &&
+        a.type!=="investment"
+      )
       .reduce(
         (s,a)=>s+Number(a.balance||0),
         0
