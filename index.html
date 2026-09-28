@@ -406,7 +406,7 @@ button{
   display:grid;
   grid-template-columns:minmax(0,1fr) max-content;
   align-items:center;
-  column-gap:8px;
+  column-gap:6px;
   width:100%;
   box-sizing:border-box;
   overflow:hidden;
@@ -511,22 +511,32 @@ button{
 }
 
 .account-actions{
-  min-width:104px;
+  width:max-content;
+  min-width:0;
   display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  justify-content:center;
-  gap:6px;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-end;
+  gap:4px;
+  flex-shrink:0
 }
 
 .account-actions .account-balance{
-  max-width:104px;
+  max-width:none;
   text-align:right;
   white-space:nowrap;
+  margin-right:4px;
+  font-variant-numeric:tabular-nums;
 }
 
 .account-actions .icon-action{
-  flex:0 0 auto;
+  flex:0 0 34px;
+}
+
+/* Перевод запускается отдельной кнопкой/перетаскиванием, поэтому
+   невидимая служебная кнопка не должна занимать место в строке. */
+.account-actions [data-transfer-from]{
+  display:none;
 }
 
 
