@@ -394,13 +394,22 @@ button{
 }
 
 .category-top,
-.account-row,
 .debt-top,
 .goal-top{
   display:flex;
   justify-content:space-between;
   align-items:center;
   gap:12px
+}
+
+.account-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  column-gap:12px;
+  width:100%;
+  box-sizing:border-box;
+  overflow:hidden;
 }
 
 .category-left,
@@ -473,15 +482,74 @@ button{
 .account-main{
   display:flex;
   align-items:center;
-  gap:12px
+  gap:12px;
+  min-width:0;
+  max-width:100%;
+  overflow:hidden;
 }
+
+/* Контейнер логотипа счёта не даёт картинке вылезать за карточку. */
+.account-main > div:first-child{
+  flex:0 0 42px;
+  width:42px;
+  height:42px;
+  min-width:42px;
+  min-height:42px;
+  overflow:hidden;
+  border-radius:13px;
+}
+
+.account-left{
+  min-width:0;
+  overflow:hidden;
+}
+
+.account-name{
+  white-space:normal;
+  overflow-wrap:anywhere;
+  line-height:1.25;
+}
+
+.account-actions{
+  min-width:104px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  justify-content:center;
+  gap:6px;
+}
+
+.account-actions .account-balance{
+  max-width:104px;
+  text-align:right;
+  white-space:nowrap;
+}
+
+.account-actions .icon-action{
+  flex:0 0 auto;
+}
+
 
 .bank-logo{
   width:42px;
   height:42px;
+  max-width:42px;
+  max-height:42px;
+  flex:0 0 42px;
+  display:block;
   border-radius:13px;
   object-fit:contain;
-  background:#eee
+  background:#eee;
+  box-sizing:border-box;
+}
+
+.bank-logo img{
+  display:block;
+  width:100%;
+  height:100%;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
 }
 
 .bank-icon-picker{
@@ -504,8 +572,10 @@ button{
   border-color:var(--pink);
 }
 .bank-logo svg{
-  width:42px;
-  height:42px;
+  width:100%;
+  height:100%;
+  max-width:42px;
+  max-height:42px;
   display:block
 }
 
@@ -1376,6 +1446,28 @@ button{
         class="text-input"
         type="number"
         inputmode="decimal"
+      >
+
+      <div class="field-label">День платежа по договору</div>
+      <input
+        id="creditPaymentDayInput"
+        class="text-input"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        max="31"
+        placeholder="Например, 15"
+      >
+
+      <div class="field-label">Последний день платежа по договору</div>
+      <input
+        id="creditLastDayInput"
+        class="text-input"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        max="31"
+        placeholder="Например, 20"
       >
 
     </div>
@@ -2549,7 +2641,9 @@ function renderDebts(){
           0,
           -Number(a.balance)
         ),
-        dueDate:null,
+        dueDate:a.dueDate||null,
+        paymentDay:a.paymentDay||null,
+        lastPaymentDay:a.lastPaymentDay||null,
         kind:"credit"
       }));
 
@@ -2615,7 +2709,9 @@ function renderDebts(){
                 <div class="debt-meta">
                   ${
                     d.kind==="credit"
-                      ?"Задолженность по кредитной карте"
+                      ?(d.paymentDay
+                        ?`Платёж ${d.paymentDay}-го числа`
+                        :"Задолженность по кредитной карте")
                       :(d.paymentDay
                         ?`Платёж ${d.paymentDay}-го числа`
                         :"Личный долг")
@@ -2623,7 +2719,7 @@ function renderDebts(){
                 </div>
 
                 ${
-                  d.kind!=="credit" && d.lastPaymentDay
+                  d.lastPaymentDay
                     ?`
                       <div class="debt-meta">
                         Крайний день по договору: ${d.lastPaymentDay}-е
@@ -2639,7 +2735,7 @@ function renderDebts(){
                         Точный срок: ${due} · ориентир откладывать ${money(monthly)} в месяц
                       </div>
                     `
-                    :d.kind!=="credit" && d.paymentDay
+                    :d.paymentDay
                       ?`
                         <div class="debt-meta">
                           Ежемесячный платёж по договору
@@ -5246,6 +5342,8 @@ addAccountButton.addEventListener(
     accountNameInput.value = "";
     accountBalanceInput.value = "";
     creditLimitInput.value = "";
+    creditPaymentDayInput.value = "";
+    creditLastDayInput.value = "";
     selectedBankIcon = "auto";
     updateBankIconPicker();
 
@@ -5307,6 +5405,9 @@ accountsList.addEventListener("click", e => {
 
   creditLimitInput.value =
     a.creditLimit || 0;
+
+  creditPaymentDayInput.value = a.paymentDay || "";
+  creditLastDayInput.value = a.lastPaymentDay || "";
 
   creditFields.style.display =
     a.type === "credit"
@@ -5397,6 +5498,16 @@ saveAccountButton.addEventListener(
               creditLimitInput.value || 0
             )
           : 0,
+
+      paymentDay:
+        accountTypeInput.value === "credit"
+          ? (Math.min(31,Math.max(1,Number(creditPaymentDayInput.value||0))) || null)
+          : null,
+
+      lastPaymentDay:
+        accountTypeInput.value === "credit"
+          ? (Math.min(31,Math.max(1,Number(creditLastDayInput.value||0))) || null)
+          : null,
 
       /*
        * Legacy mirror only. Для пользовательской картинки это та же
@@ -5999,6 +6110,8 @@ debtsList.addEventListener(
         updateBankIconPicker();
         accountBalanceInput.value=account.balance||0;
         creditLimitInput.value=account.creditLimit||0;
+        creditPaymentDayInput.value=account.paymentDay||"";
+        creditLastDayInput.value=account.lastPaymentDay||"";
         creditFields.style.display="block";
         saveAccountButton.textContent="Сохранить";
         open("accountOverlay");
