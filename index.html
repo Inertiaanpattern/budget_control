@@ -3239,8 +3239,9 @@ function roundingAmount(value){
 }
 
 function isTBankAccount(a){
-  const text=String(a?.bank||a?.name||"").toLowerCase();
-  return text.includes("т-банк") || text.includes("тинькофф") || text.includes("t-bank") || text.includes("tbank");
+  const text=String(a?.bank||a?.name||"").toLowerCase().replace(/ё/g,"е");
+  const icon=String(a?.icon||"").toLowerCase();
+  return text.includes("т-банк") || text.includes("т банк") || text.includes("тинькофф") || text.includes("t-bank") || text.includes("t bank") || text.includes("tinkoff") || text.includes("tbank") || icon==="tbank";
 }
 
 function investmentAccount(){
@@ -3258,11 +3259,17 @@ function reverseTransactionEffect(t){
   if(!a) return;
   const v=Number(t.amount||0);
   if(t.type==="income") a.balance=Number(a.balance||0)-v;
-  else if(t.type==="expense") a.balance=Number(a.balance||0)+v+transactionRounding(t);
-
-  if(t.type==="expense" && transactionRounding(t)>0){
-    const inv=accounts.find(x=>String(x.id)===String(t.roundingAccount));
-    if(inv) inv.balance=Number(inv.balance||0)-transactionRounding(t);
+  else if(t.type==="expense") {
+    const inlineRounding = t.roundingTransactionId ? 0 : transactionRounding(t);
+    a.balance=Number(a.balance||0)+v+inlineRounding;
+    if(inlineRounding>0){
+      const inv=accounts.find(x=>String(x.id)===String(t.roundingAccount));
+      if(inv) inv.balance=Number(inv.balance||0)-inlineRounding;
+    }
+  }else if(t.type==="transfer"){
+    a.balance=Number(a.balance||0)+v;
+    const to=accounts.find(x=>String(x.id)===String(t.toAccount));
+    if(to) to.balance=Number(to.balance||0)-v;
   }
 }
 
@@ -3271,12 +3278,19 @@ function applyTransactionEffect(t){
   if(!a) return false;
   const v=Number(t.amount||0);
   if(t.type==="income") a.balance=Number(a.balance||0)+v;
-  else if(t.type==="expense") a.balance=Number(a.balance||0)-v-transactionRounding(t);
-
-  if(t.type==="expense" && transactionRounding(t)>0){
-    const inv=accounts.find(x=>String(x.id)===String(t.roundingAccount));
-    if(!inv) return false;
-    inv.balance=Number(inv.balance||0)+transactionRounding(t);
+  else if(t.type==="expense") {
+    const inlineRounding = t.roundingTransactionId ? 0 : transactionRounding(t);
+    a.balance=Number(a.balance||0)-v-inlineRounding;
+    if(inlineRounding>0){
+      const inv=accounts.find(x=>String(x.id)===String(t.roundingAccount));
+      if(!inv) return false;
+      inv.balance=Number(inv.balance||0)+inlineRounding;
+    }
+  }else if(t.type==="transfer"){
+    const to=accounts.find(x=>String(x.id)===String(t.toAccount));
+    if(!to) return false;
+    a.balance=Number(a.balance||0)-v;
+    to.balance=Number(to.balance||0)+v;
   }
   return true;
 }
@@ -3312,6 +3326,14 @@ function deleteTransaction(index){
   if(!t) return;
   if(!confirm("Удалить эту операцию?")) return;
   reverseTransactionEffect(t);
+  if(t.roundingTransactionId){
+    const ri=transactions.findIndex(x=>String(x.id)===String(t.roundingTransactionId));
+    if(ri>=0){
+      reverseTransactionEffect(transactions[ri]);
+      transactions.splice(ri,1);
+      if(ri<index) index--;
+    }
+  }
   transactions.splice(index,1);
   save(AK,accounts);
   save(TY,transactions);
@@ -3750,6 +3772,14 @@ function normalizeSyncData(data){
 
       roundingAccount:String(
         x.roundingAccount||""
+      ),
+
+      roundingTransactionId:String(
+        x.roundingTransactionId||""
+      ),
+
+      toAccount:String(
+        x.toAccount||""
       )
 
     }))
@@ -5303,6 +5333,10 @@ saveExpenseButton.addEventListener("click", () => {
     if(!old) return;
 
     reverseTransactionEffect(old);
+    if(old.roundingTransactionId){
+      const ri=transactions.findIndex(x=>String(x.id)===String(old.roundingTransactionId));
+      if(ri>=0) reverseTransactionEffect(transactions[ri]);
+    }
 
     const updated={
       ...old,
@@ -5324,13 +5358,44 @@ saveExpenseButton.addEventListener("click", () => {
       updated.roundingEnabled=extra>0;
       updated.roundingAmount=extra;
       updated.roundingAccount=extra>0 ? inv.id : null;
+      updated.roundingTransactionId=null;
+      if(extra>0) updated.roundingTransactionId=String(old.roundingTransactionId||"");
     }
 
     updated.type=isIncome ? "income" : "expense";
 
     if(!applyTransactionEffect(updated)){
       applyTransactionEffect(old);
+      if(old.roundingTransactionId){
+        const oldTransfer=transactions.find(x=>String(x.id)===String(old.roundingTransactionId));
+        if(oldTransfer) applyTransactionEffect(oldTransfer);
+      }
       return;
+    }
+
+    // Округление хранится отдельной операцией перевода, чтобы у Инвесткопилки
+    // была собственная история пополнений.
+    if(updated.type==="expense" && Number(updated.roundingAmount||0)>0){
+      const transferId=String(updated.roundingTransactionId||("round-"+updated.id));
+      const transfer={
+        id:transferId,
+        type:"transfer",
+        amount:Number(updated.roundingAmount||0),
+        account:updated.account,
+        toAccount:updated.roundingAccount,
+        date:updated.date,
+        name:"Округление покупки",
+        roundingFor:String(updated.id)
+      };
+      applyTransactionEffect(transfer);
+      updated.roundingTransactionId=transferId;
+      const oldTransferIndex=transactions.findIndex(x=>String(x.id)===String(old.roundingTransactionId));
+      if(oldTransferIndex>=0) transactions[oldTransferIndex]=transfer;
+      else transactions.push(transfer);
+    } else if(old.roundingTransactionId){
+      const oldTransferIndex=transactions.findIndex(x=>String(x.id)===String(old.roundingTransactionId));
+      if(oldTransferIndex>=0) transactions.splice(oldTransferIndex,1);
+      updated.roundingTransactionId=null;
     }
 
     transactions[editingTransactionIndex]=updated;
@@ -5372,12 +5437,31 @@ saveExpenseButton.addEventListener("click", () => {
     transaction.roundingEnabled=extra>0;
     transaction.roundingAmount=extra;
     transaction.roundingAccount=extra>0 ? inv.id : null;
+    transaction.roundingTransactionId=extra>0 ? "round-"+transaction.id : null;
 
-    account.balance=Number(account.balance||0)-value-extra;
-    if(extra>0) inv.balance=Number(inv.balance||0)+extra;
+    account.balance=Number(account.balance||0)-value;
+    if(extra>0){
+      const transfer={
+        id:transaction.roundingTransactionId,
+        type:"transfer",
+        amount:extra,
+        account:account.id,
+        toAccount:inv.id,
+        date,
+        name:"Округление покупки",
+        roundingFor:String(transaction.id)
+      };
+      applyTransactionEffect(transfer);
+      transactions.push(transaction);
+      transactions.push(transfer);
+    }else{
+      transactions.push(transaction);
+    }
   }
 
-  transactions.push(transaction);
+  if(isIncome){
+    transactions.push(transaction);
+  }
   save(AK,accounts);
   save(TY,transactions);
   close("expenseOverlay");
