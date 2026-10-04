@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>Бабки в шапку</title>
-<link rel="icon" type="image/png" sizes="1024x1024" href="IMG_5931.png">
-<link rel="apple-touch-icon" sizes="1024x1024" href="IMG_5931.png">
+<link rel="icon" type="image/png" href="money_pouch_icon.png">
+<link rel="apple-touch-icon" href="money_pouch_icon.png">
 
 <style>
 :root{
@@ -195,10 +195,8 @@ button{
   border-radius:12px;
   background:var(--pp);
   color:#64484f;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:0;
+  font-size:18px;
+  font-weight:800
 }
 
 .history-filter.active{
@@ -224,19 +222,12 @@ button{
 .history-amount{font-weight:800;white-space:nowrap}
 .history-amount.income{color:#66856f}
 .history-amount.expense{color:var(--danger)}
-.history-edit,.history-delete{
-  width:32px;
-  height:32px;
-  min-width:32px;
-  padding:0;
-  border:0;
-  border-radius:10px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
+.history-edit{
+  width:32px;height:32px;border:0;border-radius:10px;background:var(--pp);color:#64484f;font-size:15px
 }
-.history-edit{background:transparent;color:#8f747b}
-.history-delete{background:transparent;color:#b46f79}
+.history-delete{
+  width:32px;height:32px;border:0;border-radius:10px;background:#f5dddd;color:var(--danger);font-size:15px
+}
 
 .stat-row{
   display:flex;
@@ -282,40 +273,6 @@ button{
   height:34px;
   border-radius:11px;
   font-size:17px
-}
-
-.icon-action{
-  width:34px;
-  height:34px;
-  min-width:34px;
-  padding:0;
-  border:0;
-  border-radius:11px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  background:transparent;
-  color:#8f747b;
-  cursor:pointer;
-}
-
-.icon-action.danger{
-  background:transparent;
-  color:#b46f79;
-}
-
-.icon-action svg,
-.calc-button svg,
-.history-edit svg,
-.history-delete svg{
-  width:17px;
-  height:17px;
-  display:block;
-  stroke:currentColor;
-  fill:none;
-  stroke-width:1.9;
-  stroke-linecap:round;
-  stroke-linejoin:round;
 }
 
 .clear-limits-button{
@@ -394,58 +351,13 @@ button{
 }
 
 .category-top,
+.account-row,
 .debt-top,
 .goal-top{
   display:flex;
   justify-content:space-between;
   align-items:center;
   gap:12px
-}
-
-.account-row{
-  width:100%;
-  box-sizing:border-box;
-  overflow:hidden;
-}
-
-.account-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  width:100%;
-}
-
-.account-right{
-  width:124px;
-  min-width:124px;
-  text-align:right;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  flex-shrink:0;
-}
-
-.account-right .account-balance{
-  width:100%;
-  text-align:right;
-  white-space:nowrap;
-  font-variant-numeric:tabular-nums;
-}
-
-.account-right .actions-row{
-  width:100%;
-  justify-content:flex-end;
-  gap:4px;
-  margin-top:8px;
-}
-
-.account-info{
-  min-width:0;
-}
-
-.account-main{
-  min-width:0;
 }
 
 .category-left,
@@ -518,121 +430,77 @@ button{
 .account-main{
   display:flex;
   align-items:center;
-  gap:12px;
-  min-width:0;
-  max-width:100%;
-  overflow:hidden;
+  gap:12px
 }
-
-/* Контейнер логотипа счёта не даёт картинке вылезать за карточку. */
-.account-main > div:first-child{
-  flex:0 0 42px;
-  width:42px;
-  height:42px;
-  min-width:42px;
-  min-height:42px;
-  overflow:hidden;
-  border-radius:13px;
-}
-
-.account-left{
-  min-width:0;
-  overflow:hidden;
-}
-
-.account-name{
-  white-space:normal;
-  overflow-wrap:anywhere;
-  line-height:1.25;
-}
-
-.account-actions{
-  width:max-content;
-  min-width:0;
-  display:flex;
-  flex-direction:row;
-  align-items:center;
-  justify-content:flex-end;
-  gap:4px;
-  flex-shrink:0
-}
-
-.account-actions .account-balance{
-  max-width:none;
-  text-align:right;
-  white-space:nowrap;
-  margin-right:4px;
-  font-variant-numeric:tabular-nums;
-}
-
-.account-actions .icon-action{
-  flex:0 0 34px;
-}
-
-/* Перевод запускается отдельной кнопкой/перетаскиванием, поэтому
-   невидимая служебная кнопка не должна занимать место в строке. */
-.account-actions [data-transfer-from]{
-  display:none;
-}
-
 
 .bank-logo{
   width:42px;
   height:42px;
-  max-width:42px;
-  max-height:42px;
-  flex:0 0 42px;
-  display:block;
   border-radius:13px;
-  object-fit:contain;
-  background:#eee;
-  box-sizing:border-box;
+  object-fit:cover;
+  background:#eee
 }
 
-.bank-logo img{
-  display:block;
-  width:100%;
-  height:100%;
-  max-width:100%;
-  max-height:100%;
-  object-fit:contain;
-}
-
-.bank-icon-picker{
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-  margin-top:7px
-}
-.bank-icon-choice{
-  border:1px solid var(--border);
-  background:#fff;
-  color:#64484f;
-  padding:8px 10px;
-  border-radius:12px;
-  font-size:12px;
-  font-weight:700
-}
-.bank-icon-choice.active{
-  background:var(--pp);
-  border-color:var(--pink);
-}
-.bank-logo svg{
-  width:100%;
-  height:100%;
-  max-width:42px;
-  max-height:42px;
-  display:block
-}
-
-/* Счёт прокручивается как обычный список. Перевод запускается отдельной кнопкой. */
+/* Весь счёт можно зажать и перетащить для перевода */
 .account-row{
   position:relative;
-  touch-action:pan-y;
+  touch-action:none;
   user-select:none;
   -webkit-user-select:none;
   -webkit-touch-callout:none;
+  cursor:grab;
+  transition:background .18s, box-shadow .18s, transform .18s, opacity .18s;
 }
+.account-row:active{cursor:grabbing}
+.account-row.transfer-source{
+  background:var(--pp);
+  border-radius:16px;
+  padding-left:10px;
+  padding-right:10px;
+  margin-left:-10px;
+  margin-right:-10px;
+  box-shadow:0 0 0 2px var(--pink), 0 8px 22px #00000014;
+}
+.account-row.transfer-source::after{
+  content:"⇄  Перетащите на другой счёт";
+  position:absolute;
+  right:8px;
+  top:-10px;
+  padding:5px 9px;
+  border-radius:10px;
+  background:var(--dark);
+  color:#fff;
+  font-size:10px;
+  font-weight:700;
+  pointer-events:none;
+  white-space:nowrap;
+  box-shadow:0 4px 12px #0002;
+}
+.account-row.transfer-target{
+  background:var(--pp);
+  border-radius:16px;
+  padding-left:10px;
+  padding-right:10px;
+  margin-left:-10px;
+  margin-right:-10px;
+  box-shadow:0 0 0 2px var(--pink);
+}
+.transfer-ghost{
+  position:fixed;
+  z-index:9999;
+  pointer-events:none;
+  transform:translate(-50%,-50%) scale(.96);
+  opacity:.94;
+  box-shadow:0 12px 30px #0003;
+  background:#fff;
+  border-radius:16px;
+  padding:0 10px;
+  min-width:260px;
+  max-width:calc(100vw - 30px);
+}
+.transfer-ghost .small-button{display:none}
+.transfer-ghost .account-row{padding:13px 0 !important; margin:0 !important; border:0 !important; box-shadow:none !important; background:transparent !important}
+.transfer-ghost::after{display:none}
 
 .bank-fallback{
   display:flex;
@@ -665,29 +533,6 @@ button{
 .debt-amount,
 .goal-amount{
   font-weight:800
-}
-
-.debt-right{
-  width:124px;
-  min-width:124px;
-  text-align:right;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  flex-shrink:0
-}
-
-.debt-amount{
-  min-width:124px;
-  text-align:right;
-  white-space:nowrap;
-  font-variant-numeric:tabular-nums;
-}
-
-.debt-right .actions-row{
-  width:100%;
-  justify-content:flex-end;
-  gap:4px;
 }
 
 .debt-meta,
@@ -819,10 +664,7 @@ button{
 }
 
 .nav{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
+  position:static;
   background:#fffafaF0;
   backdrop-filter:blur(15px);
   border-top:1px solid var(--border);
@@ -854,64 +696,6 @@ button{
   font-size:20px;
   display:block;
   margin-bottom:2px
-}
-
-.nav-date-icon{
-  width:21px;
-  height:21px;
-  box-sizing:border-box;
-  margin:0 auto 2px;
-  border:1.7px solid currentColor;
-  border-radius:5px;
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  line-height:1;
-  overflow:hidden;
-}
-
-.nav-date-top{
-  position:absolute;
-  top:0;
-  left:0;
-  right:0;
-  height:5px;
-  border-bottom:1.4px solid currentColor;
-}
-
-.nav-date-top::before,
-.nav-date-top::after{
-  content:"";
-  position:absolute;
-  top:-2px;
-  width:2px;
-  height:5px;
-  border-radius:2px;
-  background:currentColor;
-}
-
-.nav-date-top::before{left:5px}
-.nav-date-top::after{right:5px}
-
-.nav-date-number{
-  margin-top:5px;
-  font-size:9px;
-  line-height:1;
-  font-weight:800;
-  letter-spacing:-.2px;
-}
-
-.nav-icon-svg svg{
-  width:21px;
-  height:21px;
-  display:block;
-  margin:0 auto;
-  fill:none;
-  stroke:currentColor;
-  stroke-width:1.8;
-  stroke-linecap:round;
-  stroke-linejoin:round;
 }
 
 .inline-button{
@@ -979,7 +763,7 @@ button{
 
 <section id="home" class="screen active">
   <div class="header">
-    <div class="month">Сентябрь 2026</div>
+    <div class="month" id="currentMonthLabel"></div>
   </div>
 
   <div class="hero">
@@ -1011,7 +795,7 @@ button{
   <div style="height:18px"></div>
 
   <div class="card clickable-card" id="monthlyHistoryCard">
-    <div class="card-title">Сентябрь <span class="card-hint">История операций →</span></div>
+    <div class="card-title"><span id="currentMonthShortLabel"></span> <span class="card-hint">История операций →</span></div>
     <div class="stat-row">
       <span>План расходов</span>
       <span class="stat-value" id="monthPlan">0 ₽</span>
@@ -1100,13 +884,6 @@ button{
     <button class="inline-button" id="addDebtButton">＋ Добавить долг</button>
   </div>
 
-  <div class="card" id="debtsTotalCard">
-    <div class="stat-row">
-      <span>Итого долгов</span>
-      <span class="stat-value" id="debtsTotal">0 ₽</span>
-    </div>
-  </div>
-
   <div class="card" id="debtsList"></div>
 </section>
 
@@ -1166,23 +943,23 @@ button{
 
       <div class="stat-row">
         <span>Общий доход</span>
-        <span class="stat-value" id="salaryDisplay"></span>
+        <div class="category-actions">
+          <span class="stat-value" id="salaryDisplay"></span>
+          <button class="small-button" id="editSalaryButton">✎</button>
+        </div>
       </div>
 
       <div class="stat-row">
         <span>Аванс</span>
         <div class="category-actions">
           <span class="stat-value" id="advanceDisplay"></span>
-          <button class="icon-action" id="editAdvanceButton" title="Изменить" aria-label="Изменить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button>
+          <button class="small-button" id="editAdvanceButton">✎</button>
         </div>
       </div>
 
       <div class="stat-row">
         <span>Основная зарплата</span>
-        <div class="category-actions">
-          <span class="stat-value" id="mainSalaryDisplay"></span>
-          <button class="icon-action" id="editSalaryButton" title="Изменить" aria-label="Изменить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button>
-        </div>
+        <span class="stat-value" id="mainSalaryDisplay"></span>
       </div>
     </div>
 
@@ -1194,7 +971,7 @@ button{
         <span>Дата аванса</span>
         <div class="category-actions">
           <span class="stat-value" id="advanceDateDisplay"></span>
-          <button class="icon-action" id="editAdvanceDateButton" title="Изменить" aria-label="Изменить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button>
+          <button class="small-button" id="editAdvanceDateButton">✎</button>
         </div>
       </div>
 
@@ -1202,7 +979,7 @@ button{
         <span>Дата основной зарплаты</span>
         <div class="category-actions">
           <span class="stat-value" id="mainSalaryDateDisplay"></span>
-          <button class="icon-action" id="editMainSalaryDateButton" title="Изменить" aria-label="Изменить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button>
+          <button class="small-button" id="editMainSalaryDateButton">✎</button>
         </div>
       </div>
     </div>
@@ -1215,11 +992,18 @@ button{
         <span>Цель накоплений</span>
         <div class="category-actions">
           <span class="stat-value" id="savingsPercentDisplay"></span>
-          <button class="icon-action" id="editSavingsButton" title="Изменить" aria-label="Изменить"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button>
+          <button class="small-button" id="editSavingsButton">✎</button>
         </div>
       </div>
     </div>
 
+  </div>
+
+
+  <div class="card">
+    <div class="card-title">Фактические выплаты</div>
+    <div class="small-note">Если выплата отличается от плановой, зафиксируй фактическую сумму. Дневной лимит будет учитывать ее вместо плановой суммы.</div>
+    <button class="secondary" id="addPaymentFactButton" style="margin-top:12px">＋ Зафиксировать выплату</button>
   </div>
 
 
@@ -1238,7 +1022,7 @@ button{
     </button>
 
     <div class="sync-status" id="syncStatus">
-      Синхронизация автоматическая. Изменения не перезаписываются, если версии расходятся.
+      Синхронизируются все данные приложения.
     </div>
   </div>
 
@@ -1332,14 +1116,6 @@ button{
         <div class="category-info-main" id="monthRemainingAfter">—</div>
       </div>
 
-      <div class="category-info" id="roundingBox" style="display:none">
-        <label style="display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700">
-          <input id="roundingEnabled" type="checkbox" style="width:18px;height:18px;accent-color:var(--pink)">
-          Округлить до 50 ₽ и перевести остаток в Инвесткопилку
-        </label>
-        <div class="small-note" id="roundingPreview" style="margin-top:8px">—</div>
-      </div>
-
     </div>
 
 
@@ -1375,8 +1151,8 @@ button{
       <button class="primary" id="saveExpenseButton">
         Записать
       </button>
-      <button class="danger-button" id="deleteOperationButton" title="Удалить операцию" aria-label="Удалить операцию" style="display:none;margin-top:8px;width:100%;height:46px;padding:0;align-items:center;justify-content:center">
-        <svg viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;display:block;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>
+      <button class="danger-button" id="deleteOperationButton" style="display:none;margin-top:8px;width:100%">
+        Удалить операцию
       </button>
     </div>
 
@@ -1447,10 +1223,8 @@ button{
 
     <select id="accountTypeInput" class="select">
       <option value="debit">Дебетовая карта</option>
-      <option value="cash">Наличные</option>
-      <option value="savings">Накопительный счёт</option>
-      <option value="investment">Инвесткопилка</option>
       <option value="credit">Кредитная карта</option>
+      <option value="cash">Наличные</option>
     </select>
 
     <div class="field-label">Банк / название</div>
@@ -1460,21 +1234,6 @@ button{
       class="text-input"
       placeholder="Например, Сбер"
     >
-
-    <div class="field-label">Иконка счёта</div>
-
-    <div class="bank-icon-picker" id="bankIconChoices">
-      <button type="button" class="bank-icon-choice" data-icon-key="auto">Авто</button>
-      <button type="button" class="bank-icon-choice" data-icon-key="sber">Сбер</button>
-      <button type="button" class="bank-icon-choice" data-icon-key="tbank">Т-Банк</button>
-      <button type="button" class="bank-icon-choice" data-icon-key="vtb">ВТБ</button>
-      <button type="button" class="bank-icon-choice" data-icon-key="alfa">Альфа</button>
-      <button type="button" class="bank-icon-choice" data-icon-key="avangard">Авангард</button>
-      <button type="button" class="bank-icon-choice" data-icon-key="wallet">Кошелёк</button>
-    </div>
-    <input id="bankIconFileInput" type="file" accept="image/*" style="display:none">
-    <button type="button" class="secondary" id="uploadBankIconButton" style="margin-top:8px;padding:11px">Загрузить свою иконку</button>
-    <div class="small-note" id="bankIconNote">Можно выбрать готовую иконку или загрузить картинку с телефона.</div>
 
     <div class="field-label">Реальный остаток</div>
 
@@ -1496,28 +1255,6 @@ button{
         class="text-input"
         type="number"
         inputmode="decimal"
-      >
-
-      <div class="field-label">День платежа по договору</div>
-      <input
-        id="creditPaymentDayInput"
-        class="text-input"
-        type="number"
-        inputmode="numeric"
-        min="1"
-        max="31"
-        placeholder="Например, 15"
-      >
-
-      <div class="field-label">Последний день платежа по договору</div>
-      <input
-        id="creditLastDayInput"
-        class="text-input"
-        type="number"
-        inputmode="numeric"
-        min="1"
-        max="31"
-        placeholder="Например, 20"
       >
 
     </div>
@@ -1603,6 +1340,28 @@ button{
 </div>
 
 
+<!-- ФАКТИЧЕСКАЯ ВЫПЛАТА -->
+
+<div class="overlay" id="paymentFactOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Фактическая выплата</div>
+      <button class="close" id="closePaymentFactButton">×</button>
+    </div>
+    <div class="field-label">Тип выплаты</div>
+    <select id="paymentFactType" class="select">
+      <option value="salary">Основная зарплата</option>
+      <option value="advance">Аванс</option>
+    </select>
+    <div class="field-label" style="margin-top:12px">Дата выплаты</div>
+    <input id="paymentFactDate" class="text-input" type="date">
+    <div class="field-label" style="margin-top:12px">Сколько реально пришло</div>
+    <input id="paymentFactAmount" class="amount" type="number" inputmode="decimal" placeholder="0 ₽">
+    <button class="primary" id="savePaymentFactButton" style="margin-top:15px">Сохранить выплату</button>
+  </div>
+</div>
+
+
 <!-- ПЕРЕВОД -->
 
 <div class="overlay" id="transferOverlay">
@@ -1612,13 +1371,6 @@ button{
       <div class="modal-title">Перевод между своими счетами</div>
       <button class="close" id="closeTransferButton">×</button>
     </div>
-
-    <div class="field-label">Дата операции</div>
-    <input
-      id="transferDate"
-      class="text-input"
-      type="date"
-    >
 
     <div class="field-label">Откуда</div>
     <select id="transferFrom" class="select"></select>
@@ -1702,16 +1454,6 @@ button{
       type="date"
     >
 
-    <div class="field-label">Категория лимита</div>
-
-    <select id="goalCategory" class="text-input">
-      <option value="">Не учитывать в лимитах</option>
-    </select>
-
-    <div class="small-note" style="margin-top:7px">
-      Ежемесячная сумма на цель будет автоматически добавляться к лимиту выбранной категории.
-    </div>
-
     <div class="modal-button">
       <button class="primary" id="saveGoalButton">
         Сохранить цель
@@ -1749,41 +1491,13 @@ button{
       inputmode="decimal"
     >
 
-    <div class="field-label">День платежа по договору</div>
-
-    <input
-      id="manualDebtPaymentDay"
-      class="text-input"
-      type="number"
-      inputmode="numeric"
-      min="1"
-      max="31"
-      placeholder="Например, 15"
-    >
-
-    <div class="field-label">Последний день платежа по договору</div>
-
-    <input
-      id="manualDebtLastDay"
-      class="text-input"
-      type="number"
-      inputmode="numeric"
-      min="1"
-      max="31"
-      placeholder="Например, 20"
-    >
-
-    <div class="field-label">Точный срок возврата</div>
+    <div class="field-label">Срок возврата</div>
 
     <input
       id="manualDebtDueDate"
       class="text-input"
       type="date"
     >
-
-    <div class="field-hint" style="margin-top:7px">
-      День платежа — когда по договору нужно платить регулярно. Последний день — крайний допустимый день. Точный срок можно оставить пустым для ежемесячного кредита.
-    </div>
 
     <button
       class="primary"
@@ -1803,45 +1517,32 @@ button{
   <div class="nav-inner">
 
     <button class="active" data-screen="home">
-      <span class="nav-icon nav-date-icon" id="navTodayDate" aria-hidden="true">
-        <span class="nav-date-top"></span>
-        <span class="nav-date-number">27</span>
-      </span>
+      <span class="nav-icon">⌂</span>
       Сегодня
     </button>
 
     <button data-screen="budget">
-      <span class="nav-icon nav-icon-svg">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8"/><path d="M8 11h1M12 11h1M16 11h0M8 15h1M12 15h1M16 15h0M8 18h1M12 18h1M16 18h0"/></svg>
-      </span>
+      <span class="nav-icon">▤</span>
       Бюджет
     </button>
 
     <button data-screen="accounts">
-      <span class="nav-icon nav-icon-svg">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H19v16H6.5A2.5 2.5 0 0 1 4 17.5z"/><path d="M4 7h15"/><path d="M15 11h4v4h-4a2 2 0 0 1 0-4Z"/><circle cx="16.5" cy="13" r=".7"/></svg>
-      </span>
+      <span class="nav-icon">▱</span>
       Счета
     </button>
 
     <button data-screen="debts">
-      <span class="nav-icon nav-icon-svg">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9a5 5 0 0 1 10 0v3.2l1.7 2.3H5.3L7 12.2Z"/><path d="M9.5 17.2a2.7 2.7 0 0 0 5 0"/><path d="M8.2 5.2 6.7 3.8M15.8 5.2l1.5-1.4"/><path d="M12 9v2.2l1.5 1"/></svg>
-      </span>
+      <span class="nav-icon">↺</span>
       Долги
     </button>
 
     <button data-screen="goals">
-      <span class="nav-icon nav-icon-svg">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.7c0 5.1-8.8 10.3-8.8 10.3S3.2 13.8 3.2 8.7A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z"/></svg>
-      </span>
+      <span class="nav-icon">♡</span>
       Цели
     </button>
 
     <button data-screen="settings">
-      <span class="nav-icon nav-icon-svg">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.7 3.8 10.4 2h3.2l.7 1.8 1.6.9 1.8-.5 2.3 2.3-.5 1.8.9 1.6 1.8.7v3.2l-1.8.7-.9 1.6.5 1.8-2.3 2.3-1.8-.5-1.6.9-.7 1.8h-3.2l-.7-1.8-1.6-.9-1.8.5-2.3-2.3.5-1.8-.9-1.6-1.8-.7v-3.2l1.8-.7.9-1.6-.5-1.8 2.3-2.3 1.8.5 1.6-.9Z"/><circle cx="12" cy="12" r="3.2"/></svg>
-      </span>
+      <span class="nav-icon">⚙</span>
       Настройки
     </button>
 
@@ -1851,23 +1552,16 @@ button{
 
 <script>
 
-const TY="babki_september_2026_transactions";
-const CK="babki_september_2026_categories";
+let budgetYear=new Date().getFullYear();
+let budgetMonth=new Date().getMonth();
+let TY="";
+let CK="";
 const AK="babki_accounts_real_v1";
 const FK="babki_finance_settings_v1";
 const SK="babki_savings_goal_percent_v1";
 const GK="babki_goals_v1";
 const DK="babki_personal_debts_v1";
-// Иконки счетов хранятся отдельно от самих счетов, чтобы обновления кода
-// или синхронизация не могли случайно затереть выбранные пользователем логотипы.
-const AIK="babki_account_icons_v1";
-const DSK="babki_debt_schedules_v1";
-const SCREEN_KEY="babki_last_screen_v1";
-const SYNC_SNAPSHOT_KEY="babki_google_sync_snapshot_v1";
-const SYNC_BACKUP_KEY="babki_pre_sync_backup_v1";
-let appReady=false;
-let autoSyncTimer=null;
-let syncInProgress=false;
+const SETTINGS_DIRTY_KEY="babki_finance_settings_dirty_v1";
 
 
 /* GOOGLE SHEETS */
@@ -1876,21 +1570,17 @@ const GOOGLE_SYNC_URL=
   "https://script.google.com/macros/s/AKfycbyzPDsAXBCE58pYtFfAswCpzsyjG0o2lWG6q9j_QxHx11AwMyvma1H_d8JGyeCwiV13/exec";
 
 
-const budgetYear=2026;
-const budgetMonth=8;
-
 let salary=114000;
 let advance=26000;
 let advanceDate=null;
 let mainSalaryDate=15;
 let savingsPercent=20;
+let paymentFacts={};
 
 let transactions=[];
 let accounts=[];
-let accountIcons={};
 let goals=[];
 let debts=[];
-let debtSchedules={};
 
 let editingCategory=null;
 let editingAccount=null;
@@ -1903,7 +1593,6 @@ let historyAccountId=null;
 let historyFilter="all";
 let historyReturnScreen="home";
 let calculatorTarget=null;
-let selectedBankIcon="auto";
 let suppressAccountClickUntil=0;
 
 
@@ -1939,27 +1628,70 @@ const categories=[
   plan:x[1]
 }));
 
+const DEFAULT_CATEGORY_PLANS=categories.map(c=>({name:c.name,plan:c.plan}));
+
+function monthStorageKey(prefix,year,month){
+  return `babki_${prefix}_${year}_${String(month+1).padStart(2,"0")}`;
+}
+
+function monthLabelLong(year,month){
+  return new Intl.DateTimeFormat("ru-RU",{month:"long",year:"numeric"})
+    .format(new Date(year,month,1));
+}
+
+function monthLabelShort(year,month){
+  return new Intl.DateTimeFormat("ru-RU",{month:"long"})
+    .format(new Date(year,month,1));
+}
+
+function updateMonthLabels(){
+  currentMonthLabel.textContent=monthLabelLong(budgetYear,budgetMonth);
+  currentMonthShortLabel.textContent=monthLabelShort(budgetYear,budgetMonth);
+}
+
+function resetCategoryPlans(){
+  categories.forEach(c=>{
+    const d=DEFAULT_CATEGORY_PLANS.find(x=>x.name===c.name);
+    c.plan=d?d.plan:0;
+  });
+}
+
+function setBudgetPeriod(year,month){
+  budgetYear=year;
+  budgetMonth=month;
+  TY=monthStorageKey("transactions",year,month);
+  CK=monthStorageKey("categories",year,month);
+  updateMonthLabels();
+}
+
+function previousBudgetPeriod(){
+  const d=new Date(budgetYear,budgetMonth-1,1);
+  return {year:d.getFullYear(),month:d.getMonth()};
+}
+
+function ensureCurrentBudgetMonth(){
+  const now=new Date();
+  const y=now.getFullYear();
+  const m=now.getMonth();
+  if(y===budgetYear && m===budgetMonth){
+    updateMonthLabels();
+    return false;
+  }
+  setBudgetPeriod(y,m);
+  return true;
+}
+
 
 const money=v=>
   new Intl.NumberFormat("ru-RU",{
-    minimumFractionDigits:2,
     maximumFractionDigits:2
   }).format(
     Math.round((Number(v)||0)*100)/100
   )+" ₽";
 
 
-const moneyPlain=v=>
-  new Intl.NumberFormat("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Math.round((Number(v)||0)*100)/100);
-
-
 const cat=n=>
   categories.find(x=>x.name===n);
-
-const sortedCategories=()=>
-  [...categories].sort((a,b)=>
-    a.name.localeCompare(b.name,"ru",{sensitivity:"base"})
-  );
 
 
 const today=()=>{
@@ -1967,32 +1699,9 @@ const today=()=>{
   return d.toISOString().slice(0,10);
 };
 
-function updateNavTodayDate(){
-  const el=document.querySelector("#navTodayDate .nav-date-number");
-  if(el) el.textContent=String(new Date().getDate());
-}
 
-updateNavTodayDate();
-setInterval(updateNavTodayDate,60000);
-
-
-function save(k,v){
+const save=(k,v)=>
   localStorage.setItem(k,JSON.stringify(v));
-
-  /* После полной загрузки приложения изменения синхронизируются
-     автоматически, но с защитой от параллельных/циклических записей. */
-  if(appReady && !syncInProgress &&
-     [TY,CK,AK,FK,SK,GK,DK,AIK,DSK].includes(k)){
-    queueAutoSync();
-  }
-}
-
-function queueAutoSync(){
-  clearTimeout(autoSyncTimer);
-  autoSyncTimer=setTimeout(()=>{
-    safeSyncWithGoogle(true).catch(()=>{});
-  },1800);
-}
 
 
 const read=(k,f)=>{
@@ -2003,38 +1712,6 @@ const read=(k,f)=>{
     return f;
   }
 };
-
-
-/*
- * Пользовательские логотипы хранятся как исходные Data URL.
- * Здесь принципиально НЕТ canvas, resize, JPEG/WebP-конвертации
- * или иной обработки изображения. Строка возвращается без изменений.
- */
-function cleanAccountIcons(source){
-
-  const result={};
-
-  if(!source || typeof source!=="object")
-    return result;
-
-  Object.keys(source).forEach(id=>{
-    const value=source[id];
-
-    if(typeof value!=="string")
-      return;
-
-    if(value === "auto" || !value)
-      result[String(id)] = value || "auto";
-    else if(value.startsWith("data:image/"))
-      result[String(id)] = value;
-    else if(
-      ["sber","tbank","vtb","alfa","avangard","wallet","ozon"].includes(value)
-    )
-      result[String(id)] = value;
-  });
-
-  return result;
-}
 
 
 const spent=()=>
@@ -2059,7 +1736,7 @@ const catSpent=n=>
 
 const budget=()=>
   categories.reduce(
-    (s,x)=>s+effectiveCategoryLimit(x),
+    (s,x)=>s+Number(x.plan||0),
     0
   );
 
@@ -2091,6 +1768,9 @@ function ensureAccountIds(list){
 
 
 function load(){
+
+  const periodChanged=ensureCurrentBudgetMonth();
+  resetCategoryPlans();
 
   const t=read(TY,null);
 
@@ -2154,37 +1834,33 @@ function load(){
 
   }
 
+  /* Новый месяц: переносим только лимиты предыдущего месяца,
+     но не его операции. Это сохраняет привычные лимиты и
+     одновременно отделяет расходы каждого месяца. */
+  if(!Array.isArray(p)){
+    const prev=previousBudgetPeriod();
+    const prevKey=monthStorageKey("categories",prev.year,prev.month);
+    const legacyPrevKey=(prev.year===2026 && prev.month===8)
+      ?"babki_september_2026_categories"
+      :prevKey;
+    const prevData=read(prevKey,read(legacyPrevKey,null));
+    const prevPlans=prevData && prevData.plans && typeof prevData.plans==="object"
+      ?prevData.plans
+      :prevData;
+    if(prevPlans && typeof prevPlans==="object")
+      categories.forEach(c=>{
+        if(Object.prototype.hasOwnProperty.call(prevPlans,c.name))
+          c.plan=Math.max(0,Number(prevPlans[c.name])||0);
+      });
+    saveCategories();
+  }
+
 
   const a=read(AK,null);
-
-  // Иконки читаются из отдельного хранилища. Это важно: если в будущем
-  // структура accounts изменится или Google вернет старую версию счетов,
-  // пользовательские логотипы все равно останутся на месте.
-  const savedAccountIcons=read(AIK,{});
-  accountIcons=cleanAccountIcons(savedAccountIcons);
 
   if(Array.isArray(a)){
 
     accounts=ensureAccountIds(a);
-
-    // Однократно переносим уже существующие icon из accounts в отдельное
-    // хранилище, не меняя сами пользовательские данные.
-    let iconsChanged=false;
-    accounts.forEach(account=>{
-      if(
-        account &&
-        account.id &&
-        typeof account.icon==="string" &&
-        account.icon &&
-        !Object.prototype.hasOwnProperty.call(accountIcons,account.id)
-      ){
-        accountIcons[account.id]=account.icon;
-        iconsChanged=true;
-      }
-    });
-
-    if(iconsChanged)
-      save(AIK,accountIcons);
 
     save(
       AK,
@@ -2220,28 +1896,12 @@ function load(){
       mainSalaryDate=+f.mainSalaryDate;
   }
 
-  /*
-   * ВАЖНО: salary — это самостоятельное значение ОСНОВНОЙ зарплаты.
-   * advance — самостоятельное значение аванса.
-   *
-   * Ничего не вычитаем из salary при загрузке приложения.
-   * Ранее здесь была одноразовая миграция, которая при повторном
-   * запуске могла снова уменьшать зарплату на сумму аванса.
-   * Теперь сохранённые пользователем значения только читаются.
-   */
 
-  /* Одноразовое восстановление значения, испорченного старой миграцией.
-     Если до исправления кода 114000 уже успело превратиться в 88000
-     при авансе 26000, возвращаем 114000 один раз. После этого любые
-     значения, которые пользователь задаст сам, больше не меняем. */
-  const FINANCE_REPAIR_V1="babki_finance_repair_v1";
-  if(read(FINANCE_REPAIR_V1,null)!==true){
-    if(Number(salary)===88000 && Number(advance)===26000){
-      salary=114000;
-      save(FK,{salary,advance,totalIncome:salary+advance,advanceDate,mainSalaryDate});
-    }
-    save(FINANCE_REPAIR_V1,true);
-  }
+  const pf=read("babki_payment_facts_v1",{});
+
+  if(pf && typeof pf==="object")
+    paymentFacts=pf;
+
 
   const sp=read(SK,null);
 
@@ -2346,12 +2006,8 @@ function renderBudgetHistory(){
 
 function updateFinance(){
 
-  const totalIncome =
-    Math.max(0,Number(salary)||0) +
-    Math.max(0,Number(advance)||0);
-
   salaryDisplay.textContent=
-    money(totalIncome);
+    money(salary);
 
   advanceDisplay.textContent=
     money(advance);
@@ -2370,12 +2026,16 @@ function updateFinance(){
   savingsPercentDisplay.textContent=
     savingsPercent+"%";
 
+  const monthlyIncome=
+    Math.max(0,Number(salary||0)) +
+    Math.max(0,Number(advance||0));
+
   budgetSalary.textContent=
-    money(totalIncome);
+    money(monthlyIncome);
 
   budgetSavings.textContent=
     money(
-      totalIncome*savingsPercent/100
+      monthlyIncome*savingsPercent/100
     );
 
   budgetTotal.textContent=
@@ -2385,35 +2045,25 @@ function updateFinance(){
     money(
       Math.max(
         0,
-        totalIncome-
+        salary-
         budget()-
-        totalIncome*savingsPercent/100
+        salary*savingsPercent/100
       )
     );
 }
 
 
-function uiIcon(type){
-  if(type==="edit") return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>`;
-  if(type==="delete") return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>`;
-  if(type==="calculator") return `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8"/><path d="M8 11h1M12 11h1M16 11h0M8 15h1M12 15h1M16 15h0M8 18h1M12 18h1M16 18h0"/></svg>`;
-  return "";
-}
-
 function renderCats(){
 
   categoryList.innerHTML="";
 
-  sortedCategories().forEach(c=>{
-
-    const i=categories.indexOf(c);
+  categories.forEach((c,i)=>{
 
     const s=catSpent(c.name);
 
-    const limit=effectiveCategoryLimit(c);
-    const r=limit-s;
+    const r=c.plan-s;
 
-    const p=limit
+    const p=c.plan
       ?Math.min(
         100,
         Math.max(
@@ -2438,8 +2088,7 @@ function renderCats(){
           </div>
 
           <div class="category-limit">
-            Лимит: ${money(limit)}
-            ${goalCategoryAddition(c.name)>0 ? `<span class="small-note"> · цели +${money(goalCategoryAddition(c.name))}</span>` : ""}
+            Лимит: ${money(c.plan)}
           </div>
 
         </div>
@@ -2452,18 +2101,16 @@ function renderCats(){
           </div>
 
           <button
-            class="icon-action"
+            class="small-button"
             data-ci="${i}"
-            title="Изменить категорию"
-            aria-label="Изменить категорию"
-          >${uiIcon("edit")}</button>
+          >✎</button>
 
         </div>
 
       </div>
 
       <div class="category-meta">
-        ${money(s)} из ${money(limit)}
+        ${money(s)} из ${money(c.plan)}
       </div>
 
       <div class="category-bar">
@@ -2482,108 +2129,52 @@ function renderCats(){
 }
 
 
-function bankIconKeyFor(a){
-
-  if(a && typeof a.icon === "string" && a.icon.startsWith("data:image/"))
-    return "custom";
-
-  if(a && a.icon && a.icon!="auto")
-    return a.icon;
-
-  const name=(a?.bank||a?.name||"").toLowerCase();
-
-  if(name.includes("сбер")) return "sber";
-  if(name.includes("т-банк")||name.includes("тинькофф")||name.includes("tinkoff")) return "tbank";
-  if(name.includes("втб")||name.includes("vtb")) return "vtb";
-  if(name.includes("альфа")||name.includes("alfa")) return "alfa";
-  if(name.includes("авангард")||name.includes("avangard")) return "avangard";
-  if(name.includes("озон")||name.includes("ozon")) return "ozon";
-
-  return "initial";
-}
-
-/*
-  Официальные логотипы: берем favicon с сайта самого банка.
-  Если интернет недоступен или у банка нет подходящей favicon,
-  срабатывает аккуратный текстовый fallback.
-*/
-const BANK_LOGO_DOMAINS={
-  sber:"sberbank.ru",
-  tbank:"tbank.ru",
-  vtb:"www.vtb.ru",
-  alfa:"alfabank.ru",
-  avangard:"avangard.ru",
-  ozon:"ozon.ru"
-};
-
-function bankLogoUrl(key){
-  const domain=BANK_LOGO_DOMAINS[key];
-  return domain
-    ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
-    : "";
-}
-
-function bankFallbackSvg(key,label="С"){
-  const initials={
-    sber:"С",
-    tbank:"Т",
-    vtb:"ВТБ",
-    alfa:"A",
-    avangard:"А",
-    ozon:"O",
-    wallet:"▱",
-    initial:String(label||"С").slice(0,2).toUpperCase()
-  };
-  const bg={
-    sber:"#21A038",
-    tbank:"#FFDD2D",
-    vtb:"#1B5BD7",
-    alfa:"#EF3124",
-    avangard:"#1B9B55",
-    ozon:"#005BFF",
-    wallet:"#8C6FF0",
-    initial:"#E8DDE0"
-  }[key]||"#E8DDE0";
-  const text=initials[key]||initials.initial;
-  const textColor=key==="tbank"?"#222":"#fff";
-  return `<svg viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <rect x="0" y="0" width="42" height="42" rx="13" fill="${bg}"/>
-    <text x="21" y="26" text-anchor="middle" font-family="Arial,sans-serif" font-size="${text.length>2?9:15}" font-weight="800" fill="${textColor}">${text}</text>
-  </svg>`;
-}
-
 function logoFor(a){
 
-  const savedIcon=
-    a && a.id && Object.prototype.hasOwnProperty.call(accountIcons,a.id)
-      ?accountIcons[a.id]
-      :a?.icon;
+  const name=
+    (a.bank||a.name||"")
+      .toLowerCase();
 
-  if(typeof savedIcon==="string" && savedIcon.startsWith("data:image/")){
-    return `<img class="bank-logo" src="${savedIcon}" alt="">`;
+  const domains={
+    sber:"sberbank.ru",
+    "сбер":"sberbank.ru",
+    "т-банк":"tbank.ru",
+    "тинькофф":"tbank.ru",
+    tinkoff:"tbank.ru",
+    "альфа":"alfabank.ru",
+    alfa:"alfabank.ru",
+    "втб":"vtb.ru",
+    vtb:"vtb.ru",
+    "дебанк":"debank.com",
+    debank:"debank.com",
+    "озон":"ozon.ru",
+    ozon:"ozon.ru"
+  };
+
+  const d=
+    Object.keys(domains)
+      .find(
+        k=>name.includes(k)
+      );
+
+  if(d){
+
+    return `
+      <img
+        class="bank-logo"
+        src="https://www.google.com/s2/favicons?domain=${domains[d]}&sz=128"
+        alt=""
+      >
+    `;
   }
 
-  const iconForAccount=
-    savedIcon ||
-    "auto";
-
-  const key=
-    iconForAccount!=="auto"
-      ?iconForAccount
-      :bankIconKeyFor(a);
-  const url=bankLogoUrl(key);
-
-  if(url){
-    const fallback=encodeURIComponent(bankFallbackSvg(key,a?.name||"С"));
-    if(key==="vtb") {
-      const direct="https://www.vtb.ru/favicon.ico";
-      return `<img class="bank-logo" src="${url}" alt="" onerror="this.onerror=null;this.src='${direct}'" onload="if(this.naturalWidth===0)this.src='${direct}'">`;
-    }
-    return `<img class="bank-logo" src="${url}" alt="" onerror="this.outerHTML=decodeURIComponent('${fallback}')">`;
-  }
-
-  return `<div class="bank-logo bank-fallback">${bankFallbackSvg(key,a?.name||"С")}</div>`;
+  return `
+    <div class="bank-logo bank-fallback">
+      ${(a.name||"С").slice(0,1).toUpperCase()}
+    </div>
+  `;
 }
+
 
 function renderAccounts(){
 
@@ -2599,11 +2190,7 @@ function renderAccounts(){
             ?"Кредитная карта"
             :a.type==="cash"
               ?"Наличные"
-              :a.type==="savings"
-                ?"Накопительный счёт"
-                :a.type==="investment"
-                  ?"Инвесткопилка"
-                  :"Дебетовая карта";
+              :"Дебетовая карта";
 
         const debt=
           a.type==="credit"
@@ -2617,58 +2204,44 @@ function renderAccounts(){
           <div
             class="account-row"
             data-transfer-index="${i}"
+            title="Зажмите счёт и перетащите его на другой счёт для перевода"
           >
 
-            <div class="account-top">
+            <div class="account-main">
 
-              <div class="account-left account-main">
+              <div>
+                ${logoFor(a)}
+              </div>
 
-                <div>
-                  ${logoFor(a)}
+              <div class="account-left">
+
+                <div class="account-name">
+                  ${a.name||"Счёт"}
                 </div>
 
-                <div class="account-info">
-
-                  <div class="account-name">
-                    ${a.name||"Счёт"}
-                  </div>
-
-                  <div class="account-type">
-                    ${type}
-                    ${
-                      a.type==="credit"&&a.creditLimit
-                        ?` · лимит ${money(a.creditLimit)}`
-                        :""
-                    }
-                  </div>
-
+                <div class="account-type">
+                  ${type}
+                  ${
+                    a.type==="credit"&&a.creditLimit
+                      ?` · лимит ${money(a.creditLimit)}`
+                      :""
+                  }
                 </div>
 
               </div>
 
-              <div class="account-right">
+            </div>
 
-                <div class="account-balance ${debt?"negative":""}">
-                  ${moneyPlain(a.balance||0)}
-                </div>
+            <div class="account-actions">
 
-                <div class="actions-row">
-                  <button
-                    class="icon-action"
-                    data-ai="${i}"
-                    title="Изменить счёт"
-                    aria-label="Изменить счёт"
-                  >${uiIcon("edit")}</button>
-
-                  <button
-                    class="icon-action danger"
-                    data-account-delete="${i}"
-                    title="Удалить счёт"
-                    aria-label="Удалить счёт"
-                  >${uiIcon("delete")}</button>
-                </div>
-
+              <div class="account-balance ${debt?"negative":""}">
+                ${money(a.balance||0)}
               </div>
+
+              <button
+                class="small-button"
+                data-ai="${i}"
+              >✎</button>
 
             </div>
 
@@ -2687,11 +2260,7 @@ function renderAccounts(){
 
   const spendable=
     accounts
-      .filter(a=>
-        a.type!=="credit" &&
-        a.type!=="savings" &&
-        a.type!=="investment"
-      )
+      .filter(a=>a.type!=="credit")
       .reduce(
         (s,a)=>s+Number(a.balance||0),
         0
@@ -2715,31 +2284,19 @@ function renderDebts(){
           Number(a.balance||0)<0
       )
       .map(a=>({
-        id:"card_"+a.id,
-        accountId:a.id,
+        id:"card_"+a.name,
         name:a.name+" — кредитная карта",
         amount:Math.max(
           0,
           -Number(a.balance)
         ),
-        dueDate:a.dueDate||null,
-        paymentDay:a.paymentDay||null,
-        lastPaymentDay:a.lastPaymentDay||null,
+        dueDate:null,
         kind:"credit"
       }));
 
 
   const all=
     cards.concat(debts);
-
-  const debtsTotalValue=all.reduce(
-    (sum,d)=>sum+Number(d.amount||0),
-    0
-  );
-
-  const debtsTotalElement=document.getElementById("debtsTotal");
-  if(debtsTotalElement)
-    debtsTotalElement.textContent=money(debtsTotalValue);
 
 
   debtsList.innerHTML=
@@ -2790,64 +2347,51 @@ function renderDebts(){
                 <div class="debt-meta">
                   ${
                     d.kind==="credit"
-                      ?(d.paymentDay
-                        ?`Платёж ${d.paymentDay}-го числа`
-                        :"Задолженность по кредитной карте")
-                      :(d.paymentDay
-                        ?`Платёж ${d.paymentDay}-го числа`
+                      ?"Задолженность по кредитной карте"
+                      :(due
+                        ?"Вернуть до "+due
                         :"Личный долг")
                   }
                 </div>
 
                 ${
-                  d.lastPaymentDay
+                  due
                     ?`
                       <div class="debt-meta">
-                        Крайний день по договору: ${d.lastPaymentDay}-е
+                        Ориентир откладывать:
+                        ${money(monthly)} в месяц
                       </div>
                     `
                     :""
                 }
 
-                ${
-                  due
-                    ?`
-                      <div class="debt-meta">
-                        Точный срок: ${due} · ориентир откладывать ${money(monthly)} в месяц
-                      </div>
-                    `
-                    :d.paymentDay
-                      ?`
-                        <div class="debt-meta">
-                          Ежемесячный платёж по договору
-                        </div>
-                      `
-                      :""
-                }
-
               </div>
 
-              <div class="debt-right">
+              <div>
 
                 <div class="debt-amount negative">
                   ${money(d.amount)}
                 </div>
 
                 ${
-                  `<div class="actions-row">
-                    <button
-                      class="icon-action"
-                      data-dei="${i}"
-                      title="Изменить долг"
-                      aria-label="Изменить долг"
-                    >${uiIcon("edit")}</button>
-                    <button
-                      class="icon-action danger"
-                      data-di="${i}"
-                      title="Удалить долг"
-                      aria-label="Удалить долг"
-                    >${uiIcon("delete")}</button>
-                  </div>`
+                  d.kind!=="credit"
+                    ?`
+                      <div class="actions-row">
+                        <button
+                          class="inline-button"
+                          data-dei="${i}"
+                        >
+                          ✎ Изменить
+                        </button>
+                        <button
+                          class="danger-button"
+                          data-di="${i}"
+                        >
+                          Удалить
+                        </button>
+                      </div>
+                    `
+                    :""
                 }
 
               </div>
@@ -2861,58 +2405,6 @@ function renderDebts(){
       :'<div class="empty">Пока нет долгов и обязательств.</div>';
 }
 
-
-function populateGoalCategories(){
-
-  const goalCategoryEl=document.getElementById("goalCategory");
-  if(!goalCategoryEl) return;
-
-  const current=goalCategoryEl.value || "";
-
-  goalCategoryEl.innerHTML=
-    '<option value="">Не учитывать в лимитах</option>'+
-    sortedCategories().map(c=>
-      `<option value="${String(c.name).replace(/"/g,"&quot;")}">${c.name}</option>`
-    ).join("");
-
-  goalCategoryEl.value=current;
-}
-
-function goalMonthlyAmount(g){
-
-  const target=Number(g?.target)||0;
-  const saved=Number(g?.saved)||0;
-  const left=Math.max(0,target-saved);
-
-  if(!left) return 0;
-
-  if(!g?.date) return left;
-
-  const end=new Date(g.date+"T00:00:00");
-  const now=new Date();
-  now.setHours(0,0,0,0);
-
-  const months=
-    (end.getFullYear()-now.getFullYear())*12+
-    (end.getMonth()-now.getMonth())+
-    1;
-
-  return left/Math.max(1,months);
-}
-
-function goalCategoryAddition(categoryName){
-
-  if(!categoryName) return 0;
-
-  return goals.reduce((sum,g)=>
-    sum+(g.category===categoryName ? goalMonthlyAmount(g) : 0),
-    0
-  );
-}
-
-function effectiveCategoryLimit(c){
-  return Number(c.plan||0)+goalCategoryAddition(c.name);
-}
 
 function renderGoals(){
 
@@ -2940,7 +2432,29 @@ function renderGoals(){
             )
             :0;
 
-        const monthly=goalMonthlyAmount(g);
+        let monthly=left;
+
+        if(g.date){
+
+          const days=
+            Math.max(
+              1,
+              Math.ceil(
+                (
+                  new Date(
+                    g.date+"T00:00:00"
+                  )-new Date()
+                )/86400000
+              )
+            );
+
+          monthly=
+            left/
+            Math.max(
+              1,
+              Math.ceil(days/30)
+            );
+        }
 
 
         return `
@@ -2960,7 +2474,6 @@ function renderGoals(){
                     ?` · до ${new Date(g.date+"T00:00:00").toLocaleDateString("ru-RU")}`
                     :""
                   }
-                  ${g.category ? ` · ${g.category}` : ""}
                 </div>
 
               </div>
@@ -2983,7 +2496,6 @@ function renderGoals(){
               Накоплено ${money(saved)}
               из ${money(target)}
               · откладывать ${money(monthly)} в месяц
-              ${g.category ? ` · в лимит «${g.category}»` : ""}
             </div>
 
             <div class="goal-progress">
@@ -2996,18 +2508,18 @@ function renderGoals(){
             <div class="actions-row">
 
               <button
-                class="icon-action"
+                class="inline-button"
                 data-gi="${i}"
-                title="Изменить цель"
-                aria-label="Изменить цель"
-              >${uiIcon("edit")}</button>
+              >
+                ✎ Изменить
+              </button>
 
               <button
-                class="icon-action danger"
+                class="danger-button"
                 data-gd="${i}"
-                title="Удалить цель"
-                aria-label="Удалить цель"
-              >${uiIcon("delete")}</button>
+              >
+                Удалить
+              </button>
 
             </div>
 
@@ -3019,7 +2531,89 @@ function renderGoals(){
 }
 
 
-function nextPaymentInfo(){
+function paymentSchedule(){
+
+  const now=new Date();
+  const year=now.getFullYear();
+  const month=now.getMonth();
+  const schedule=[];
+
+  const addPayment=(day,amount,type,monthOffset=0)=>{
+    const d=Number(day);
+    if(!Number.isFinite(d)||d<1) return;
+
+    const safeDay=Math.min(31,Math.max(1,d));
+    const date=new Date(year,month+monthOffset,safeDay);
+
+    schedule.push({
+      date,
+      amount:Math.max(0,Number(amount)||0),
+      type
+    });
+  };
+
+  const advanceAmount=Math.max(0,Number(advance)||0);
+  /* salary — общий доход за месяц. Аванс является частью зарплаты,
+     поэтому основная выплата = общий доход минус аванс. */
+  const mainSalaryAmount=Math.max(
+    0,
+    Number(salary||0)-advanceAmount
+  );
+
+  if(Number.isFinite(Number(advanceDate)) && Number(advanceDate)>0)
+    addPayment(advanceDate,advanceAmount,"advance");
+
+  if(Number.isFinite(Number(mainSalaryDate)) && Number(mainSalaryDate)>0)
+    addPayment(mainSalaryDate,mainSalaryAmount,"salary");
+
+  if(!schedule.length)
+    addPayment(15,Number(salary||0),"salary");
+
+  return schedule;
+}
+
+function paymentFactKey(date,type){
+  return `${date.toISOString().slice(0,10)}|${type}`;
+}
+
+function paymentAmount(payment){
+  if(!payment || !payment.date)
+    return Number(payment?.amount||0);
+
+  const fact=paymentFacts[paymentFactKey(payment.date,payment.type)];
+
+  return fact && Number.isFinite(Number(fact.amount))
+    ? Math.max(0,Number(fact.amount))
+    : Math.max(0,Number(payment.amount||0));
+}
+
+function monthPaymentSchedule(offset=0){
+  const base=new Date();
+  const year=base.getFullYear();
+  const month=base.getMonth()+offset;
+  const result=[];
+
+  const add=(day,amount,type)=>{
+    const d=Number(day);
+    if(!Number.isFinite(d)||d<1) return;
+    result.push({
+      date:new Date(year,month,Math.min(31,Math.max(1,d))),
+      amount:Math.max(0,Number(amount)||0),
+      type
+    });
+  };
+
+  const adv=Math.max(0,Number(advance)||0);
+  const main=Math.max(0,Number(salary||0)-adv);
+
+  if(Number(advanceDate)>0) add(advanceDate,adv,"advance");
+  if(Number(mainSalaryDate)>0) add(mainSalaryDate,main,"salary");
+
+  if(!result.length) add(15,Number(salary||0),"salary");
+  return result.sort((a,b)=>a.date-b.date);
+}
+
+function paymentPeriodInfo(){
 
   const now=new Date();
   const todayStart=new Date(
@@ -3028,75 +2622,118 @@ function nextPaymentInfo(){
     now.getDate()
   );
 
-  const dates=[];
+  const current=monthPaymentSchedule(0);
+  const previousMonth=monthPaymentSchedule(-1);
+  const nextMonth=monthPaymentSchedule(1);
 
-  /* Аванс и основная зарплата — оба считаются выплатами. */
-  [advanceDate,mainSalaryDate].forEach(value=>{
-    const day=Number(value);
-    if(!Number.isFinite(day)||day<1)
-      return;
+  let previous=current
+    .filter(p=>p.date<=todayStart)
+    .sort((a,b)=>b.date-a.date)[0];
 
-    const safeDay=Math.min(31,Math.max(1,day));
-    let candidate=new Date(
-      todayStart.getFullYear(),
-      todayStart.getMonth(),
-      safeDay
-    );
+  let next=current
+    .filter(p=>p.date>todayStart)
+    .sort((a,b)=>a.date-b.date)[0];
 
-    /* Если выплата этого месяца уже прошла — берём следующий месяц. */
-    if(candidate<=todayStart){
-      candidate=new Date(
-        todayStart.getFullYear(),
-        todayStart.getMonth()+1,
-        safeDay
-      );
-    }
+  if(!previous)
+    previous=previousMonth[previousMonth.length-1]||null;
 
-    dates.push(candidate);
-  });
+  if(!next)
+    next=nextMonth[0]||null;
 
-  /* На всякий случай: если даты выплат не заданы, оставляем 15-е число. */
-  if(!dates.length){
-    dates.push(
-      new Date(
-        todayStart.getFullYear(),
-        todayStart.getMonth()+1,
-        15
-      )
-    );
-  }
+  const periodStart=previous
+    ?new Date(previous.date.getFullYear(),previous.date.getMonth(),previous.date.getDate())
+    :todayStart;
 
-  const next=dates.sort((a,b)=>a-b)[0];
+  const periodEnd=next
+    ?new Date(next.date.getFullYear(),next.date.getMonth(),next.date.getDate())
+    :todayStart;
 
   const days=Math.max(
     1,
-    Math.ceil((next-todayStart)/86400000)
+    Math.ceil((periodEnd-todayStart)/86400000)
   );
 
   return {
-    date:next,
+    previous,
+    next,
+    periodStart,
+    periodEnd,
     days
   };
 }
 
+function monthExpenseTotal(){
+  const now=new Date();
+  const key=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+
+  return transactions
+    .filter(x=>x.type==="expense" && String(x.date||"").startsWith(key))
+    .reduce((s,x)=>s+Number(x.amount||0),0);
+}
+
+function periodExpenseTotal(start,end){
+  return transactions
+    .filter(x=>{
+      if(x.type!=="expense" || !x.date) return false;
+      const d=new Date(x.date+"T00:00:00");
+      return d>=start && d<end;
+    })
+    .reduce((s,x)=>s+Number(x.amount||0),0);
+}
+
+function monthlySpendCapacity(){
+  /* Категории задают месячный потолок расходов.
+     Доход минус накопления задает второй потолок.
+     Берём меньший из двух, чтобы категория не создавала деньги из воздуха. */
+  const incomeAfterSavings=Math.max(
+    0,
+    Number(salary||0) * (1-savingsPercent/100)
+  );
+
+  const categoryPlan=Math.max(0,budget());
+
+  return Math.min(
+    categoryPlan,
+    incomeAfterSavings
+  );
+}
 
 function periodDailyLimit(){
 
-  const cash=
-    accounts
-      .filter(a=>a.type!=="credit")
-      .reduce(
-        (s,a)=>s+Number(a.balance||0),
-        0
-      );
+  const info=paymentPeriodInfo();
+  const periodStart=info.periodStart;
+  const periodEnd=info.periodEnd;
 
-  const info=
-    nextPaymentInfo();
-
-  return Math.max(
-    0,
-    cash/info.days
+  /* Плановые/фактические выплаты текущего месяца.
+     Аванс и основная зарплата имеют разные суммы, поэтому дневной лимит
+     распределяется пропорционально размеру соответствующей выплаты. */
+  const monthPayments=monthPaymentSchedule(0);
+  const totalPaymentIncome=monthPayments.reduce(
+    (s,p)=>s+paymentAmount(p),
+    0
   );
+
+  if(totalPaymentIncome<=0)
+    return 0;
+
+  const currentPayment=info.previous;
+  const currentAmount=currentPayment
+    ?paymentAmount(currentPayment)
+    :0;
+
+  const monthlyCapacity=monthlySpendCapacity();
+
+  /* Сколько месячного бюджета приходится на текущий период. */
+  const periodCapacity=
+    monthlyCapacity * (currentAmount/totalPaymentIncome);
+
+  const spentInPeriod=periodExpenseTotal(periodStart,periodEnd);
+  const remainingPeriod=Math.max(
+    0,
+    periodCapacity-spentInPeriod
+  );
+
+  return remainingPeriod/info.days;
 }
 
 
@@ -3151,17 +2788,22 @@ function home(){
     )+"%";
 
 
-  const info=
-    nextPaymentInfo();
+  const period=
+    paymentPeriodInfo();
+
+  const paymentName=
+    period.next.type==="advance"
+      ?"аванса"
+      :"зарплаты";
 
   dailyDescription.textContent=
-    `До следующей выплаты: ${info.days} ${
-      info.days===1
+    `До ${paymentName}: ${period.days} ${
+      period.days===1
         ?"день"
-        :info.days<5
+        :period.days<5
           ?"дня"
           :"дней"
-    } · реальные деньги на счетах`;
+    } · с учетом ${savingsPercent}% накоплений`;
 
   updateFinance();
 }
@@ -3193,7 +2835,7 @@ function openHistory(accountId=null, returnScreen="home"){
 function renderHistory(){
   const rows=transactions
     .map((x,index)=>({x,index}))
-    .filter(({x})=>historyAccountId===null || String(x.account)===String(historyAccountId) || String(x.toAccount||"")===String(historyAccountId))
+    .filter(({x})=>historyAccountId===null || String(x.account)===String(historyAccountId))
     .filter(({x})=>historyFilter==="all" || x.type===historyFilter)
     .sort((a,b)=>String(b.x.date||"").localeCompare(String(a.x.date||"")) || b.index-a.index);
 
@@ -3210,48 +2852,19 @@ function renderHistory(){
       html.push(`<div class="history-date">${formatHistoryDate(x.date)}</div>`);
     }
     const isIncome=x.type==="income";
-    const isTransfer=x.type==="transfer";
-    const title=isTransfer ? "Перевод между своими счетами" : (isIncome ? (x.name||"Доход") : (x.category||"Расход"));
-    const baseMeta=isTransfer
-      ? `${accountNameById(x.account)} → ${accountNameById(x.toAccount)}`
-      : accountNameById(x.account);
-    const meta=(!isTransfer && !isIncome && transactionRounding(x)>0)
-      ? `${baseMeta} · округление +${money(transactionRounding(x))} → ${accountNameById(x.roundingAccount)}`
-      : baseMeta;
-    const amount=(isTransfer?"⇄ ":(isIncome?"+":"−"))+money(x.amount||0);
+    const title=isIncome ? (x.name||"Доход") : (x.category||"Расход");
+    const amount=(isIncome?"+":"−")+money(x.amount||0);
     html.push(`<div class="history-row" data-history-index="${index}">
       <div class="history-main">
         <div class="history-name">${title}</div>
-        <div class="history-meta">${meta}</div>
+        <div class="history-meta">${accountNameById(x.account)}</div>
       </div>
-      <div class="history-amount ${isIncome?"income":""} ${isTransfer?"":"expense"}">${amount}</div>
-      ${isTransfer ? "" : `<button class="history-edit" data-history-edit="${index}" title="Изменить" aria-label="Изменить">${uiIcon("edit")}</button>
-      <button class="history-delete" data-history-delete="${index}" title="Удалить" aria-label="Удалить">${uiIcon("delete")}</button>`}
+      <div class="history-amount ${isIncome?"income":"expense"}">${amount}</div>
+      <button class="history-edit" data-history-edit="${index}" title="Изменить">✎</button>
+      <button class="history-delete" data-history-delete="${index}" title="Удалить">×</button>
     </div>`);
   });
   historyList.innerHTML=html.join("");
-}
-
-function roundingAmount(value){
-  const v=Math.max(0,Number(value)||0);
-  const rounded=Math.ceil((v-1e-9)/50)*50;
-  return Math.max(0,Math.round((rounded-v)*100)/100);
-}
-
-function isTBankAccount(a){
-  const text=String(a?.bank||a?.name||"").toLowerCase().replace(/ё/g,"е");
-  const icon=String(a?.icon||"").toLowerCase();
-  return text.includes("т-банк") || text.includes("т банк") || text.includes("тинькофф") || text.includes("t-bank") || text.includes("t bank") || text.includes("tinkoff") || text.includes("tbank") || icon==="tbank";
-}
-
-function investmentAccount(){
-  return accounts.find(a=>a && a.type==="investment");
-}
-
-function transactionRounding(t){
-  return t?.type==="expense" && t.roundingEnabled===true
-    ? Number(t.roundingAmount||0)
-    : 0;
 }
 
 function reverseTransactionEffect(t){
@@ -3259,18 +2872,7 @@ function reverseTransactionEffect(t){
   if(!a) return;
   const v=Number(t.amount||0);
   if(t.type==="income") a.balance=Number(a.balance||0)-v;
-  else if(t.type==="expense") {
-    const inlineRounding = t.roundingTransactionId ? 0 : transactionRounding(t);
-    a.balance=Number(a.balance||0)+v+inlineRounding;
-    if(inlineRounding>0){
-      const inv=accounts.find(x=>String(x.id)===String(t.roundingAccount));
-      if(inv) inv.balance=Number(inv.balance||0)-inlineRounding;
-    }
-  }else if(t.type==="transfer"){
-    a.balance=Number(a.balance||0)+v;
-    const to=accounts.find(x=>String(x.id)===String(t.toAccount));
-    if(to) to.balance=Number(to.balance||0)-v;
-  }
+  else if(t.type==="expense") a.balance=Number(a.balance||0)+v;
 }
 
 function applyTransactionEffect(t){
@@ -3278,20 +2880,7 @@ function applyTransactionEffect(t){
   if(!a) return false;
   const v=Number(t.amount||0);
   if(t.type==="income") a.balance=Number(a.balance||0)+v;
-  else if(t.type==="expense") {
-    const inlineRounding = t.roundingTransactionId ? 0 : transactionRounding(t);
-    a.balance=Number(a.balance||0)-v-inlineRounding;
-    if(inlineRounding>0){
-      const inv=accounts.find(x=>String(x.id)===String(t.roundingAccount));
-      if(!inv) return false;
-      inv.balance=Number(inv.balance||0)+inlineRounding;
-    }
-  }else if(t.type==="transfer"){
-    const to=accounts.find(x=>String(x.id)===String(t.toAccount));
-    if(!to) return false;
-    a.balance=Number(a.balance||0)-v;
-    to.balance=Number(to.balance||0)+v;
-  }
+  else if(t.type==="expense") a.balance=Number(a.balance||0)-v;
   return true;
 }
 
@@ -3315,7 +2904,6 @@ function editTransaction(index){
     amount.value=t.amount||0;
     expenseAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}" ${String(a.id)===String(t.account)?"selected":""}>${a.name||"Счёт"} · ${money(a.balance||0)}</option>`).join("");
     categorySelect.value=t.category||categories[0]?.name||"";
-    updateRoundingUI(t.roundingEnabled===true);
     calc();
   }
   open("expenseOverlay");
@@ -3326,14 +2914,6 @@ function deleteTransaction(index){
   if(!t) return;
   if(!confirm("Удалить эту операцию?")) return;
   reverseTransactionEffect(t);
-  if(t.roundingTransactionId){
-    const ri=transactions.findIndex(x=>String(x.id)===String(t.roundingTransactionId));
-    if(ri>=0){
-      reverseTransactionEffect(transactions[ri]);
-      transactions.splice(ri,1);
-      if(ri<index) index--;
-    }
-  }
   transactions.splice(index,1);
   save(AK,accounts);
   save(TY,transactions);
@@ -3366,8 +2946,6 @@ function screen(id,b){
     );
 
   b.classList.add("active");
-
-  localStorage.setItem(SCREEN_KEY,id);
 
 
   if(id==="budget")
@@ -3409,48 +2987,13 @@ function close(id){
 function populate(){
 
   categorySelect.innerHTML=
-    sortedCategories()
+    categories
       .map(
         c=>`<option>${c.name}</option>`
       )
       .join("");
 }
 
-
-function updateRoundingUI(forceState=null){
-  const box=document.getElementById("roundingBox");
-  const toggle=document.getElementById("roundingEnabled");
-  const preview=document.getElementById("roundingPreview");
-  if(!box || !toggle || !preview) return;
-
-  const selectedAccountValue=String(expenseAccount?.value ?? "");
-  const selectedAccountIndex=Number(selectedAccountValue);
-  const account=Number.isInteger(selectedAccountIndex) && selectedAccountIndex>=0 && selectedAccountIndex<accounts.length
-    ? accounts[selectedAccountIndex]
-    : accounts.find(a=>String(a.id)===selectedAccountValue);
-  const inv=investmentAccount();
-  const value=Number(amount?.value||0);
-  const subscription=categorySelect?.value==="Подписки";
-  const eligible=!!account && isTBankAccount(account) && !!inv;
-
-  box.style.display=eligible ? "block" : "none";
-
-  if(!eligible){
-    preview.textContent="";
-    return;
-  }
-
-  if(forceState!==null) toggle.checked=!!forceState;
-
-  const extra=toggle.checked ? roundingAmount(value) : 0;
-  if(value>0 && extra>0){
-    preview.textContent=`Покупка ${money(value)} → со счёта уйдёт ${money(value+extra)}. ${money(extra)} автоматически попадут в «${inv.name||"Инвесткопилку"}».`;
-  }else if(value>0){
-    preview.textContent=subscription ? "Для этой подписки округление можно отключить." : "Округление отключено.";
-  }else{
-    preview.textContent="Шаг округления — 50 ₽. Например, 347 ₽ → 350 ₽, 3 ₽ уйдут в Инвесткопилку.";
-  }
-}
 
 function calc(){
 
@@ -3494,18 +3037,40 @@ function calc(){
 }
 
 
+function openPaymentFact(){
+  paymentFactDate.value=today();
+  paymentFactType.value="salary";
+  paymentFactAmount.value="";
+  open("paymentFactOverlay");
+}
+
+function savePaymentFact(){
+  const dateValue=paymentFactDate.value;
+  const type=paymentFactType.value;
+  const amount=Math.max(0,Number(paymentFactAmount.value||0));
+  if(!dateValue || !amount){
+    alert("Укажи дату и фактическую сумму выплаты.");
+    return;
+  }
+  const date=new Date(dateValue+"T00:00:00");
+  paymentFacts[paymentFactKey(date,type)]={date:dateValue,type,amount};
+  save("babki_payment_facts_v1",paymentFacts);
+  close("paymentFactOverlay");
+  home();
+}
+
 function editFin(t){
 
   financeType=t;
 
   financeTitle.textContent=
     t==="salary"
-      ?"Основная зарплата"
+      ?"Общий доход"
       :"Аванс";
 
   financeLabel.textContent=
     t==="salary"
-      ?"Сумма основной зарплаты"
+      ?"Сумма общего дохода"
       :"Сумма аванса";
 
   financeInput.value=
@@ -3575,6 +3140,15 @@ function setSyncStatus(text,type=""){
    ДАННЫЕ ДЛЯ СИНХРОНИЗАЦИИ
 ------------------------- */
 
+function markSettingsDirty(){
+  save(SETTINGS_DIRTY_KEY,Date.now());
+}
+
+function clearSettingsDirty(){
+  localStorage.removeItem(SETTINGS_DIRTY_KEY);
+}
+
+
 function localSyncData(){
 
   return {
@@ -3589,12 +3163,6 @@ function localSyncData(){
     ),
 
     accounts:ensureAccountIds(accounts),
-
-    /*
-     * Иконки синхронизируются отдельным полем.
-     * Data URL передаётся как есть — без перекодирования.
-     */
-    accountIcons:cleanAccountIcons(accountIcons),
 
     transactions:
       Array.isArray(transactions)
@@ -3611,17 +3179,9 @@ function localSyncData(){
         ?debts
         :[],
 
-    debtSchedules:
-      debtSchedules && typeof debtSchedules==="object"
-        ?debtSchedules
-        :{},
-
     settings:{
       salary:Number(salary)||0,
       advance:Number(advance)||0,
-      totalIncome:
-        Math.max(0,Number(salary)||0) +
-        Math.max(0,Number(advance)||0),
       advanceDate:
         advanceDate===null
           ?null
@@ -3702,34 +3262,6 @@ function normalizeSyncData(data){
     );
 
 
-  const normalizedAccountIcons=
-    cleanAccountIcons(
-      d.accountIcons
-    );
-
-
-  /*
-   * Старые версии синхронизации могли хранить иконку внутри accounts.
-   * Если отдельного accountIcons ещё нет, берём legacy icon оттуда
-   * без какого-либо изменения строки.
-   */
-  if(Array.isArray(d.accounts)){
-    d.accounts.forEach(x=>{
-      const id=String(x?.id||"");
-      const icon=x?.icon;
-
-      if(
-        id &&
-        !Object.prototype.hasOwnProperty.call(normalizedAccountIcons,id) &&
-        typeof icon==="string" &&
-        (icon==="auto" || icon.startsWith("data:image/"))
-      ){
-        normalizedAccountIcons[id]=icon;
-      }
-    });
-  }
-
-
   const normalizedTransactions=
     (
       Array.isArray(d.transactions)
@@ -3762,24 +3294,6 @@ function normalizeSyncData(data){
 
       date:String(
         x.date||""
-      ),
-
-      roundingEnabled:x.roundingEnabled===true,
-
-      roundingAmount:Number(
-        x.roundingAmount||0
-      ),
-
-      roundingAccount:String(
-        x.roundingAccount||""
-      ),
-
-      roundingTransactionId:String(
-        x.roundingTransactionId||""
-      ),
-
-      toAccount:String(
-        x.toAccount||""
       )
 
     }))
@@ -3815,11 +3329,7 @@ function normalizeSyncData(data){
 
       date:x.date
         ?String(x.date)
-        :null,
-
-      category:String(
-        x.category||""
-      )
+        :null
 
     }))
     .sort(
@@ -3886,10 +3396,6 @@ function normalizeSyncData(data){
       s.advance||0
     ),
 
-    totalIncome:
-      Math.max(0,Number(s.salary)||0) +
-      Math.max(0,Number(s.advance)||0),
-
     advanceDate:
       s.advanceDate===null ||
       s.advanceDate==="" ||
@@ -3914,8 +3420,6 @@ function normalizeSyncData(data){
 
     accounts:normalizedAccounts,
 
-    accountIcons:normalizedAccountIcons,
-
     transactions:
       normalizedTransactions,
 
@@ -3924,11 +3428,6 @@ function normalizeSyncData(data){
 
     debts:
       normalizedDebts,
-
-    debtSchedules:
-      d.debtSchedules && typeof d.debtSchedules==="object"
-        ?d.debtSchedules
-        :{},
 
     settings:
       normalizedSettings
@@ -4404,46 +3903,6 @@ function applyGoogleData(data){
       normalized.accounts
     );
 
-  /*
-   * Восстанавливаем отдельное хранилище иконок.
-   * Если Google ещё старой версии и поля accountIcons нет,
-   * НЕ затираем уже имеющиеся локальные иконки.
-   */
-  const localIconsBeforeGoogle=
-    cleanAccountIcons(
-      accountIcons
-    );
-
-  const googleIcons=
-    cleanAccountIcons(
-      normalized.accountIcons
-    );
-
-  accountIcons=
-    Object.keys(googleIcons).length
-      ?googleIcons
-      :localIconsBeforeGoogle;
-
-  /*
-   * Legacy icon внутри accounts переносим в отдельное хранилище.
-   * Сам Data URL остаётся побайтно той же строкой.
-   */
-  accounts.forEach(a=>{
-    if(
-      a?.id &&
-      typeof a.icon==="string" &&
-      !Object.prototype.hasOwnProperty.call(accountIcons,a.id) &&
-      (a.icon==="auto" || a.icon.startsWith("data:image/"))
-    ){
-      accountIcons[a.id]=a.icon;
-    }
-  });
-
-  save(
-    AIK,
-    accountIcons
-  );
-
   save(
     AK,
     accounts
@@ -4491,12 +3950,6 @@ function applyGoogleData(data){
     debts
   );
 
-  debtSchedules=
-    data.debtSchedules && typeof data.debtSchedules==="object"
-      ?data.debtSchedules
-      :debtSchedules;
-  save(DSK,debtSchedules);
-
 
   if(
     normalized.settings &&
@@ -4536,7 +3989,6 @@ function applyGoogleData(data){
       {
         salary,
         advance,
-        totalIncome: Math.max(0,Number(salary)||0) + Math.max(0,Number(advance)||0),
         advanceDate,
         mainSalaryDate
       }
@@ -4573,9 +4025,6 @@ function mergeLegacyGoogleWithLocal(google){
         ?google.accounts
         :local.accounts,
 
-    accountIcons:
-      google.accountIcons||local.accountIcons,
-
     transactions:
       local.transactions,
 
@@ -4596,88 +4045,6 @@ function mergeLegacyGoogleWithLocal(google){
 /* -------------------------
    ПОЛНАЯ СИНХРОНИЗАЦИЯ
 ------------------------- */
-
-function backupBeforeGoogleApply(){
-  try{
-    localStorage.setItem(SYNC_BACKUP_KEY,JSON.stringify(localSyncData()));
-  }catch(e){
-    console.warn("Не удалось сделать резервную копию перед синхронизацией",e);
-  }
-}
-
-async function safeSyncWithGoogle(manual=false){
-  if(syncInProgress) return;
-  syncInProgress=true;
-  try{
-    setSyncStatus(manual?"Проверяю данные в Google…":"Автосинхронизация…");
-    const local=normalizeSyncData(localSyncData());
-    const googleRaw=await googleLoad();
-    const google=normalizeSyncData(googleRaw||{});
-    const snapshot=read(SYNC_SNAPSHOT_KEY,null);
-
-    const localEmpty=!local.accounts.length&&!local.transactions.length&&!local.goals.length&&!local.debts.length;
-    const googleEmpty=!google.accounts.length&&!google.transactions.length&&!google.goals.length&&!google.debts.length;
-
-    if(googleEmpty && !localEmpty){
-      await googlePush();
-      save(SYNC_SNAPSHOT_KEY,local);
-      setSyncStatus("Данные телефона сохранены в Google ✓","success");
-      return;
-    }
-
-    if(localEmpty && !googleEmpty){
-      backupBeforeGoogleApply();
-      applyGoogleData(google);
-      save(SYNC_SNAPSHOT_KEY,google);
-      renderCats(); renderAccounts(); renderDebts(); renderGoals(); updateFinance();
-      setSyncStatus("Данные восстановлены из Google ✓","success");
-      return;
-    }
-
-    if(!snapshot){
-      if(JSON.stringify(local)===JSON.stringify(google)){
-        save(SYNC_SNAPSHOT_KEY,local);
-        setSyncStatus("Телефон и Google совпадают ✓","success");
-      }else{
-        setSyncStatus("Есть различия. Ничего не перезаписываю — сначала выбери, какую версию сохранить.","error");
-      }
-      return;
-    }
-
-    const snap=normalizeSyncData(snapshot);
-    const localChanged=JSON.stringify(local)!==JSON.stringify(snap);
-    const googleChanged=JSON.stringify(google)!==JSON.stringify(snap);
-
-    if(localChanged && !googleChanged){
-      await googlePush();
-      save(SYNC_SNAPSHOT_KEY,local);
-      setSyncStatus("Изменения телефона сохранены в Google ✓","success");
-      return;
-    }
-
-    if(!localChanged && googleChanged){
-      backupBeforeGoogleApply();
-      applyGoogleData(google);
-      save(SYNC_SNAPSHOT_KEY,google);
-      renderCats(); renderAccounts(); renderDebts(); renderGoals(); updateFinance();
-      setSyncStatus("Изменения из Google загружены ✓","success");
-      return;
-    }
-
-    if(!localChanged && !googleChanged){
-      setSyncStatus("Все данные синхронизированы ✓","success");
-      return;
-    }
-
-    /* Изменения произошли с обеих сторон. Автоматически ничего не выбираем. */
-    setSyncStatus("Изменения есть и на телефоне, и в Google. Ничего не перезаписываю автоматически.","error");
-  }catch(error){
-    console.error("Babki safe sync:",error);
-    setSyncStatus("Автосинхронизация не выполнена: "+(error?.message||"ошибка"),"error");
-  }finally{
-    syncInProgress=false;
-  }
-}
 
 async function syncWithGoogle(){
 
@@ -4711,11 +4078,6 @@ async function syncWithGoogle(){
           ?google.accounts
           :[],
 
-      accountIcons:
-        google.accountIcons && typeof google.accountIcons==="object"
-          ?google.accountIcons
-          :{},
-
       transactions:
         Array.isArray(google.transactions)
           ?google.transactions
@@ -4738,6 +4100,27 @@ async function syncWithGoogle(){
           :{}
 
     };
+
+    /* Если финансовые настройки только что изменили на этом устройстве,
+       именно они считаются актуальными. Это не дает старому авансу из
+       Google перезаписать новое значение при синхронизации. */
+    const settingsDirty=Boolean(read(SETTINGS_DIRTY_KEY,null));
+    if(settingsDirty){
+      setSyncStatus("Сохраняю измененные финансовые настройки в Google…");
+      await googlePush();
+      try{
+        const verify=await googleLoad();
+        if(sameSyncData(localSyncData(),verify)){
+          clearSettingsDirty();
+          setSyncStatus("Аванс и другие финансовые настройки сохранены ✓","success");
+        }else{
+          setSyncStatus("Настройки отправлены, но Google пока не подтвердил новое значение.","error");
+        }
+      }catch(e){
+        setSyncStatus("Настройки отправлены в Google ✓","success");
+      }
+      return;
+    }
 
 
     const googleIsEmpty=
@@ -5166,14 +4549,6 @@ document
 
   });
 
-const savedScreen=localStorage.getItem(SCREEN_KEY);
-if(savedScreen){
-  const savedButton=document.querySelector(`.nav button[data-screen="${savedScreen}"]`);
-  const savedElement=document.getElementById(savedScreen);
-  if(savedButton && savedElement)
-    screen(savedScreen,savedButton);
-}
-
 
 /* РАСХОД / ДОХОД */
 
@@ -5202,7 +4577,6 @@ quickExpenseButton.addEventListener("click", () => {
       : `<option value="">Сначала добавь счёт</option>`;
 
   open("expenseOverlay");
-  updateRoundingUI(true);
 
   setTimeout(() => {
     amount.focus();
@@ -5297,11 +4671,6 @@ categorySelect.addEventListener("change", calc);
 
 /* СОХРАНЕНИЕ РАСХОДА / ДОХОДА */
 
-expenseAccount.addEventListener("change",()=>updateRoundingUI());
-categorySelect.addEventListener("change",()=>{ updateRoundingUI(); calc(); });
-amount.addEventListener("input",()=>{ updateRoundingUI(); calc(); });
-document.getElementById("roundingEnabled")?.addEventListener("change",()=>updateRoundingUI());
-
 saveExpenseButton.addEventListener("click", () => {
 
   const isIncome = incomeFields.style.display !== "none";
@@ -5333,10 +4702,6 @@ saveExpenseButton.addEventListener("click", () => {
     if(!old) return;
 
     reverseTransactionEffect(old);
-    if(old.roundingTransactionId){
-      const ri=transactions.findIndex(x=>String(x.id)===String(old.roundingTransactionId));
-      if(ri>=0) reverseTransactionEffect(transactions[ri]);
-    }
 
     const updated={
       ...old,
@@ -5345,57 +4710,14 @@ saveExpenseButton.addEventListener("click", () => {
       date
     };
 
-    if(isIncome){
-      updated.name=name;
-      delete updated.roundingEnabled;
-      delete updated.roundingAmount;
-      delete updated.roundingAccount;
-    }else{
-      updated.category=category;
-      const inv=investmentAccount();
-      const roundingEnabled=document.getElementById("roundingEnabled")?.checked===true;
-      const extra=(isTBankAccount(accounts[accountIndex]) && inv && roundingEnabled) ? roundingAmount(value) : 0;
-      updated.roundingEnabled=extra>0;
-      updated.roundingAmount=extra;
-      updated.roundingAccount=extra>0 ? inv.id : null;
-      updated.roundingTransactionId=null;
-      if(extra>0) updated.roundingTransactionId=String(old.roundingTransactionId||"");
-    }
+    if(isIncome) updated.name=name;
+    else updated.category=category;
 
     updated.type=isIncome ? "income" : "expense";
 
     if(!applyTransactionEffect(updated)){
       applyTransactionEffect(old);
-      if(old.roundingTransactionId){
-        const oldTransfer=transactions.find(x=>String(x.id)===String(old.roundingTransactionId));
-        if(oldTransfer) applyTransactionEffect(oldTransfer);
-      }
       return;
-    }
-
-    // Округление хранится отдельной операцией перевода, чтобы у Инвесткопилки
-    // была собственная история пополнений.
-    if(updated.type==="expense" && Number(updated.roundingAmount||0)>0){
-      const transferId=String(updated.roundingTransactionId||("round-"+updated.id));
-      const transfer={
-        id:transferId,
-        type:"transfer",
-        amount:Number(updated.roundingAmount||0),
-        account:updated.account,
-        toAccount:updated.roundingAccount,
-        date:updated.date,
-        name:"Округление покупки",
-        roundingFor:String(updated.id)
-      };
-      applyTransactionEffect(transfer);
-      updated.roundingTransactionId=transferId;
-      const oldTransferIndex=transactions.findIndex(x=>String(x.id)===String(old.roundingTransactionId));
-      if(oldTransferIndex>=0) transactions[oldTransferIndex]=transfer;
-      else transactions.push(transfer);
-    } else if(old.roundingTransactionId){
-      const oldTransferIndex=transactions.findIndex(x=>String(x.id)===String(old.roundingTransactionId));
-      if(oldTransferIndex>=0) transactions.splice(oldTransferIndex,1);
-      updated.roundingTransactionId=null;
     }
 
     transactions[editingTransactionIndex]=updated;
@@ -5427,41 +4749,10 @@ saveExpenseButton.addEventListener("click", () => {
     account.balance=Number(account.balance||0)+value;
   }else{
     transaction.category=category;
-
-    const inv=investmentAccount();
-    const roundingEnabled=!document.getElementById("roundingBox")?.style.display || document.getElementById("roundingBox")?.style.display!=="none"
-      ? document.getElementById("roundingEnabled")?.checked===true
-      : false;
-    const extra=(isTBankAccount(account) && inv && roundingEnabled) ? roundingAmount(value) : 0;
-
-    transaction.roundingEnabled=extra>0;
-    transaction.roundingAmount=extra;
-    transaction.roundingAccount=extra>0 ? inv.id : null;
-    transaction.roundingTransactionId=extra>0 ? "round-"+transaction.id : null;
-
     account.balance=Number(account.balance||0)-value;
-    if(extra>0){
-      const transfer={
-        id:transaction.roundingTransactionId,
-        type:"transfer",
-        amount:extra,
-        account:account.id,
-        toAccount:inv.id,
-        date,
-        name:"Округление покупки",
-        roundingFor:String(transaction.id)
-      };
-      applyTransactionEffect(transfer);
-      transactions.push(transaction);
-      transactions.push(transfer);
-    }else{
-      transactions.push(transaction);
-    }
   }
 
-  if(isIncome){
-    transactions.push(transaction);
-  }
+  transactions.push(transaction);
   save(AK,accounts);
   save(TY,transactions);
   close("expenseOverlay");
@@ -5564,57 +4855,6 @@ clearAllLimitsButton.addEventListener(
 
 /* СЧЕТА */
 
-function updateBankIconPicker(){
-  document.querySelectorAll(".bank-icon-choice").forEach(btn=>{
-    btn.classList.toggle("active",btn.dataset.iconKey===selectedBankIcon);
-  });
-
-  const note=document.getElementById("bankIconNote");
-  if(note){
-    note.textContent = selectedBankIcon && selectedBankIcon.startsWith("data:image/")
-      ? "Загружена ваша иконка. Её можно заменить в любой момент."
-      : "Можно выбрать готовую иконку или загрузить картинку с телефона.";
-  }
-}
-
-document.querySelectorAll(".bank-icon-choice").forEach(btn=>{
-  btn.addEventListener("click",()=>{
-    selectedBankIcon=btn.dataset.iconKey||"auto";
-    updateBankIconPicker();
-  });
-});
-
-uploadBankIconButton.addEventListener("click",()=>bankIconFileInput.click());
-
-bankIconFileInput.addEventListener("change",()=>{
-  const file=bankIconFileInput.files?.[0];
-  if(!file) return;
-
-  /*
-   * Сохраняем оригинальный файл 1:1 как Data URL.
-   * Никакого canvas, изменения размера, JPEG/WebP или quality-параметров.
-   */
-  const reader=new FileReader();
-
-  reader.onload=()=>{
-    const originalDataUrl=String(reader.result||"");
-
-    if(!originalDataUrl.startsWith("data:image/")){
-      alert("Не удалось прочитать изображение.");
-      return;
-    }
-
-    selectedBankIcon=originalDataUrl;
-    updateBankIconPicker();
-  };
-
-  reader.onerror=()=>{
-    alert("Не удалось загрузить изображение.");
-  };
-
-  reader.readAsDataURL(file);
-});
-
 addAccountButton.addEventListener(
   "click",
   () => {
@@ -5630,10 +4870,6 @@ addAccountButton.addEventListener(
     accountNameInput.value = "";
     accountBalanceInput.value = "";
     creditLimitInput.value = "";
-    creditPaymentDayInput.value = "";
-    creditLastDayInput.value = "";
-    selectedBankIcon = "auto";
-    updateBankIconPicker();
 
     creditFields.style.display =
       "none";
@@ -5648,20 +4884,6 @@ addAccountButton.addEventListener(
 
 
 accountsList.addEventListener("click", e => {
-
-  const deleteButton=e.target.closest("[data-account-delete]");
-  if(deleteButton){
-    e.preventDefault(); e.stopPropagation();
-    const i=Number(deleteButton.dataset.accountDelete);
-    if(!Number.isInteger(i) || !accounts[i]) return;
-    const a=accounts[i];
-    if(!confirm(`Удалить счёт «${a.name||"Счёт"}»?\n\nИстория операций сохранится, но этот счёт больше не будет доступен для новых операций.`)) return;
-    const id=a.id; accounts.splice(i,1);
-    if(id) delete accountIcons[id];
-    save(AIK,accountIcons); save(AK,accounts);
-    renderAccounts(); renderDebts(); renderHistory(); home();
-    return;
-  }
 
   const button =
     e.target.closest("[data-ai]");
@@ -5682,20 +4904,11 @@ accountsList.addEventListener("click", e => {
   accountNameInput.value =
     a.name || "";
 
-  selectedBankIcon =
-    a?.id && Object.prototype.hasOwnProperty.call(accountIcons,a.id)
-      ? accountIcons[a.id]
-      : (a.icon || "auto");
-  updateBankIconPicker();
-
   accountBalanceInput.value =
     a.balance || 0;
 
   creditLimitInput.value =
     a.creditLimit || 0;
-
-  creditPaymentDayInput.value = a.paymentDay || "";
-  creditLastDayInput.value = a.lastPaymentDay || "";
 
   creditFields.style.display =
     a.type === "credit"
@@ -5747,20 +4960,18 @@ saveAccountButton.addEventListener(
         ? accounts[editingAccount]
         : null;
 
-    const accountId=
-      old?.id ||
-      (
-        "acc_" +
-        Date.now() +
-        "_" +
-        Math.random()
-          .toString(36)
-          .slice(2,8)
-      );
-
     const account = {
 
-      id:accountId,
+      id:
+        old?.id ||
+        (
+          "acc_" +
+          Date.now() +
+          "_" +
+          Math.random()
+            .toString(36)
+            .slice(2,8)
+        ),
 
       name:
         accountNameInput.value.trim() ||
@@ -5785,24 +4996,7 @@ saveAccountButton.addEventListener(
           ? Number(
               creditLimitInput.value || 0
             )
-          : 0,
-
-      paymentDay:
-        accountTypeInput.value === "credit"
-          ? (Math.min(31,Math.max(1,Number(creditPaymentDayInput.value||0))) || null)
-          : null,
-
-      lastPaymentDay:
-        accountTypeInput.value === "credit"
-          ? (Math.min(31,Math.max(1,Number(creditLastDayInput.value||0))) || null)
-          : null,
-
-      /*
-       * Legacy mirror only. Для пользовательской картинки это та же
-       * самая Data URL строка, которая пришла из FileReader.
-       */
-      icon:
-        selectedBankIcon || "auto"
+          : 0
     };
 
 
@@ -5814,14 +5008,6 @@ saveAccountButton.addEventListener(
     }
 
 
-    // Логотип сохраняем отдельно от счета. Поэтому даже если состав объекта
-    // accounts изменится при следующем обновлении приложения, иконка не пропадет.
-    accountIcons[accountId]=
-      selectedBankIcon || "auto";
-    save(AIK,accountIcons);
-
-    // Для совместимости оставляем icon и внутри счета, но отдельное хранилище
-    // является главным источником пользовательского выбора.
     save(
       AK,
       accounts
@@ -5863,7 +5049,6 @@ function prepareTransfer(fromIndex=null, toIndex=null){
     transferTo.value = String(toIndex);
 
   transferAmount.value = "";
-  transferDate.value = today();
   open("transferOverlay");
 }
 
@@ -5872,16 +5057,271 @@ transferButton.addEventListener(
   () => prepareTransfer()
 );
 
-/* Перевод со счёта — отдельная кнопка, чтобы обычный свайп не блокировался. */
-accountsList.addEventListener(
-  "click",
-  e => {
-    const button=e.target.closest("[data-transfer-from]");
-    if(!button) return;
+/* ДОЛГОЕ НАЖАТИЕ + ПЕРЕТАСКИВАНИЕ ВСЕГО СЧЁТА */
+let transferDragTimer = null;
+let transferDragActive = false;
+let transferDragFrom = null;
+let transferDragRow = null;
+let transferDragGhost = null;
+let transferDragTarget = null;
+let transferDragStartX = 0;
+let transferDragStartY = 0;
 
-    const from=Number(button.dataset.transferFrom);
-    if(Number.isInteger(from) && accounts[from])
-      prepareTransfer(from);
+function clearTransferDrag(){
+  if(transferDragTimer){
+    clearTimeout(transferDragTimer);
+    transferDragTimer = null;
+  }
+
+  if(transferDragRow)
+    transferDragRow.classList.remove("transfer-source");
+
+  if(transferDragTarget)
+    transferDragTarget.classList.remove("transfer-target");
+
+  if(transferDragGhost){
+    transferDragGhost.remove();
+    transferDragGhost = null;
+  }
+
+  transferDragActive = false;
+  transferDragFrom = null;
+  transferDragRow = null;
+  transferDragTarget = null;
+}
+
+function getTransferTarget(x,y){
+  const el = document.elementFromPoint(x,y);
+  const row = el && el.closest(".account-row");
+
+  if(!row || !accountsList.contains(row))
+    return null;
+
+  const index = Number(row.dataset.transferIndex);
+
+  if(!Number.isInteger(index) || index === transferDragFrom)
+    return null;
+
+  return row;
+}
+
+function startTransferDrag(){
+  if(!transferDragRow)
+    return;
+
+  transferDragActive = true;
+  transferDragRow.classList.add("transfer-source");
+
+  transferDragGhost = transferDragRow.cloneNode(true);
+  transferDragGhost.classList.add("transfer-ghost");
+  transferDragGhost.classList.remove("transfer-source");
+  transferDragGhost.removeAttribute("data-transfer-index");
+  transferDragGhost.style.width = Math.min(390, Math.max(260, transferDragRow.getBoundingClientRect().width)) + "px";
+
+  document.body.appendChild(transferDragGhost);
+  moveTransferGhost(transferDragStartX,transferDragStartY);
+}
+
+function moveTransferGhost(x,y){
+  if(!transferDragGhost)
+    return;
+
+  transferDragGhost.style.left = x + "px";
+  transferDragGhost.style.top = y + "px";
+
+  const row = getTransferTarget(x,y);
+
+  if(transferDragTarget && transferDragTarget !== row)
+    transferDragTarget.classList.remove("transfer-target");
+
+  transferDragTarget = row;
+
+  if(transferDragTarget)
+    transferDragTarget.classList.add("transfer-target");
+}
+
+function finishTransferDrag(x,y){
+  if(!transferDragRow)
+    return;
+
+  const wasActive = transferDragActive;
+  const from = transferDragFrom;
+  const row = wasActive ? getTransferTarget(x,y) : null;
+  const to = row ? Number(row.dataset.transferIndex) : null;
+
+  clearTransferDrag();
+
+  if(wasActive)
+    suppressAccountClickUntil=Date.now()+900;
+
+  if(
+    wasActive &&
+    Number.isInteger(from) &&
+    Number.isInteger(to) &&
+    from !== to
+  ){
+    prepareTransfer(from,to);
+  }
+}
+
+function beginTransferFromEvent(target,x,y){
+  const row = target && target.closest(".account-row");
+
+  /* Кнопка редактирования остаётся обычной кнопкой. */
+  if(!row || target.closest(".small-button"))
+    return;
+
+  const index = Number(row.dataset.transferIndex);
+
+  if(!Number.isInteger(index))
+    return;
+
+  clearTransferDrag();
+
+  transferDragFrom = index;
+  transferDragRow = row;
+  transferDragStartX = x;
+  transferDragStartY = y;
+
+  transferDragTimer = setTimeout(
+    startTransferDrag,
+    500
+  );
+}
+
+/* iPhone / touch */
+accountsList.addEventListener(
+  "touchstart",
+  e => {
+    if(e.touches.length !== 1)
+      return;
+
+    const touch = e.touches[0];
+    beginTransferFromEvent(
+      e.target,
+      touch.clientX,
+      touch.clientY
+    );
+  },
+  {passive:false}
+);
+
+accountsList.addEventListener(
+  "touchmove",
+  e => {
+    if(!transferDragRow || e.touches.length !== 1)
+      return;
+
+    const touch = e.touches[0];
+    const dx = touch.clientX - transferDragStartX;
+    const dy = touch.clientY - transferDragStartY;
+    const distance = Math.hypot(dx,dy);
+
+    if(!transferDragActive){
+      /* Пока ждём долгое нажатие, не отменяем его из-за мелкого движения пальца. */
+      if(distance > 45)
+        clearTransferDrag();
+      return;
+    }
+
+    e.preventDefault();
+    moveTransferGhost(touch.clientX,touch.clientY);
+  },
+  {passive:false}
+);
+
+accountsList.addEventListener(
+  "touchend",
+  e => {
+    if(!transferDragRow)
+      return;
+
+    const touch =
+      e.changedTouches && e.changedTouches[0];
+
+    if(!touch){
+      clearTransferDrag();
+      return;
+    }
+
+    finishTransferDrag(
+      touch.clientX,
+      touch.clientY
+    );
+  },
+  {passive:false}
+);
+
+accountsList.addEventListener(
+  "touchcancel",
+  () => clearTransferDrag(),
+  {passive:true}
+);
+
+/* Компьютер */
+accountsList.addEventListener(
+  "pointerdown",
+  e => {
+    if(e.pointerType === "touch")
+      return;
+
+    if(e.pointerType === "mouse" && e.button !== 0)
+      return;
+
+    beginTransferFromEvent(
+      e.target,
+      e.clientX,
+      e.clientY
+    );
+  }
+);
+
+accountsList.addEventListener(
+  "pointermove",
+  e => {
+    if(e.pointerType === "touch" || !transferDragRow)
+      return;
+
+    const dx = e.clientX - transferDragStartX;
+    const dy = e.clientY - transferDragStartY;
+
+    if(!transferDragActive){
+      if(Math.hypot(dx,dy) > 20)
+        clearTransferDrag();
+      return;
+    }
+
+    e.preventDefault();
+    moveTransferGhost(e.clientX,e.clientY);
+  }
+);
+
+accountsList.addEventListener(
+  "pointerup",
+  e => {
+    if(e.pointerType === "touch" || !transferDragRow)
+      return;
+
+    finishTransferDrag(
+      e.clientX,
+      e.clientY
+    );
+  }
+);
+
+accountsList.addEventListener(
+  "pointercancel",
+  e => {
+    if(e.pointerType !== "touch")
+      clearTransferDrag();
+  }
+);
+
+accountsList.addEventListener(
+  "contextmenu",
+  e => {
+    if(e.target.closest(".account-row"))
+      e.preventDefault();
   }
 );
 
@@ -5903,8 +5343,6 @@ saveTransferButton.addEventListener(
 
     const value =
       Number(transferAmount.value || 0);
-
-    const date = transferDate.value || today();
 
     if(from === to){
 
@@ -5933,17 +5371,7 @@ saveTransferButton.addEventListener(
     accounts[from].balance -= value;
     accounts[to].balance += value;
 
-    transactions.push({
-      id:Date.now(),
-      type:"transfer",
-      amount:value,
-      account:accounts[from].id,
-      toAccount:accounts[to].id,
-      date
-    });
-
     save(AK,accounts);
-    save(TY,transactions);
 
     close("transferOverlay");
 
@@ -5953,6 +5381,13 @@ saveTransferButton.addEventListener(
 
   }
 );
+
+
+/* ФАКТИЧЕСКИЕ ВЫПЛАТЫ */
+
+addPaymentFactButton.addEventListener("click",openPaymentFact);
+closePaymentFactButton.addEventListener("click",()=>close("paymentFactOverlay"));
+savePaymentFactButton.addEventListener("click",savePaymentFact);
 
 
 /* ФИНАНСЫ */
@@ -5996,7 +5431,6 @@ saveFinanceButton.addEventListener(
       {
         salary,
         advance,
-        totalIncome: Math.max(0,Number(salary)||0) + Math.max(0,Number(advance)||0),
         advanceDate,
         mainSalaryDate
       }
@@ -6057,7 +5491,6 @@ saveDateButton.addEventListener(
       {
         salary,
         advance,
-        totalIncome: Math.max(0,Number(salary)||0) + Math.max(0,Number(advance)||0),
         advanceDate,
         mainSalaryDate
       }
@@ -6145,8 +5578,6 @@ addGoalButton.addEventListener(
     goalTarget.value = "";
     goalSaved.value = "";
     goalDate.value = "";
-    populateGoalCategories();
-    goalCategory.value = "";
 
     open("goalOverlay");
 
@@ -6189,9 +5620,6 @@ goalsList.addEventListener("click", e => {
     goalDate.value =
       g.date || "";
 
-    populateGoalCategories();
-    goalCategory.value = g.category || "";
-
     open("goalOverlay");
 
   }
@@ -6207,7 +5635,6 @@ goalsList.addEventListener("click", e => {
     save(GK,goals);
 
     renderGoals();
-    renderCats();
 
   }
 
@@ -6240,10 +5667,7 @@ saveGoalButton.addEventListener(
         Number(goalSaved.value || 0),
 
       date:
-        goalDate.value || null,
-
-      category:
-        goalCategory.value || ""
+        goalDate.value || null
 
     };
 
@@ -6260,7 +5684,6 @@ saveGoalButton.addEventListener(
     close("goalOverlay");
 
     renderGoals();
-    renderCats();
 
   }
 );
@@ -6276,11 +5699,8 @@ addDebtButton.addEventListener(
     debtModalTitle.textContent = "Новый долг";
     manualDebtName.value = "";
     manualDebtAmount.value = "";
-    manualDebtPaymentDay.value = "";
-    manualDebtLastDay.value = "";
     manualDebtDueDate.value = "";
     saveDebtButton.textContent = "Сохранить долг";
-    delete saveDebtButton.dataset.creditAccountId;
 
     open("debtOverlay");
 
@@ -6297,12 +5717,6 @@ closeDebtButton.addEventListener(
 saveDebtButton.addEventListener(
   "click",
   () => {
-
-    if(saveDebtButton.dataset.creditAccountId){
-      delete saveDebtButton.dataset.creditAccountId;
-      close("debtOverlay");
-      return;
-    }
 
     const d={
 
@@ -6322,14 +5736,6 @@ saveDebtButton.addEventListener(
 
       dueDate:
         manualDebtDueDate.value ||
-        null,
-
-      paymentDay:
-        Math.min(31,Math.max(1,Number(manualDebtPaymentDay.value||0))) ||
-        null,
-
-      lastPaymentDay:
-        Math.min(31,Math.max(1,Number(manualDebtLastDay.value||0))) ||
         null
 
     };
@@ -6380,7 +5786,6 @@ debtsList.addEventListener(
         )
         .map(a => ({
           id:"card_"+a.name,
-          accountId:a.id,
           kind:"credit"
         }))
         .concat(
@@ -6394,32 +5799,8 @@ debtsList.addEventListener(
       const item =
         all[Number(editButton.dataset.dei)];
 
-      if(!item)
+      if(!item || item.kind !== "personal")
         return;
-
-      if(item.kind === "credit"){
-        const accountIndex=accounts.findIndex(a=>String(a.id)===String(item.accountId) && a.type==="credit");
-        if(accountIndex<0) return;
-
-        /* Кредитная задолженность управляется через сам счёт.
-           Открываем настоящий редактор счёта, а не пустое окно долга. */
-        editingAccount=accountIndex;
-        const account=accounts[accountIndex];
-        accountModalTitle.textContent="Изменить счёт";
-        accountTypeInput.value=account.type||"credit";
-        accountNameInput.value=account.name||"";
-        selectedBankIcon=account.id && Object.prototype.hasOwnProperty.call(accountIcons,account.id)
-          ?accountIcons[account.id]:(account.icon||"auto");
-        updateBankIconPicker();
-        accountBalanceInput.value=account.balance||0;
-        creditLimitInput.value=account.creditLimit||0;
-        creditPaymentDayInput.value=account.paymentDay||"";
-        creditLastDayInput.value=account.lastPaymentDay||"";
-        creditFields.style.display="block";
-        saveAccountButton.textContent="Сохранить";
-        open("accountOverlay");
-        return;
-      }
 
       editingDebt =
         debts.findIndex(d => d.id === item.id);
@@ -6432,11 +5813,8 @@ debtsList.addEventListener(
       debtModalTitle.textContent = "Изменить долг";
       manualDebtName.value = d.name || "";
       manualDebtAmount.value = d.amount || 0;
-      manualDebtPaymentDay.value = d.paymentDay || "";
-      manualDebtLastDay.value = d.lastPaymentDay || "";
       manualDebtDueDate.value = d.dueDate || "";
       saveDebtButton.textContent = "Сохранить изменения";
-      delete saveDebtButton.dataset.creditAccountId;
 
       open("debtOverlay");
       return;
@@ -6472,12 +5850,13 @@ debtsList.addEventListener(
 
 syncButton.addEventListener(
   "click",
-  () => safeSyncWithGoogle(true)
+  syncWithGoogle
 );
 
 
 /* ЗАПУСК */
 
+setBudgetPeriod(new Date().getFullYear(),new Date().getMonth());
 load();
 saveBudgetHistorySnapshot();
 populate();
@@ -6501,9 +5880,8 @@ function setupCalculators(){
     const button=document.createElement("button");
     button.type="button";
     button.className="calc-button";
-    button.innerHTML=uiIcon("calculator");
+    button.textContent="∑";
     button.title="Открыть калькулятор";
-    button.setAttribute("aria-label","Открыть калькулятор");
     button.addEventListener("click",()=>openCalculator(input));
     wrap.appendChild(button);
   });
@@ -6551,12 +5929,6 @@ renderDebts();
 renderGoals();
 updateFinance();
 home();
-
-appReady=true;
-
-/* При запуске сначала проверяем Google. Если локальные данные пусты
-   после обновления кода, они восстанавливаются из Google, а не затирают его. */
-setTimeout(()=>safeSyncWithGoogle(false).catch(()=>{}),2200);
 
 </script>
 
