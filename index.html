@@ -942,7 +942,7 @@ button{
       <div class="settings-group-title">Деньги</div>
 
       <div class="stat-row">
-        <span>Общий доход</span>
+        <span>Плановая зарплата</span>
         <div class="category-actions">
           <span class="stat-value" id="salaryDisplay"></span>
           <button class="small-button" id="editSalaryButton">✎</button>
@@ -1070,11 +1070,18 @@ button{
         placeholder="0 ₽"
       >
 
-      <div class="field-label">Источник дохода</div>
+      <div class="field-label">Категория дохода</div>
+      <select id="incomeCategory" class="select">
+        <option value="salary">Зарплата</option>
+        <option value="advance">Аванс</option>
+        <option value="other">Другой доход</option>
+      </select>
+
+      <div class="field-label" id="incomeNameLabel">Источник дохода</div>
       <input
         id="incomeName"
         class="text-input"
-        placeholder="Например, зарплата"
+        placeholder="Например, премия"
       >
 
       <div class="field-label">Счёт, куда пришли деньги</div>
@@ -2531,45 +2538,82 @@ function renderGoals(){
 }
 
 
-function paymentSchedule(){
+function normalizeIncomeCategory(t){
+  if(!t || t.type!=="income") return "";
+  if(t.incomeCategory==="salary" || t.incomeCategory==="advance" || t.incomeCategory==="other")
+    return t.incomeCategory;
+  const name=String(t.name||"").trim().toLowerCase();
+  if(name==="зарплата" || name.includes("зарплат")) return "salary";
+  if(name==="аванс" || name.includes("аванс")) return "advance";
+  return "other";
+}
 
+function getTransactionsForMonth(year,month){
+  const key=monthStorageKey("transactions",year,month);
+  const data=read(key,[]);
+  return Array.isArray(data)
+    ?data.map(x=>({...x,type:x.type||"expense"}))
+    :[];
+}
+
+function actualSalaryPayment(){
+  const now=new Date();
+  const todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const current=transactions
+    .filter(x=>x.type==="income" && normalizeIncomeCategory(x)==="salary" && x.date)
+    .map(x=>({...x,dateObj:new Date(x.date+"T00:00:00")}))
+    .filter(x=>!Number.isNaN(x.dateObj.getTime()) && x.dateObj<=todayStart)
+    .sort((a,b)=>b.dateObj-a.dateObj);
+
+  if(current.length) return current[0];
+
+  return null;
+}
+
+function effectiveSalaryAmount(){
+  const actual=actualSalaryPayment();
+  return actual
+    ?Math.max(0,Number(actual.amount)||0)
+    :Math.max(0,Number(salary)||0);
+}
+
+function effectiveMonthlyIncome(){
+  return Math.max(0,Number(advance)||0)+effectiveSalaryAmount();
+}
+
+function salaryBoundaryDate(){
+  const actual=actualSalaryPayment();
+  if(actual) return new Date(actual.date+"T00:00:00");
+
+  const now=new Date();
+  return new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    Math.min(31,Math.max(1,Number(mainSalaryDate)||15))
+  );
+}
+
+function paymentSchedule(){
   const now=new Date();
   const year=now.getFullYear();
   const month=now.getMonth();
   const schedule=[];
-
-  const addPayment=(day,amount,type,monthOffset=0)=>{
-    const d=Number(day);
-    if(!Number.isFinite(d)||d<1) return;
-
-    const safeDay=Math.min(31,Math.max(1,d));
-    const date=new Date(year,month+monthOffset,safeDay);
-
-    schedule.push({
-      date,
-      amount:Math.max(0,Number(amount)||0),
-      type
-    });
+  const addPayment=(date,amount,type)=>{
+    if(!(date instanceof Date) || Number.isNaN(date.getTime())) return;
+    schedule.push({date,amount:Math.max(0,Number(amount)||0),type});
   };
 
   const advanceAmount=Math.max(0,Number(advance)||0);
-  /* salary — общий доход за месяц. Аванс является частью зарплаты,
-     поэтому основная выплата = общий доход минус аванс. */
-  const mainSalaryAmount=Math.max(
-    0,
-    Number(salary||0)-advanceAmount
-  );
+  const mainSalaryAmount=effectiveSalaryAmount();
+  const salaryDate=salaryBoundaryDate();
 
-  if(Number.isFinite(Number(advanceDate)) && Number(advanceDate)>0)
-    addPayment(advanceDate,advanceAmount,"advance");
+  if(Number.isFinite(Number(advanceDate)) && Number(advanceDate)>0){
+    addPayment(new Date(year,month,Math.min(31,Math.max(1,Number(advanceDate)))),advanceAmount,"advance");
+  }
 
-  if(Number.isFinite(Number(mainSalaryDate)) && Number(mainSalaryDate)>0)
-    addPayment(mainSalaryDate,mainSalaryAmount,"salary");
+  addPayment(salaryDate,mainSalaryAmount,"salary");
 
-  if(!schedule.length)
-    addPayment(15,Number(salary||0),"salary");
-
-  return schedule;
+  return schedule.sort((a,b)=>a.date-b.date);
 }
 
 function paymentFactKey(date,type){
@@ -2593,149 +2637,76 @@ function monthPaymentSchedule(offset=0){
   const month=base.getMonth()+offset;
   const result=[];
 
-  const add=(day,amount,type)=>{
-    const d=Number(day);
-    if(!Number.isFinite(d)||d<1) return;
-    result.push({
-      date:new Date(year,month,Math.min(31,Math.max(1,d))),
-      amount:Math.max(0,Number(amount)||0),
-      type
-    });
+  const add=(date,amount,type)=>{
+    if(!(date instanceof Date) || Number.isNaN(date.getTime())) return;
+    result.push({date,amount:Math.max(0,Number(amount)||0),type});
   };
 
   const adv=Math.max(0,Number(advance)||0);
-  const main=Math.max(0,Number(salary||0)-adv);
+  const actual=actualSalaryPayment();
+  const main=actual && actual.dateObj
+    ?Math.max(0,Number(actual.amount)||0)
+    :Math.max(0,Number(salary||0));
 
-  if(Number(advanceDate)>0) add(advanceDate,adv,"advance");
-  if(Number(mainSalaryDate)>0) add(mainSalaryDate,main,"salary");
+  if(Number(advanceDate)>0)
+    add(new Date(year,month,Math.min(31,Math.max(1,Number(advanceDate)))),adv,"advance");
 
-  if(!result.length) add(15,Number(salary||0),"salary");
+  const salaryDate=offset===0 && actual
+    ?actual.dateObj
+    :new Date(year,month,Math.min(31,Math.max(1,Number(mainSalaryDate)||15)));
+
+  add(salaryDate,main,"salary");
+
   return result.sort((a,b)=>a.date-b.date);
 }
 
 function paymentPeriodInfo(){
-
   const now=new Date();
-  const todayStart=new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate()
-  );
-
+  const todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate());
   const current=monthPaymentSchedule(0);
   const previousMonth=monthPaymentSchedule(-1);
   const nextMonth=monthPaymentSchedule(1);
 
-  let previous=current
-    .filter(p=>p.date<=todayStart)
-    .sort((a,b)=>b.date-a.date)[0];
+  let previous=current.filter(p=>p.date<=todayStart).sort((a,b)=>b.date-a.date)[0];
+  let next=current.filter(p=>p.date>todayStart).sort((a,b)=>a.date-b.date)[0];
 
-  let next=current
-    .filter(p=>p.date>todayStart)
-    .sort((a,b)=>a.date-b.date)[0];
-
-  if(!previous)
-    previous=previousMonth[previousMonth.length-1]||null;
-
-  if(!next)
-    next=nextMonth[0]||null;
+  if(!previous) previous=previousMonth[previousMonth.length-1]||null;
+  if(!next) next=nextMonth[0]||null;
 
   const periodStart=previous
     ?new Date(previous.date.getFullYear(),previous.date.getMonth(),previous.date.getDate())
     :todayStart;
-
   const periodEnd=next
     ?new Date(next.date.getFullYear(),next.date.getMonth(),next.date.getDate())
     :todayStart;
+  const days=Math.max(1,Math.ceil((periodEnd-todayStart)/86400000));
 
-  const days=Math.max(
-    1,
-    Math.ceil((periodEnd-todayStart)/86400000)
-  );
-
-  return {
-    previous,
-    next,
-    periodStart,
-    periodEnd,
-    days
-  };
-}
-
-function monthExpenseTotal(){
-  const now=new Date();
-  const key=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-
-  return transactions
-    .filter(x=>x.type==="expense" && String(x.date||"").startsWith(key))
-    .reduce((s,x)=>s+Number(x.amount||0),0);
-}
-
-function periodExpenseTotal(start,end){
-  return transactions
-    .filter(x=>{
-      if(x.type!=="expense" || !x.date) return false;
-      const d=new Date(x.date+"T00:00:00");
-      return d>=start && d<end;
-    })
-    .reduce((s,x)=>s+Number(x.amount||0),0);
+  return {previous,next,periodStart,periodEnd,days};
 }
 
 function monthlySpendCapacity(){
-  /* Категории задают месячный потолок расходов.
-     Доход минус накопления задает второй потолок.
-     Берём меньший из двух, чтобы категория не создавала деньги из воздуха. */
   const incomeAfterSavings=Math.max(
     0,
-    Number(salary||0) * (1-savingsPercent/100)
+    effectiveMonthlyIncome()*(1-savingsPercent/100)
   );
-
   const categoryPlan=Math.max(0,budget());
-
-  return Math.min(
-    categoryPlan,
-    incomeAfterSavings
-  );
+  return Math.min(categoryPlan,incomeAfterSavings);
 }
 
 function periodDailyLimit(){
-
   const info=paymentPeriodInfo();
-  const periodStart=info.periodStart;
-  const periodEnd=info.periodEnd;
-
-  /* Плановые/фактические выплаты текущего месяца.
-     Аванс и основная зарплата имеют разные суммы, поэтому дневной лимит
-     распределяется пропорционально размеру соответствующей выплаты. */
   const monthPayments=monthPaymentSchedule(0);
-  const totalPaymentIncome=monthPayments.reduce(
-    (s,p)=>s+paymentAmount(p),
-    0
-  );
-
-  if(totalPaymentIncome<=0)
-    return 0;
+  const totalPaymentIncome=monthPayments.reduce((s,p)=>s+paymentAmount(p),0);
+  if(totalPaymentIncome<=0) return 0;
 
   const currentPayment=info.previous;
-  const currentAmount=currentPayment
-    ?paymentAmount(currentPayment)
-    :0;
-
+  const currentAmount=currentPayment ? paymentAmount(currentPayment) : 0;
   const monthlyCapacity=monthlySpendCapacity();
-
-  /* Сколько месячного бюджета приходится на текущий период. */
-  const periodCapacity=
-    monthlyCapacity * (currentAmount/totalPaymentIncome);
-
-  const spentInPeriod=periodExpenseTotal(periodStart,periodEnd);
-  const remainingPeriod=Math.max(
-    0,
-    periodCapacity-spentInPeriod
-  );
-
+  const periodCapacity=monthlyCapacity*(currentAmount/totalPaymentIncome);
+  const spentInPeriod=periodExpenseTotal(info.periodStart,info.periodEnd);
+  const remainingPeriod=Math.max(0,periodCapacity-spentInPeriod);
   return remainingPeriod/info.days;
 }
-
 
 function home(){
 
@@ -2792,7 +2763,7 @@ function home(){
     paymentPeriodInfo();
 
   const paymentName=
-    period.next.type==="advance"
+    period.next && period.next.type==="advance"
       ?"аванса"
       :"зарплаты";
 
@@ -2898,7 +2869,10 @@ function editTransaction(index){
 
   if(t.type==="income"){
     incomeAmount.value=t.amount||0;
+    incomeCategory.value=normalizeIncomeCategory(t)||"other";
     incomeName.value=t.name||"";
+    incomeNameLabel.style.display=incomeCategory.value==="other" ? "block" : "none";
+    incomeName.style.display=incomeCategory.value==="other" ? "block" : "none";
     incomeAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}" ${String(a.id)===String(t.account)?"selected":""}>${a.name||"Счёт"} · ${money(a.balance||0)}</option>`).join("");
   }else{
     amount.value=t.amount||0;
@@ -3282,6 +3256,10 @@ function normalizeSyncData(data){
 
       category:String(
         x.category||""
+      ),
+
+      incomeCategory:String(
+        x.incomeCategory||normalizeIncomeCategory(x)||""
       ),
 
       name:String(
@@ -4599,7 +4577,10 @@ quickIncomeButton.addEventListener("click", () => {
   operationDate.value = today();
 
   incomeAmount.value = "";
-  incomeName.value = "";
+  incomeCategory.value = "salary";
+  incomeName.value = "Зарплата";
+  incomeNameLabel.style.display = "none";
+  incomeName.style.display = "none";
 
   incomeAccount.innerHTML =
     accounts.length
@@ -4616,6 +4597,14 @@ quickIncomeButton.addEventListener("click", () => {
     incomeAmount.focus();
   }, 100);
 
+});
+
+
+incomeCategory.addEventListener("change", () => {
+  const other=incomeCategory.value==="other";
+  incomeNameLabel.style.display=other ? "block" : "none";
+  incomeName.style.display=other ? "block" : "none";
+  if(!other) incomeName.value=incomeCategory.value==="salary" ? "Зарплата" : "Аванс";
 });
 
 
@@ -4681,10 +4670,12 @@ saveExpenseButton.addEventListener("click", () => {
   let accountIndex;
   let category;
   let name;
+  let incomeCategoryValue;
 
   if(isIncome){
     accountIndex=Number(incomeAccount.value);
-    name=incomeName.value.trim() || "Доход";
+    incomeCategoryValue=incomeCategory.value || "other";
+    name=incomeCategoryValue==="salary" ? "Зарплата" : incomeCategoryValue==="advance" ? "Аванс" : (incomeName.value.trim() || "Доход");
   }else{
     category=categorySelect.value;
     accountIndex=Number(expenseAccount.value);
@@ -4710,8 +4701,10 @@ saveExpenseButton.addEventListener("click", () => {
       date
     };
 
-    if(isIncome) updated.name=name;
-    else updated.category=category;
+    if(isIncome){
+      updated.name=name;
+      updated.incomeCategory=incomeCategoryValue;
+    }else updated.category=category;
 
     updated.type=isIncome ? "income" : "expense";
 
@@ -4746,6 +4739,7 @@ saveExpenseButton.addEventListener("click", () => {
 
   if(isIncome){
     transaction.name=name;
+    transaction.incomeCategory=incomeCategoryValue;
     account.balance=Number(account.balance||0)+value;
   }else{
     transaction.category=category;
@@ -5435,6 +5429,7 @@ saveFinanceButton.addEventListener(
         mainSalaryDate
       }
     );
+    markSettingsDirty();
 
 
     close("financeOverlay");
@@ -5495,6 +5490,7 @@ saveDateButton.addEventListener(
         mainSalaryDate
       }
     );
+    markSettingsDirty();
 
 
     close("dateOverlay");
@@ -5552,6 +5548,7 @@ saveFinanceButton.addEventListener(
       SK,
       savingsPercent
     );
+    markSettingsDirty();
 
     close("financeOverlay");
 
