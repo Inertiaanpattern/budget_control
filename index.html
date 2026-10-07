@@ -448,8 +448,8 @@ button{
 }
 
 .action-icon{
-  width:16px;
-  height:16px;
+  width:14px;
+  height:14px;
   display:block;
   fill:none;
   stroke:currentColor;
@@ -872,6 +872,34 @@ button{
 .list-search{margin:0 0 12px;width:100%;box-sizing:border-box}
 .account-action-icons{justify-content:flex-end;margin-top:6px}
 .danger-icon{color:var(--danger);background:#f8e8e8}
+
+.account-main-stacked{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+.account-financials{
+  margin-top:7px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+}
+.account-balance-bottom{
+  font-size:25px;
+  font-weight:800;
+  line-height:1.15;
+}
+.account-financials .account-actions{
+  margin-top:7px;
+}
+
+#operationDate{
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
 </style>
 </head>
 
@@ -2290,7 +2318,7 @@ function renderAccounts(){
             title="Зажмите счёт и перетащите его на другой счёт для перевода"
           >
 
-            <div class="account-main">
+            <div class="account-main account-main-stacked">
 
               <div>
                 ${logoFor(a)}
