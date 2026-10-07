@@ -997,9 +997,7 @@ button{
 
 
 <section id="accounts" class="screen">
-  <div class="section-heading">Счета</div>
-
-  <div class="card total-card">
+  <div class="section-heading">Счета</div><div class="card total-card">
     <div class="stat-row">
       <span>Общий баланс</span>
       <span class="stat-value" id="accountsTotal">0 ₽</span>
@@ -1997,8 +1995,7 @@ function load(){
     if(Number.isFinite(+f.salary))
       salary=+f.salary;
 
-    if(Number.isFinite(+f.advance))
-      advance=+f.advance;
+    if(Number.isFinite(+f.advance))advance=+f.advance;
 
     if(
       Number.isFinite(+f.advanceDate)&&
@@ -2732,27 +2729,24 @@ function salaryPeriodInfo(){
   if(!interval && history.length===1)
     interval=15;
 
-  // Если фактический интервал пока не удалось определить,
-  // временно используем 15 дней. Это не создаёт операцию зарплаты —
-  // только даёт расчётную дату для дневного лимита.
-  if(!interval)
-    interval=15;
-
-  // Следующую дату всегда рассчитываем от последней фактической выплаты.
+  // Если есть история выплат, следующую дату определяем по фактическому
+  // интервалу между зарплатами. Никаких ручных дат выплат больше не нужно.
   let next=null;
-  const nextDate=new Date(previous.dateObj);
-  nextDate.setDate(nextDate.getDate()+interval);
-
-  while(nextDate<=todayStart)
+  if(interval){
+    const nextDate=new Date(previous.dateObj);
     nextDate.setDate(nextDate.getDate()+interval);
 
-  next={
-    date:nextDate,
-    dateObj:nextDate,
-    amount:0,
-    type:"salary",
-    inferred:true
-  };
+    while(nextDate<=todayStart)
+      nextDate.setDate(nextDate.getDate()+interval);
+
+    next={
+      date:nextDate,
+      dateObj:nextDate,
+      amount:0,
+      type:"salary",
+      inferred:true
+    };
+  }
 
   const days=next
     ?Math.max(1,Math.ceil((next.dateObj-todayStart)/86400000))
@@ -3000,8 +2994,7 @@ function editTransaction(index){
     if(ai>=0) expenseAccount.value=String(ai);
     amount.value=t.amount||"";
     populate();
-    categorySelect.value=t.category||categories[0]?.name||"";
-    const toggle=document.getElementById("roundingEnabled");
+    categorySelect.value=t.category||categories[0]?.name||"";const toggle=document.getElementById("roundingEnabled");
     if(toggle) toggle.checked=!!t.roundingEnabled;
     updateRoundingUI();
     calc();
@@ -3975,9 +3968,6 @@ function applyGoogleData(data){
   }
 
 
-    normalizeSyncData(data);
-
-
   const plans=
     normalized.plans;
 
@@ -3998,10 +3988,7 @@ function applyGoogleData(data){
 
     }
 
-  });
-
-
-  saveCategories();
+  });saveCategories();
 
 
   accounts=
@@ -4138,6 +4125,7 @@ async function syncWithGoogle(){
 async function autoSyncOnce(showStatus=false){
   if(autoSyncBusy) return;
   autoSyncBusy=true;
+
   try{
     if(showStatus){
       syncButton.disabled=true;
@@ -4146,59 +4134,228 @@ async function autoSyncOnce(showStatus=false){
     }
 
     const google=await googleLoad();
-    const local=localSyncData();
-    const googleUpdatedAt=Number(google.updatedAt||google?.settings?.updatedAt||0)||0;
-    const localUpdated=localUpdatedAt();
+    const googleData=normalizeSyncData(google);
+    const localData=normalizeSyncData(localSyncData());
+
+    /*
+     * ВАЖНО:
+     * plans намеренно НЕ участвуют в определении пустого приложения,
+     * потому что список категорий существует и без пользовательских данных.
+     * Реальными данными считаем счета, операции, цели, долги и плановые платежи.
+     */
+    const googleHasData =
+      googleData.accounts.length>0 ||
+      googleData.transactions.length>0 ||
+      googleData.goals.length>0 ||
+      googleData.debts.length>0 ||
+      googleData.plannedPayments.length>0;
+
+    const localHasData =
+      localData.accounts.length>0 ||
+      localData.transactions.length>0 ||
+      localData.goals.length>0 ||
+      localData.debts.length>0 ||
+      localData.plannedPayments.length>0;
+
+    /*
+     * ЗАЩИТА ОТ ЗАТИРАНИЯ:
+     * если установленное приложение пустое, а в Google есть данные,
+     * всегда загружаем Google на телефон. Пустой телефон НЕ МОЖЕТ
+     * заменить содержимое Google.
+     */
+    if(!localHasData && googleHasData){
+      applyGoogleData(google);
+
+      renderCats();
+      renderAccounts();
+      renderDebts();
+      renderGoals();
+      updateFinance();
+      home();
+      renderHistory();
+
+      localStorage.setItem(
+        SYNC_LAST_GOOGLE_KEY,
+        JSON.stringify(googleData)
+      );
+
+      localStorage.setItem(
+        SYNC_UPDATED_AT_KEY,
+        String(googleData.updatedAt||Date.now())
+      );
+
+      if(showStatus){
+        setSyncStatus(
+          "Данные из Google загружены на телефон ✓",
+          "success"
+        );
+      }
+
+      return;
+    }
+
+    /*
+     * Обратная ситуация: Google пуст, а на телефоне уже есть данные.
+     * Тогда сохраняем телефон в Google.
+     */
+    if(localHasData && !googleHasData){
+      await googlePush();
+
+      localStorage.setItem(
+        SYNC_LAST_GOOGLE_KEY,
+        JSON.stringify(localData)
+      );
+
+      if(showStatus){
+        setSyncStatus(
+          "Данные телефона сохранены в Google ✓",
+          "success"
+        );
+      }
+
+      return;
+    }
+
+    /* Обе стороны действительно пустые. Ничего не создаём и не затираем. */
+    if(!localHasData && !googleHasData){
+      if(showStatus){
+        setSyncStatus(
+          "Данных для синхронизации пока нет.",
+          "success"
+        );
+      }
+
+      return;
+    }
+
+    /*
+     * Ниже остаётся обычная логика разрешения изменений,
+     * когда данные уже есть на обеих сторонах.
+     */
+    const googleUpdatedAt=Number(googleData.updatedAt||0);
+    const localUpdated=Number(localData.updatedAt||0);
 
     if(googleUpdatedAt>localUpdated){
       applyGoogleData(google);
-      renderCats(); renderAccounts(); renderDebts(); renderGoals();
-      updateFinance(); home(); renderHistory();
-      localStorage.setItem(SYNC_LAST_GOOGLE_KEY,JSON.stringify(normalizeSyncData(google)));
-      if(showStatus) setSyncStatus("Данные из Google обновлены на телефоне ✓","success");
+
+      renderCats();
+      renderAccounts();
+      renderDebts();
+      renderGoals();
+      updateFinance();
+      home();
+      renderHistory();
+
+      localStorage.setItem(
+        SYNC_LAST_GOOGLE_KEY,
+        JSON.stringify(googleData)
+      );
+
+      if(showStatus){
+        setSyncStatus(
+          "Данные из Google обновлены на телефоне ✓",
+          "success"
+        );
+      }
+
       return;
     }
 
     if(localUpdated>googleUpdatedAt){
       await googlePush();
-      localStorage.setItem(SYNC_LAST_GOOGLE_KEY,JSON.stringify(normalizeSyncData(localSyncData())));
-      if(showStatus) setSyncStatus("Последние данные телефона сохранены в Google ✓","success");
+
+      localStorage.setItem(
+        SYNC_LAST_GOOGLE_KEY,
+        JSON.stringify(localData)
+      );
+
+      if(showStatus){
+        setSyncStatus(
+          "Последние данные телефона сохранены в Google ✓",
+          "success"
+        );
+      }
+
       return;
     }
 
-    const same=sameSyncData(local,google);
+    const same=sameSyncData(localData,googleData);
+
     if(!same){
       const lastRaw=localStorage.getItem(SYNC_LAST_GOOGLE_KEY);
       const last=lastRaw?JSON.parse(lastRaw):null;
-      const googleChanged=last ? !sameSyncData(google,last) : false;
-      const localChanged=last ? !sameSyncData(local,last) : false;
+
+      const googleChanged=last
+        ? !sameSyncData(googleData,last)
+        : false;
+
+      const localChanged=last
+        ? !sameSyncData(localData,last)
+        : false;
 
       if(googleChanged && !localChanged){
         applyGoogleData(google);
-        renderCats(); renderAccounts(); renderDebts(); renderGoals(); updateFinance(); home(); renderHistory();
-        if(showStatus) setSyncStatus("Данные из Google обновлены на телефоне ✓","success");
+
+        renderCats();
+        renderAccounts();
+        renderDebts();
+        renderGoals();
+        updateFinance();
+        home();
+        renderHistory();
+
+        if(showStatus){
+          setSyncStatus(
+            "Данные из Google обновлены на телефоне ✓",
+            "success"
+          );
+        }
       }else{
         await googlePush();
-        localStorage.setItem(SYNC_LAST_GOOGLE_KEY,JSON.stringify(normalizeSyncData(localSyncData())));
-        if(showStatus) setSyncStatus("Последние данные сохранены в Google ✓","success");
+
+        localStorage.setItem(
+          SYNC_LAST_GOOGLE_KEY,
+          JSON.stringify(localData)
+        );
+
+        if(showStatus){
+          setSyncStatus(
+            "Последние данные сохранены в Google ✓",
+            "success"
+          );
+        }
       }
     }else if(showStatus){
-      setSyncStatus("Телефон и Google уже синхронизированы ✓","success");
+      setSyncStatus(
+        "Телефон и Google уже синхронизированы ✓",
+        "success"
+      );
     }
 
-    localStorage.setItem(SYNC_LAST_GOOGLE_KEY,JSON.stringify(normalizeSyncData(google)));
+    localStorage.setItem(
+      SYNC_LAST_GOOGLE_KEY,
+      JSON.stringify(googleData)
+    );
+
   }catch(error){
     console.warn("Babki auto sync:",error);
-    if(showStatus) setSyncStatus("Не удалось синхронизировать автоматически. Проверь соединение.","error");
+
+    if(showStatus){
+      setSyncStatus(
+        "Не удалось синхронизировать автоматически. Проверь соединение.",
+        "error"
+      );
+    }
+
   }finally{
     autoSyncBusy=false;
+
     if(showStatus){
       syncButton.disabled=false;
       syncButton.textContent="↻ Синхронизировать с Google";
     }
   }
 }
-
 
 /* =========================
    PULL-TO-REFRESH
@@ -5000,9 +5157,7 @@ function beginTransferFromEvent(target,x,y){
   const index = Number(row.dataset.transferIndex);
 
   if(!Number.isInteger(index))
-    return;
-
-  clearTransferDrag();
+    return;clearTransferDrag();
 
   transferDragFrom = index;
   transferDragRow = row;
