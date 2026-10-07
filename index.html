@@ -196,7 +196,13 @@ button{
   background:var(--pp);
   color:#64484f;
   font-size:18px;
-  font-weight:800
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  line-height:1;
+  box-sizing:border-box
 }
 
 .calc-button svg{
@@ -643,11 +649,24 @@ button{
 .select,
 .textarea{
   width:100%;
+  min-width:0;
+  max-width:100%;
   border:1px solid var(--border);
   background:#fff;
   border-radius:15px;
   padding:14px;
-  outline:0
+  outline:0;
+  box-sizing:border-box
+}
+
+/* На iPhone поле даты не должно раздвигать модальное окно */
+.modal input[type="date"]{
+  display:block;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+  overflow:hidden
 }
 
 .amount{
