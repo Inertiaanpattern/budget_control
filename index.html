@@ -328,12 +328,27 @@ button{
 }
 
 .screen{
-  display:none
+  display:none;
+  will-change:transform,opacity;
 }
 
 .screen.active{
-  display:block
+  display:block;
 }
+
+@keyframes babkiSwipeInLeft{
+  from{opacity:.35;transform:translate3d(22px,0,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+}
+
+@keyframes babkiSwipeInRight{
+  from{opacity:.35;transform:translate3d(-22px,0,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+}
+
+.screen.swipe-in-left{animation:babkiSwipeInLeft .24s cubic-bezier(.22,.61,.36,1)}
+.screen.swipe-in-right{animation:babkiSwipeInRight .24s cubic-bezier(.22,.61,.36,1)}
+
 
 .category-row,
 .account-row,
@@ -1207,6 +1222,14 @@ button{
       Сохранить лимит
     </button>
 
+    <button
+      class="danger-button"
+      id="deleteCategoryButton"
+      style="margin-top:8px;width:100%"
+    >
+      Удалить категорию
+    </button>
+
   </div>
 </div>
 
@@ -1440,13 +1463,34 @@ button{
       inputmode="decimal"
     >
 
-    <div class="field-label">Срок возврата</div>
+    <div class="field-label">Тип обязательства</div>
+    <select id="manualDebtType" class="select">
+      <option value="personal">Личный долг</option>
+      <option value="installment">Рассрочка</option>
+    </select>
 
-    <input
-      id="manualDebtDueDate"
-      class="text-input"
-      type="date"
-    >
+    <div id="personalDebtFields">
+      <div class="field-label">Срок возврата</div>
+      <input
+        id="manualDebtDueDate"
+        class="text-input"
+        type="date"
+      >
+    </div>
+
+    <div id="installmentDebtFields" style="display:none">
+      <div class="field-label">Первый платёж</div>
+      <input id="installmentFirstDate" class="text-input" type="date">
+
+      <div class="field-label">Ежемесячный платёж</div>
+      <input id="installmentPayment" class="text-input" type="number" inputmode="decimal" placeholder="0">
+
+      <div class="field-label">Количество платежей</div>
+      <input id="installmentCount" class="text-input" type="number" inputmode="numeric" min="1" step="1" placeholder="36">
+
+      <div class="small-note" style="margin-top:8px">Можно также загрузить CSV-график с колонками «Дата» и «Сумма».</div>
+      <input id="installmentFile" type="file" accept=".csv,text/csv" class="text-input">
+    </div>
 
     <button
       class="primary"
@@ -1503,7 +1547,11 @@ const FK="babki_finance_settings_v1";
 const SK="babki_savings_goal_percent_v1";
 const GK="babki_goals_v1";
 const DK="babki_personal_debts_v1";
+const PK="babki_planned_payments_v1";
 const SETTINGS_DIRTY_KEY="babki_finance_settings_dirty_v1";
+const SYNC_UPDATED_AT_KEY="babki_sync_updated_at_v2";
+const SYNC_LAST_GOOGLE_KEY="babki_sync_last_google_v2";
+let syncPollTimer=null;
 
 
 /* GOOGLE SHEETS */
@@ -1524,6 +1572,7 @@ let transactions=[];
 let accounts=[];
 let goals=[];
 let debts=[];
+let plannedPayments=[];
 
 let editingCategory=null;
 let editingAccount=null;
@@ -1570,6 +1619,8 @@ const categories=[
   name:x[0],
   plan:x[1]
 }));
+
+categories.sort((a,b)=>a.name.localeCompare(b.name,"ru",{sensitivity:"base"}));
 
 const DEFAULT_CATEGORY_PLANS=categories.map(c=>({name:c.name,plan:c.plan}));
 
@@ -1881,6 +1932,10 @@ function load(){
 
   if(Array.isArray(d))
     debts=d;
+
+  const pp=read(PK,[]);
+  if(Array.isArray(pp))
+    plannedPayments=pp;
 }
 
 
@@ -2002,7 +2057,7 @@ function renderCats(){
 
   categoryList.innerHTML="";
 
-  categories.forEach((c,i)=>{
+  categories.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru",{sensitivity:"base"})).forEach((c,i)=>{
 
     const s=catSpent(c.name);
 
@@ -2303,8 +2358,7 @@ function renderDebts(){
                   due
                     ?`
                       <div class="debt-meta">
-                        Ориентир откладывать:
-                        ${money(monthly)} в месяц
+                        Запланировано в лимите: ${money(d.amount)} до ${due}
                       </div>
                     `
                     :""
@@ -2612,8 +2666,21 @@ function spendableBalance(){
     .reduce((s,a)=>s+Number(a.balance||0),0);
 }
 
+function plannedPaymentsForMonth(year=budgetYear,month=budgetMonth){
+  const prefix=`${year}-${String(month+1).padStart(2,"0")}`;
+  return plannedPayments.filter(p=>
+    !p.paid && String(p.date||"").startsWith(prefix)
+  );
+}
+
+function plannedDebtTotalForMonth(year=budgetYear,month=budgetMonth){
+  return plannedPaymentsForMonth(year,month)
+    .filter(p=>p.category==="Кредиты | Долги")
+    .reduce((s,p)=>s+Number(p.amount||0),0);
+}
+
 function remainingBudget(){
-  return Math.max(0,budget()-spent());
+  return Math.max(0,budget()-spent()-plannedDebtTotalForMonth());
 }
 
 function periodDailyLimit(){
@@ -2879,7 +2946,7 @@ function close(id){
 function populate(){
 
   categorySelect.innerHTML=
-    categories
+    categories.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru",{sensitivity:"base"}))
       .map(
         c=>`<option>${c.name}</option>`
       )
@@ -3006,25 +3073,36 @@ function clearSettingsDirty(){
 let autoSyncTimer=null;
 let autoSyncBusy=false;
 
+function touchLocalSync(){
+  localStorage.setItem(SYNC_UPDATED_AT_KEY,String(Date.now()));
+}
+
+function localUpdatedAt(){
+  return Number(localStorage.getItem(SYNC_UPDATED_AT_KEY)||0);
+}
+
 function scheduleAutoSync(){
+  touchLocalSync();
   if(autoSyncTimer) clearTimeout(autoSyncTimer);
-  autoSyncTimer=setTimeout(async()=>{
-    if(autoSyncBusy) return;
-    autoSyncBusy=true;
-    try{
-      await googlePush();
-    }catch(e){
-      console.warn("Babki auto sync:",e);
-    }finally{
-      autoSyncBusy=false;
-    }
-  },1200);
+  autoSyncTimer=setTimeout(()=>{
+    autoSyncOnce(true);
+  },900);
+}
+
+function startAutoSyncPolling(){
+  if(syncPollTimer) clearInterval(syncPollTimer);
+  syncPollTimer=setInterval(()=>{
+    if(document.hidden || autoSyncBusy) return;
+    autoSyncOnce(false);
+  },15000);
 }
 
 
 function localSyncData(){
 
   return {
+
+    updatedAt:localUpdatedAt(),
 
     plans:Object.fromEntries(
       categories.map(
@@ -3052,6 +3130,11 @@ function localSyncData(){
         ?debts
         :[],
 
+    plannedPayments:
+      Array.isArray(plannedPayments)
+        ?plannedPayments
+        :[],
+
     settings:{
       // Сохраняем только действительно используемую настройку.
       savingsPercent:Number(savingsPercent)||0
@@ -3068,6 +3151,8 @@ function localSyncData(){
 function normalizeSyncData(data){
 
   const d=data||{};
+
+  const updatedAt=Number(d.updatedAt||d?.settings?.updatedAt||0)||0;
 
   const plans=
     d.plans &&
@@ -3248,6 +3333,21 @@ function normalizeSyncData(data){
     );
 
 
+  const normalizedPlannedPayments=
+    (Array.isArray(d.plannedPayments) ? d.plannedPayments : [])
+      .map(x=>({
+        id:String(x.id||""),
+        debtId:String(x.debtId||""),
+        name:String(x.name||""),
+        amount:Number(x.amount||0),
+        date:x.date?String(x.date):null,
+        category:String(x.category||"Кредиты | Долги"),
+        paid:Boolean(x.paid),
+        source:String(x.source||"debt")
+      }))
+      .filter(x=>x.amount>0 && x.date);
+
+
   const s=
     d.settings &&
     typeof d.settings==="object"
@@ -3262,6 +3362,8 @@ function normalizeSyncData(data){
 
   return {
 
+    updatedAt,
+
     plans:normalizedPlans,
 
     accounts:normalizedAccounts,
@@ -3274,6 +3376,9 @@ function normalizeSyncData(data){
 
     debts:
       normalizedDebts,
+
+    plannedPayments:
+      normalizedPlannedPayments,
 
     settings:
       normalizedSettings
@@ -3714,7 +3819,12 @@ function googlePush(){
 
 function applyGoogleData(data){
 
-  const normalized=
+  const normalized=normalizeSyncData(data);
+  if(normalized.updatedAt){
+    localStorage.setItem(SYNC_UPDATED_AT_KEY,String(normalized.updatedAt));
+  }
+
+
     normalizeSyncData(data);
 
 
@@ -3796,6 +3906,11 @@ function applyGoogleData(data){
     debts
   );
 
+  plannedPayments=Array.isArray(normalized.plannedPayments)
+    ?normalized.plannedPayments
+    :[];
+  save(PK,plannedPayments);
+
 
   if(
     normalized.settings &&
@@ -3851,6 +3966,9 @@ function mergeLegacyGoogleWithLocal(google){
     debts:
       local.debts,
 
+    plannedPayments:
+      local.plannedPayments,
+
     settings:
       local.settings
 
@@ -3864,378 +3982,71 @@ function mergeLegacyGoogleWithLocal(google){
 ------------------------- */
 
 async function syncWithGoogle(){
+  return autoSyncOnce(true);
+}
 
-  syncButton.disabled=true;
-
-  syncButton.textContent=
-    "Синхронизация…";
-
-
-  setSyncStatus(
-    "Проверяю данные в Google…"
-  );
-
-
+async function autoSyncOnce(showStatus=false){
+  if(autoSyncBusy) return;
+  autoSyncBusy=true;
   try{
+    if(showStatus){
+      syncButton.disabled=true;
+      syncButton.textContent="Синхронизация…";
+      setSyncStatus("Проверяю данные…");
+    }
 
-    const google=
-      await googleLoad();
+    const google=await googleLoad();
+    const local=localSyncData();
+    const googleUpdatedAt=Number(google.updatedAt||google?.settings?.updatedAt||0)||0;
+    const localUpdated=localUpdatedAt();
 
-
-    const local=
-      localSyncData();
-
-
-    const googleData={
-      plans:
-        google.plans||{},
-
-      accounts:
-        Array.isArray(google.accounts)
-          ?google.accounts
-          :[],
-
-      transactions:
-        Array.isArray(google.transactions)
-          ?google.transactions
-          :[],
-
-      goals:
-        Array.isArray(google.goals)
-          ?google.goals
-          :[],
-
-      debts:
-        Array.isArray(google.debts)
-          ?google.debts
-          :[],
-
-      settings:
-        google.settings &&
-        typeof google.settings==="object"
-          ?google.settings
-          :{}
-
-    };
-
-
-    const googleIsEmpty=
-      Object.keys(
-        googleData.plans
-      ).length===0 &&
-
-      googleData.accounts.length===0 &&
-
-      googleData.transactions.length===0 &&
-
-      googleData.goals.length===0 &&
-
-      googleData.debts.length===0 &&
-
-      Object.keys(
-        googleData.settings
-      ).length===0;
-
-
-    /* GOOGLE ПУСТ */
-
-    if(googleIsEmpty){
-
-      setSyncStatus(
-        "Google пока пуст. Загружаю данные с телефона…"
-      );
-
-
-      await googlePush();
-
-
-      setSyncStatus(
-        "Все данные сохранены в Google ✓",
-        "success"
-      );
-
-
+    if(googleUpdatedAt>localUpdated){
+      applyGoogleData(google);
+      renderCats(); renderAccounts(); renderDebts(); renderGoals();
+      updateFinance(); home(); renderHistory();
+      localStorage.setItem(SYNC_LAST_GOOGLE_KEY,JSON.stringify(normalizeSyncData(google)));
+      if(showStatus) setSyncStatus("Данные из Google обновлены на телефоне ✓","success");
       return;
     }
 
+    if(localUpdated>googleUpdatedAt){
+      await googlePush();
+      localStorage.setItem(SYNC_LAST_GOOGLE_KEY,JSON.stringify(normalizeSyncData(localSyncData())));
+      if(showStatus) setSyncStatus("Последние данные телефона сохранены в Google ✓","success");
+      return;
+    }
 
-    /* СТАРЫЙ GOOGLE */
+    const same=sameSyncData(local,google);
+    if(!same){
+      const lastRaw=localStorage.getItem(SYNC_LAST_GOOGLE_KEY);
+      const last=lastRaw?JSON.parse(lastRaw):null;
+      const googleChanged=last ? !sameSyncData(google,last) : false;
+      const localChanged=last ? !sameSyncData(local,last) : false;
 
-    if(
-      googleIsLegacy(
-        googleData
-      )
-    ){
-
-      const oldGoogle={
-        plans:
-          googleData.plans,
-
-        accounts:
-          googleData.accounts
-      };
-
-
-      const localOld={
-        plans:
-          local.plans,
-
-        accounts:
-          local.accounts
-      };
-
-
-      const oldSame=
-        sameSyncData(
-          oldGoogle,
-          localOld
-        );
-
-
-      if(oldSame){
-
-        /*
-         * Старые данные Google совпадают
-         * с лимитами и счетами телефона.
-         *
-         * Просто добавляем в Google
-         * остальные локальные данные.
-         */
-
-        setSyncStatus(
-          "Обновляю Google новыми разделами…"
-        );
-
-
-        await googlePush();
-
-
-        setSyncStatus(
-          "Все данные сохранены в Google ✓",
-          "success"
-        );
-
-
-        return;
-
-      }
-
-
-      const useGoogle=
-        confirm(
-          "Лимиты или счета в Google отличаются от телефона.\n\n"+
-          "ОК — взять лимиты и счета из Google, "+
-          "а остальные данные сохранить с телефона.\n\n"+
-          "Отмена — отправить данные телефона в Google."
-        );
-
-
-      if(useGoogle){
-
-        setSyncStatus(
-          "Объединяю данные…"
-        );
-
-
-        const merged=
-          mergeLegacyGoogleWithLocal(
-            googleData
-          );
-
-
-        applyGoogleData(
-          merged
-        );
-
-
-        await googlePush();
-
-
-        renderCats();
-        renderAccounts();
-        renderDebts();
-        renderGoals();
-        updateFinance();
-        home();
-
-
-        setSyncStatus(
-          "Данные объединены и сохранены ✓",
-          "success"
-        );
-
+      if(googleChanged && !localChanged){
+        applyGoogleData(google);
+        renderCats(); renderAccounts(); renderDebts(); renderGoals(); updateFinance(); home(); renderHistory();
+        if(showStatus) setSyncStatus("Данные из Google обновлены на телефоне ✓","success");
       }else{
-
-        setSyncStatus(
-          "Отправляю данные телефона в Google…"
-        );
-
-
         await googlePush();
-
-
-        setSyncStatus(
-          "Данные телефона сохранены в Google ✓",
-          "success"
-        );
-
+        localStorage.setItem(SYNC_LAST_GOOGLE_KEY,JSON.stringify(normalizeSyncData(localSyncData())));
+        if(showStatus) setSyncStatus("Последние данные сохранены в Google ✓","success");
       }
-
-
-      return;
+    }else if(showStatus){
+      setSyncStatus("Телефон и Google уже синхронизированы ✓","success");
     }
 
-
-    /* ПОЛНЫЕ ДАННЫЕ */
-
-    const equal=
-      sameSyncData(
-        local,
-        googleData
-      );
-
-
-    if(equal){
-
-      setSyncStatus(
-        "Все данные телефона и Google совпадают ✓",
-        "success"
-      );
-
-
-      return;
-    }
-
-
-    const useGoogle=
-      confirm(
-        "Данные телефона и Google отличаются.\n\n"+
-        "ОК — загрузить данные из Google на телефон.\n\n"+
-        "Отмена — отправить текущие данные телефона в Google."
-      );
-
-
-    if(useGoogle){
-
-      setSyncStatus(
-        "Загружаю все данные из Google…"
-      );
-
-
-      applyGoogleData(
-        googleData
-      );
-
-
-      renderCats();
-      renderAccounts();
-      renderDebts();
-      renderGoals();
-      updateFinance();
-      home();
-
-
-      setSyncStatus(
-        "Все данные из Google загружены ✓",
-        "success"
-      );
-
-    }else{
-
-      setSyncStatus(
-        "Отправляю все данные телефона в Google…"
-      );
-
-
-      await googlePush();
-
-
-      /*
-       * После записи ещё раз читаем Google.
-       * Это дополнительная проверка того,
-       * что данные действительно появились.
-       */
-
-      try{
-
-        const verify=
-          await googleLoad();
-
-        const verified=
-          sameSyncData(
-            localSyncData(),
-            verify
-          );
-
-
-        if(verified){
-
-          setSyncStatus(
-            "Все данные сохранены в Google ✓",
-            "success"
-          );
-
-        }else{
-
-          setSyncStatus(
-            "Google получил запрос, но проверка данных пока не совпала.",
-            "error"
-          );
-
-        }
-
-      }catch(verifyError){
-
-        /*
-         * Запись могла пройти успешно,
-         * даже если повторное чтение временно
-         * не удалось.
-         */
-
-        console.warn(
-          "Проверка Google после записи не удалась:",
-          verifyError
-        );
-
-
-        setSyncStatus(
-          "Данные отправлены в Google ✓",
-          "success"
-        );
-
-      }
-
-    }
-
-
+    localStorage.setItem(SYNC_LAST_GOOGLE_KEY,JSON.stringify(normalizeSyncData(google)));
   }catch(error){
-
-    console.error(
-      "Babki Google Sync:",
-      error
-    );
-
-
-    setSyncStatus(
-      "Не удалось синхронизировать: "+
-      (
-        error &&
-        error.message
-          ?error.message
-          :"неизвестная ошибка"
-      ),
-      "error"
-    );
-
+    console.warn("Babki auto sync:",error);
+    if(showStatus) setSyncStatus("Не удалось синхронизировать автоматически. Проверь соединение.","error");
   }finally{
-
-    syncButton.disabled=false;
-
-    syncButton.textContent=
-      "↻ Синхронизировать с Google";
-
+    autoSyncBusy=false;
+    if(showStatus){
+      syncButton.disabled=false;
+      syncButton.textContent="↻ Синхронизировать с Google";
+    }
   }
-
 }
 
 
@@ -4330,22 +4141,43 @@ document.addEventListener("touchcancel",()=>{
 
 const mainNavScreens=["home","budget","accounts","debts","goals","settings"];
 let swipeStartX=0,swipeStartY=0,swipeTracking=false;
+
 document.addEventListener("touchstart",e=>{
   if(e.touches.length!==1 || document.querySelector(".overlay.open")) return;
   const target=e.target;
   if(target.closest("input,select,textarea,button,.account-row")) return;
-  swipeStartX=e.touches[0].clientX; swipeStartY=e.touches[0].clientY; swipeTracking=true;
+  swipeStartX=e.touches[0].clientX;
+  swipeStartY=e.touches[0].clientY;
+  swipeTracking=true;
 },{passive:true});
+
 document.addEventListener("touchend",e=>{
-  if(!swipeTracking) return; swipeTracking=false;
-  const t=e.changedTouches?.[0]; if(!t) return;
+  if(!swipeTracking) return;
+  swipeTracking=false;
+  const t=e.changedTouches?.[0];
+  if(!t) return;
   const dx=t.clientX-swipeStartX, dy=t.clientY-swipeStartY;
-  if(Math.abs(dx)<70 || Math.abs(dx)<Math.abs(dy)*1.35) return;
-  const active=document.querySelector(".screen.active"); const id=active?.id; const idx=mainNavScreens.indexOf(id);
+  if(Math.abs(dx)<55 || Math.abs(dx)<Math.abs(dy)*1.45) return;
+  const active=document.querySelector(".screen.active");
+  const id=active?.id;
+  const idx=mainNavScreens.indexOf(id);
   if(idx<0) return;
-  const next=idx+(dx<0?1:-1); if(next<0 || next>=mainNavScreens.length) return;
-  const btn=document.querySelector(`.nav button[data-screen="${mainNavScreens[next]}"]`); if(btn) screen(mainNavScreens[next],btn);
+  const next=idx+(dx<0?1:-1);
+  if(next<0 || next>=mainNavScreens.length) return;
+  const btn=document.querySelector(`.nav button[data-screen="${mainNavScreens[next]}"]`);
+  if(!btn) return;
+  screen(mainNavScreens[next],btn);
+  const newScreen=document.getElementById(mainNavScreens[next]);
+  newScreen.classList.remove("swipe-in-left","swipe-in-right");
+  void newScreen.offsetWidth;
+  newScreen.classList.add(dx<0?"swipe-in-left":"swipe-in-right");
 },{passive:true});
+
+startAutoSyncPolling();
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden) autoSyncOnce(false);
+});
+
 
 /* =========================
    СТАРТ ПРИЛОЖЕНИЯ
@@ -4635,6 +4467,22 @@ saveCategoryLimitButton.addEventListener(
 
   }
 );
+
+
+deleteCategoryButton.addEventListener("click",()=>{
+  if(editingCategory===null) return;
+  const c=categories[editingCategory];
+  if(!c) return;
+  if(!confirm(`Удалить категорию «${c.name}»?\n\nСуществующие операции останутся в истории, но категория исчезнет из новых операций и бюджета.`)) return;
+  categories.splice(editingCategory,1);
+  editingCategory=null;
+  saveCategories();
+  scheduleAutoSync();
+  populate();
+  close("categoryEditOverlay");
+  renderCats();
+  home();
+});
 
 
 /* СТЕРЕТЬ ВСЕ ЛИМИТЫ */
@@ -5334,11 +5182,18 @@ addDebtButton.addEventListener(
   () => {
 
     editingDebt = null;
-    debtModalTitle.textContent = "Новый долг";
+    debtModalTitle.textContent = "Новое обязательство";
     manualDebtName.value = "";
     manualDebtAmount.value = "";
     manualDebtDueDate.value = "";
-    saveDebtButton.textContent = "Сохранить долг";
+    manualDebtType.value = "personal";
+    installmentFirstDate.value = "";
+    installmentPayment.value = "";
+    installmentCount.value = "";
+    installmentFile.value = "";
+    personalDebtFields.style.display="block";
+    installmentDebtFields.style.display="none";
+    saveDebtButton.textContent = "Сохранить";
 
     open("debtOverlay");
 
@@ -5352,54 +5207,109 @@ closeDebtButton.addEventListener(
 );
 
 
+manualDebtType.addEventListener("change",()=>{
+  const installment=manualDebtType.value==="installment";
+  personalDebtFields.style.display=installment?"none":"block";
+  installmentDebtFields.style.display=installment?"block":"none";
+});
+
+function removePlannedPaymentsForDebt(debtId){
+  plannedPayments=plannedPayments.filter(p=>String(p.debtId)!==String(debtId));
+}
+
+function addPlannedPayment(debtId,name,amount,date,source="debt"){
+  if(!date || Number(amount)<=0) return;
+  plannedPayments.push({
+    id:"plan_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),
+    debtId:String(debtId),
+    name,
+    amount:Number(amount),
+    date,
+    category:"Кредиты | Долги",
+    paid:false,
+    source
+  });
+}
+
+function addMonthlyPayments(debtId,name,amount,firstDate,count){
+  const d=new Date(firstDate+"T00:00:00");
+  for(let i=0;i<count;i++){
+    const y=d.getFullYear();
+    const m=d.getMonth()+i;
+    const day=d.getDate();
+    const target=new Date(y,m,Math.min(day,new Date(y,m+1,0).getDate()));
+    addPlannedPayment(debtId,name,amount,target.toISOString().slice(0,10),"installment");
+  }
+}
+
+function parseInstallmentCSV(text,name,debtId){
+  const rows=String(text||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  let added=0;
+  rows.forEach((row,index)=>{
+    if(index===0 && /дата|date/i.test(row)) return;
+    const parts=row.split(/[;,\t]/).map(x=>x.trim().replace(/^"|"$/g,""));
+    if(parts.length<2) return;
+    let date=parts[0];
+    let amount=Number(parts[1].replace(/\s/g,"").replace(",","."));
+    if(/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(date)){
+      const [dd,mm,yyyy]=date.split("."); date=`${yyyy}-${mm.padStart(2,"0")}-${dd.padStart(2,"0")}`;
+    }
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(amount) || amount<=0) return;
+    addPlannedPayment(debtId,name,amount,date,"file"); added++;
+  });
+  return added;
+}
+
 saveDebtButton.addEventListener(
   "click",
-  () => {
+  async () => {
+    const type=manualDebtType.value;
+    const name=manualDebtName.value.trim() || "Обязательство";
+    const amount=Number(manualDebtAmount.value||0);
+    if(amount<=0) return;
 
-    const d={
+    const id=editingDebt!==null ? debts[editingDebt].id : Date.now();
+    const d={id,name,amount,dueDate:null,kind:type};
 
-      id:
-        editingDebt !== null
-          ? debts[editingDebt].id
-          : Date.now(),
-
-      name:
-        manualDebtName.value.trim() ||
-        "Личный долг",
-
-      amount:
-        Number(
-          manualDebtAmount.value || 0
-        ),
-
-      dueDate:
-        manualDebtDueDate.value ||
-        null
-
-    };
-
-
-    if(d.amount <= 0)
-      return;
-
-    if(editingDebt === null){
-      debts.push(d);
+    if(type==="personal"){
+      d.dueDate=manualDebtDueDate.value||null;
+      if(!d.dueDate){ alert("Укажи дату возврата."); return; }
     }else{
-      debts[editingDebt] = d;
+      const file=installmentFile.files?.[0];
+      if(!file && (!installmentFirstDate.value || Number(installmentPayment.value)<=0 || Number(installmentCount.value)<=0)){
+        alert("Укажи первый платёж, сумму и количество платежей или загрузи CSV-график.");
+        return;
+      }
+      d.dueDate=installmentFirstDate.value||null;
     }
 
-    save(
-      DK,
-      debts
-    );
-    scheduleAutoSync();
+    if(editingDebt===null) debts.push(d);
+    else debts[editingDebt]=d;
 
+    removePlannedPaymentsForDebt(id);
+
+    if(type==="personal"){
+      addPlannedPayment(id,name,amount,d.dueDate);
+    }else{
+      const file=installmentFile.files?.[0];
+      if(file){
+        const text=await file.text();
+        const added=parseInstallmentCSV(text,name,id);
+        if(!added){ alert("Не удалось найти в CSV строки с датой и суммой."); return; }
+      }else{
+        addMonthlyPayments(id,name,Number(installmentPayment.value),installmentFirstDate.value,Math.floor(Number(installmentCount.value)));
+      }
+    }
+
+    save(DK,debts);
+    save(PK,plannedPayments);
+    scheduleAutoSync();
     close("debtOverlay");
     renderDebts();
-
+    renderCats();
+    home();
   }
 );
-
 
 /* РЕДАКТИРОВАНИЕ / УДАЛЕНИЕ ДОЛГА */
 
@@ -5449,10 +5359,17 @@ debtsList.addEventListener(
 
       const d = debts[editingDebt];
 
-      debtModalTitle.textContent = "Изменить долг";
+      debtModalTitle.textContent = "Изменить обязательство";
       manualDebtName.value = d.name || "";
       manualDebtAmount.value = d.amount || 0;
       manualDebtDueDate.value = d.dueDate || "";
+      manualDebtType.value = d.kind==="installment" ? "installment" : "personal";
+      personalDebtFields.style.display=manualDebtType.value==="personal"?"block":"none";
+      installmentDebtFields.style.display=manualDebtType.value==="installment"?"block":"none";
+      installmentFirstDate.value = d.dueDate || "";
+      installmentPayment.value = "";
+      installmentCount.value = "";
+      installmentFile.value = "";
       saveDebtButton.textContent = "Сохранить изменения";
 
       open("debtOverlay");
@@ -5472,12 +5389,15 @@ debtsList.addEventListener(
       if(i < 0)
         return;
 
+      const removedId=debts[i].id;
       debts.splice(i,1);
+      removePlannedPaymentsForDebt(removedId);
 
       save(
         DK,
         debts
       );
+      save(PK,plannedPayments);
       scheduleAutoSync();
 
       renderDebts();
@@ -5569,6 +5489,7 @@ renderDebts();
 renderGoals();
 updateFinance();
 home();
+setTimeout(()=>autoSyncOnce(false),1200);
 
 </script>
 
