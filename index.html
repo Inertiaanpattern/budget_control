@@ -664,7 +664,10 @@ button{
 }
 
 .nav{
-  position:static;
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
   background:#fffafaF0;
   backdrop-filter:blur(15px);
   border-top:1px solid var(--border);
@@ -734,8 +737,8 @@ button{
 
 .grid2{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px
+  grid-template-columns:repeat(3,1fr);
+  gap:8px
 }
 
 .sync-status{
@@ -788,8 +791,9 @@ button{
   </div>
 
   <div class="grid2">
-    <button class="primary" id="quickIncomeButton">＋</button>
-    <button class="secondary" id="quickExpenseButton">−</button>
+    <button class="primary" id="quickIncomeButton">＋ Доход</button>
+    <button class="secondary" id="quickExpenseButton">− Расход</button>
+    <button class="secondary" id="quickTransferButton">⇄ Перевод</button>
   </div>
 
   <div style="height:18px"></div>
@@ -905,7 +909,7 @@ button{
   </div>
 
   <div class="card">
-    <div class="card-title">Средний месячный лимит за 2026</div>
+    <div class="card-title">Средний месячный лимит за <span id="budgetHistoryYear"></span></div>
     <div class="stat-row">
       <span>Средний план расходов</span>
       <span class="stat-value" id="budgetYearAverage">0 ₽</span>
@@ -939,51 +943,12 @@ button{
   <div class="card">
 
     <div class="settings-group">
-      <div class="settings-group-title">Деньги</div>
-
-      <div class="stat-row">
-        <span>Плановая зарплата</span>
-        <div class="category-actions">
-          <span class="stat-value" id="salaryDisplay"></span>
-          <button class="small-button" id="editSalaryButton">✎</button>
-        </div>
-      </div>
-
-      <div class="stat-row">
-        <span>Аванс</span>
-        <div class="category-actions">
-          <span class="stat-value" id="advanceDisplay"></span>
-          <button class="small-button" id="editAdvanceButton">✎</button>
-        </div>
-      </div>
-
-      <div class="stat-row">
-        <span>Основная зарплата</span>
-        <span class="stat-value" id="mainSalaryDisplay"></span>
+      <div class="settings-group-title">Прогноз</div>
+      <div class="small-note" style="margin-top:0">
+        Выплаты для прогноза берутся только из фактических операций с категорией «Зарплата».
+        Суммы и даты не нужно вводить отдельно.
       </div>
     </div>
-
-
-    <div class="settings-group">
-      <div class="settings-group-title">Даты выплат</div>
-
-      <div class="stat-row">
-        <span>Дата аванса</span>
-        <div class="category-actions">
-          <span class="stat-value" id="advanceDateDisplay"></span>
-          <button class="small-button" id="editAdvanceDateButton">✎</button>
-        </div>
-      </div>
-
-      <div class="stat-row">
-        <span>Дата основной зарплаты</span>
-        <div class="category-actions">
-          <span class="stat-value" id="mainSalaryDateDisplay"></span>
-          <button class="small-button" id="editMainSalaryDateButton">✎</button>
-        </div>
-      </div>
-    </div>
-
 
     <div class="settings-group">
       <div class="settings-group-title">Накопления</div>
@@ -997,13 +962,6 @@ button{
       </div>
     </div>
 
-  </div>
-
-
-  <div class="card">
-    <div class="card-title">Фактические выплаты</div>
-    <div class="small-note">Если выплата отличается от плановой, зафиксируй фактическую сумму. Дневной лимит будет учитывать ее вместо плановой суммы.</div>
-    <button class="secondary" id="addPaymentFactButton" style="margin-top:12px">＋ Зафиксировать выплату</button>
   </div>
 
 
@@ -1073,7 +1031,6 @@ button{
       <div class="field-label">Категория дохода</div>
       <select id="incomeCategory" class="select">
         <option value="salary">Зарплата</option>
-        <option value="advance">Аванс</option>
         <option value="other">Другой доход</option>
       </select>
 
@@ -1314,61 +1271,6 @@ button{
 </div>
 
 
-<!-- ДАТЫ -->
-
-<div class="overlay" id="dateOverlay">
-  <div class="modal">
-
-    <div class="modal-header">
-      <div class="modal-title" id="dateTitle">Дата выплаты</div>
-      <button class="close" id="closeDateButton">×</button>
-    </div>
-
-    <div class="field-label">День месяца</div>
-
-    <input
-      id="dateInput"
-      class="text-input edit-value"
-      type="number"
-      min="1"
-      max="31"
-      inputmode="numeric"
-    >
-
-    <button
-      class="primary"
-      id="saveDateButton"
-      style="margin-top:15px"
-    >
-      Сохранить
-    </button>
-
-  </div>
-</div>
-
-
-<!-- ФАКТИЧЕСКАЯ ВЫПЛАТА -->
-
-<div class="overlay" id="paymentFactOverlay">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Фактическая выплата</div>
-      <button class="close" id="closePaymentFactButton">×</button>
-    </div>
-    <div class="field-label">Тип выплаты</div>
-    <select id="paymentFactType" class="select">
-      <option value="salary">Основная зарплата</option>
-      <option value="advance">Аванс</option>
-    </select>
-    <div class="field-label" style="margin-top:12px">Дата выплаты</div>
-    <input id="paymentFactDate" class="text-input" type="date">
-    <div class="field-label" style="margin-top:12px">Сколько реально пришло</div>
-    <input id="paymentFactAmount" class="amount" type="number" inputmode="decimal" placeholder="0 ₽">
-    <button class="primary" id="savePaymentFactButton" style="margin-top:15px">Сохранить выплату</button>
-  </div>
-</div>
-
-
 <!-- ПЕРЕВОД -->
 
 <div class="overlay" id="transferOverlay">
@@ -1577,8 +1479,9 @@ const GOOGLE_SYNC_URL=
   "https://script.google.com/macros/s/AKfycbyzPDsAXBCE58pYtFfAswCpzsyjG0o2lWG6q9j_QxHx11AwMyvma1H_d8JGyeCwiV13/exec";
 
 
-let salary=114000;
-let advance=26000;
+// Старые финансовые настройки оставлены только для миграции старых данных.
+let salary=0;
+let advance=0;
 let advanceDate=null;
 let mainSalaryDate=15;
 let savingsPercent=20;
@@ -1976,6 +1879,8 @@ function saveBudgetHistorySnapshot(){
 }
 
 function renderBudgetHistory(){
+  if(typeof budgetHistoryYear!=="undefined" && budgetHistoryYear)
+    budgetHistoryYear.textContent=String(budgetYear);
   saveBudgetHistorySnapshot();
   const h=readBudgetHistory();
   const keys=Object.keys(h).filter(k=>String(k).startsWith(String(budgetYear)+"-")).sort();
@@ -2011,52 +1916,37 @@ function renderBudgetHistory(){
 
 
 
+function actualSalaryIncomeForCurrentMonth(){
+  return transactions
+    .filter(x=>x.type==="income" && normalizeIncomeCategory(x)==="salary")
+    .reduce((s,x)=>s+Math.max(0,Number(x.amount)||0),0);
+}
+
 function updateFinance(){
+  const monthlyIncome=actualSalaryIncomeForCurrentMonth();
 
-  salaryDisplay.textContent=
-    money(salary);
+  // Эти элементы больше не являются настройками, но могут существовать
+  // в старых сохранённых DOM-версиях. Заполняем их безопасно.
+  if(typeof salaryDisplay!=="undefined" && salaryDisplay)
+    salaryDisplay.textContent=money(monthlyIncome);
+  if(typeof advanceDisplay!=="undefined" && advanceDisplay)
+    advanceDisplay.textContent="—";
+  if(typeof advanceDateDisplay!=="undefined" && advanceDateDisplay)
+    advanceDateDisplay.textContent="—";
+  if(typeof mainSalaryDisplay!=="undefined" && mainSalaryDisplay)
+    mainSalaryDisplay.textContent="—";
+  if(typeof mainSalaryDateDisplay!=="undefined" && mainSalaryDateDisplay)
+    mainSalaryDateDisplay.textContent="—";
 
-  advanceDisplay.textContent=
-    money(advance);
+  if(typeof savingsPercentDisplay!=="undefined" && savingsPercentDisplay)
+    savingsPercentDisplay.textContent=savingsPercent+"%";
 
-  advanceDateDisplay.textContent=
-    advanceDate
-      ?advanceDate+" числа"
-      :"не указана";
-
-  mainSalaryDisplay.textContent=
-    money(salary);
-
-  mainSalaryDateDisplay.textContent=
-    mainSalaryDate+" числа";
-
-  savingsPercentDisplay.textContent=
-    savingsPercent+"%";
-
-  const monthlyIncome=
-    Math.max(0,Number(salary||0)) +
-    Math.max(0,Number(advance||0));
-
-  budgetSalary.textContent=
-    money(monthlyIncome);
-
-  budgetSavings.textContent=
-    money(
-      monthlyIncome*savingsPercent/100
-    );
-
-  budgetTotal.textContent=
-    money(budget());
-
-  budgetAvailable.textContent=
-    money(
-      Math.max(
-        0,
-        salary-
-        budget()-
-        salary*savingsPercent/100
-      )
-    );
+  budgetSalary.textContent=money(monthlyIncome);
+  budgetSavings.textContent=money(monthlyIncome*savingsPercent/100);
+  budgetTotal.textContent=money(budget());
+  budgetAvailable.textContent=money(
+    Math.max(0,spendableBalance()-budget())
+  );
 }
 
 
@@ -2540,11 +2430,15 @@ function renderGoals(){
 
 function normalizeIncomeCategory(t){
   if(!t || t.type!=="income") return "";
-  if(t.incomeCategory==="salary" || t.incomeCategory==="advance" || t.incomeCategory==="other")
-    return t.incomeCategory;
+  // В новой логике любая фактическая выплата, относящаяся к зарплате,
+  // имеет одну категорию — «Зарплата». Старые «авансы» считаем зарплатой,
+  // чтобы не потерять уже внесённые операции.
+  if(t.incomeCategory==="salary") return "salary";
+  if(t.incomeCategory==="advance") return "salary";
+  if(t.incomeCategory==="other") return "other";
   const name=String(t.name||"").trim().toLowerCase();
-  if(name==="зарплата" || name.includes("зарплат")) return "salary";
-  if(name==="аванс" || name.includes("аванс")) return "advance";
+  if(name==="зарплата" || name.includes("зарплат") || name==="аванс" || name.includes("аванс"))
+    return "salary";
   return "other";
 }
 
@@ -2556,156 +2450,138 @@ function getTransactionsForMonth(year,month){
     :[];
 }
 
-function actualSalaryPayment(){
-  const now=new Date();
-  const todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-  const current=transactions
-    .filter(x=>x.type==="income" && normalizeIncomeCategory(x)==="salary" && x.date)
-    .map(x=>({...x,dateObj:new Date(x.date+"T00:00:00")}))
-    .filter(x=>!Number.isNaN(x.dateObj.getTime()) && x.dateObj<=todayStart)
-    .sort((a,b)=>b.dateObj-a.dateObj);
-
-  if(current.length) return current[0];
-
-  return null;
-}
-
-function effectiveSalaryAmount(){
-  const actual=actualSalaryPayment();
-  return actual
-    ?Math.max(0,Number(actual.amount)||0)
-    :Math.max(0,Number(salary)||0);
-}
-
-function effectiveMonthlyIncome(){
-  return Math.max(0,Number(advance)||0)+effectiveSalaryAmount();
-}
-
-function salaryBoundaryDate(){
-  const actual=actualSalaryPayment();
-  if(actual) return new Date(actual.date+"T00:00:00");
-
-  const now=new Date();
-  return new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    Math.min(31,Math.max(1,Number(mainSalaryDate)||15))
-  );
-}
-
-function paymentSchedule(){
-  const now=new Date();
-  const year=now.getFullYear();
-  const month=now.getMonth();
-  const schedule=[];
-  const addPayment=(date,amount,type)=>{
-    if(!(date instanceof Date) || Number.isNaN(date.getTime())) return;
-    schedule.push({date,amount:Math.max(0,Number(amount)||0),type});
-  };
-
-  const advanceAmount=Math.max(0,Number(advance)||0);
-  const mainSalaryAmount=effectiveSalaryAmount();
-  const salaryDate=salaryBoundaryDate();
-
-  if(Number.isFinite(Number(advanceDate)) && Number(advanceDate)>0){
-    addPayment(new Date(year,month,Math.min(31,Math.max(1,Number(advanceDate)))),advanceAmount,"advance");
+function salaryTransactions(){
+  // Берём фактические операции «Зарплата» из текущего месяца,
+  // а также соседних месяцев — это нужно, чтобы определить интервал выплат.
+  const months=[];
+  const base=new Date();
+  for(let offset=-6;offset<=2;offset++){
+    const d=new Date(base.getFullYear(),base.getMonth()+offset,1);
+    months.push(...getTransactionsForMonth(d.getFullYear(),d.getMonth()));
   }
 
-  addPayment(salaryDate,mainSalaryAmount,"salary");
-
-  return schedule.sort((a,b)=>a.date-b.date);
+  return months
+    .filter(x=>x.type==="income" && normalizeIncomeCategory(x)==="salary" && x.date)
+    .map(x=>({...x,dateObj:new Date(x.date+"T00:00:00")}))
+    .filter(x=>!Number.isNaN(x.dateObj.getTime()) && Number(x.amount||0)>0)
+    .sort((a,b)=>a.dateObj-b.dateObj);
 }
 
-function paymentFactKey(date,type){
-  return `${date.toISOString().slice(0,10)}|${type}`;
+function salaryHistory(){
+  const unique=new Map();
+  salaryTransactions().forEach(x=>{
+    const key=x.date+"|"+String(x.id||"");
+    unique.set(key,x);
+  });
+  return [...unique.values()].sort((a,b)=>a.dateObj-b.dateObj);
 }
 
-function paymentAmount(payment){
-  if(!payment || !payment.date)
-    return Number(payment?.amount||0);
-
-  const fact=paymentFacts[paymentFactKey(payment.date,payment.type)];
-
-  return fact && Number.isFinite(Number(fact.amount))
-    ? Math.max(0,Number(fact.amount))
-    : Math.max(0,Number(payment.amount||0));
+function median(values){
+  if(!values.length) return 0;
+  const a=values.slice().sort((x,y)=>x-y);
+  const mid=Math.floor(a.length/2);
+  return a.length%2 ? a[mid] : (a[mid-1]+a[mid])/2;
 }
 
-function monthPaymentSchedule(offset=0){
-  const base=new Date();
-  const year=base.getFullYear();
-  const month=base.getMonth()+offset;
-  const result=[];
+function salaryIntervalDays(){
+  const history=salaryHistory();
+  if(history.length<2) return null;
 
-  const add=(date,amount,type)=>{
-    if(!(date instanceof Date) || Number.isNaN(date.getTime())) return;
-    result.push({date,amount:Math.max(0,Number(amount)||0),type});
-  };
+  const diffs=[];
+  for(let i=1;i<history.length;i++){
+    const days=Math.round((history[i].dateObj-history[i-1].dateObj)/86400000);
+    // Реалистичные интервалы выплат: от 7 до 45 дней.
+    if(days>=7 && days<=45) diffs.push(days);
+  }
 
-  const adv=Math.max(0,Number(advance)||0);
-  const actual=actualSalaryPayment();
-  const main=actual && actual.dateObj
-    ?Math.max(0,Number(actual.amount)||0)
-    :Math.max(0,Number(salary||0));
-
-  if(Number(advanceDate)>0)
-    add(new Date(year,month,Math.min(31,Math.max(1,Number(advanceDate)))),adv,"advance");
-
-  const salaryDate=offset===0 && actual
-    ?actual.dateObj
-    :new Date(year,month,Math.min(31,Math.max(1,Number(mainSalaryDate)||15)));
-
-  add(salaryDate,main,"salary");
-
-  return result.sort((a,b)=>a.date-b.date);
+  return diffs.length ? Math.round(median(diffs)) : null;
 }
 
-function paymentPeriodInfo(){
+function salaryPeriodInfo(){
   const now=new Date();
   const todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-  const current=monthPaymentSchedule(0);
-  const previousMonth=monthPaymentSchedule(-1);
-  const nextMonth=monthPaymentSchedule(1);
+  const history=salaryHistory();
 
-  let previous=current.filter(p=>p.date<=todayStart).sort((a,b)=>b.date-a.date)[0];
-  let next=current.filter(p=>p.date>todayStart).sort((a,b)=>a.date-b.date)[0];
+  const previous=history
+    .filter(x=>x.dateObj<=todayStart)
+    .sort((a,b)=>b.dateObj-a.dateObj)[0] || null;
 
-  if(!previous) previous=previousMonth[previousMonth.length-1]||null;
-  if(!next) next=nextMonth[0]||null;
+  if(!previous){
+    return {
+      previous:null,
+      next:null,
+      periodStart:todayStart,
+      periodEnd:null,
+      days:null,
+      intervalDays:salaryIntervalDays()
+    };
+  }
 
-  const periodStart=previous
-    ?new Date(previous.date.getFullYear(),previous.date.getMonth(),previous.date.getDate())
-    :todayStart;
-  const periodEnd=next
-    ?new Date(next.date.getFullYear(),next.date.getMonth(),next.date.getDate())
-    :todayStart;
-  const days=Math.max(1,Math.ceil((periodEnd-todayStart)/86400000));
+  let interval=salaryIntervalDays();
 
-  return {previous,next,periodStart,periodEnd,days};
+  // Если пока есть только одна фактическая выплата, используем её
+  // как месячную опорную дату. После появления второй выплаты приложение
+  // перейдёт на реальный интервал между выплатами.
+  if(!interval && history.length===1)
+    interval=30;
+
+  // Если есть история выплат, следующую дату определяем по фактическому
+  // интервалу между зарплатами. Никаких ручных дат выплат больше не нужно.
+  let next=null;
+  if(interval){
+    const nextDate=new Date(previous.dateObj);
+    nextDate.setDate(nextDate.getDate()+interval);
+
+    while(nextDate<=todayStart)
+      nextDate.setDate(nextDate.getDate()+interval);
+
+    next={
+      date:nextDate,
+      dateObj:nextDate,
+      amount:0,
+      type:"salary",
+      inferred:true
+    };
+  }
+
+  const days=next
+    ?Math.max(1,Math.ceil((next.dateObj-todayStart)/86400000))
+    :null;
+
+  return {
+    previous,
+    next,
+    periodStart:new Date(previous.dateObj),
+    periodEnd:next ? new Date(next.dateObj) : null,
+    days,
+    intervalDays:interval
+  };
 }
 
-function monthlySpendCapacity(){
-  const incomeAfterSavings=Math.max(
-    0,
-    effectiveMonthlyIncome()*(1-savingsPercent/100)
-  );
-  const categoryPlan=Math.max(0,budget());
-  return Math.min(categoryPlan,incomeAfterSavings);
+function spendableBalance(){
+  return accounts
+    .filter(a=>a.type!=="credit")
+    .reduce((s,a)=>s+Number(a.balance||0),0);
+}
+
+function remainingBudget(){
+  return Math.max(0,budget()-spent());
 }
 
 function periodDailyLimit(){
-  const info=paymentPeriodInfo();
-  const monthPayments=monthPaymentSchedule(0);
-  const totalPaymentIncome=monthPayments.reduce((s,p)=>s+paymentAmount(p),0);
-  if(totalPaymentIncome<=0) return 0;
+  const info=salaryPeriodInfo();
+  const realMoney=Math.max(0,spendableBalance());
+  const remaining=remainingBudget();
 
-  const currentPayment=info.previous;
-  const currentAmount=currentPayment ? paymentAmount(currentPayment) : 0;
-  const monthlyCapacity=monthlySpendCapacity();
-  const periodCapacity=monthlyCapacity*(currentAmount/totalPaymentIncome);
-  const spentInPeriod=periodExpenseTotal(info.periodStart,info.periodEnd);
-  const remainingPeriod=Math.max(0,periodCapacity-spentInPeriod);
-  return remainingPeriod/info.days;
+  // Без подтверждённой истории двух выплат мы не знаем,
+  // сколько дней осталось до следующей выплаты.
+  if(!info.next || !info.days)
+    return 0;
+
+  const byCash=realMoney/info.days;
+  const byBudget=remaining/info.days;
+
+  return Math.max(0,Math.min(byCash,byBudget));
 }
 
 function home(){
@@ -2759,22 +2635,21 @@ function home(){
     )+"%";
 
 
-  const period=
-    paymentPeriodInfo();
+  const period=salaryPeriodInfo();
 
-  const paymentName=
-    period.next && period.next.type==="advance"
-      ?"аванса"
-      :"зарплаты";
-
-  dailyDescription.textContent=
-    `До ${paymentName}: ${period.days} ${
-      period.days===1
-        ?"день"
-        :period.days<5
-          ?"дня"
-          :"дней"
-    } · с учетом ${savingsPercent}% накоплений`;
+  if(period.next && period.days){
+    const dateText=period.next.dateObj.toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
+    dailyDescription.textContent=
+      `До следующей зарплаты: ${period.days} ${
+        period.days===1 ? "день" : period.days<5 ? "дня" : "дней"
+      } · ориентировочно ${dateText}`;
+  }else if(period.previous){
+    dailyDescription.textContent=
+      "Нужна ещё одна фактическая выплата «Зарплата», чтобы определить следующий период";
+  }else{
+    dailyDescription.textContent=
+      "Добавь фактическую выплату с категорией «Зарплата» — начну считать прогноз";
+  }
 
   updateFinance();
 }
@@ -2891,6 +2766,7 @@ function deleteTransaction(index){
   transactions.splice(index,1);
   save(AK,accounts);
   save(TY,transactions);
+  scheduleAutoSync();
   close("expenseOverlay");
   editingTransactionIndex=null;
   renderAccounts();
@@ -3011,79 +2887,6 @@ function calc(){
 }
 
 
-function openPaymentFact(){
-  paymentFactDate.value=today();
-  paymentFactType.value="salary";
-  paymentFactAmount.value="";
-  open("paymentFactOverlay");
-}
-
-function savePaymentFact(){
-  const dateValue=paymentFactDate.value;
-  const type=paymentFactType.value;
-  const amount=Math.max(0,Number(paymentFactAmount.value||0));
-  if(!dateValue || !amount){
-    alert("Укажи дату и фактическую сумму выплаты.");
-    return;
-  }
-  const date=new Date(dateValue+"T00:00:00");
-  paymentFacts[paymentFactKey(date,type)]={date:dateValue,type,amount};
-  save("babki_payment_facts_v1",paymentFacts);
-  close("paymentFactOverlay");
-  home();
-}
-
-function editFin(t){
-
-  financeType=t;
-
-  financeTitle.textContent=
-    t==="salary"
-      ?"Общий доход"
-      :"Аванс";
-
-  financeLabel.textContent=
-    t==="salary"
-      ?"Сумма общего дохода"
-      :"Сумма аванса";
-
-  financeInput.value=
-    t==="salary"
-      ?salary
-      :advance;
-
-  open("financeOverlay");
-
-  setTimeout(
-    ()=>financeInput.select(),
-    80
-  );
-}
-
-
-function editDate(t){
-
-  dateType=t;
-
-  dateTitle.textContent=
-    t==="advance"
-      ?"Дата аванса"
-      :"Дата основной зарплаты";
-
-  dateInput.value=
-    t==="advance"
-      ?(advanceDate||"")
-      :(mainSalaryDate||15);
-
-  open("dateOverlay");
-
-  setTimeout(
-    ()=>dateInput.select(),
-    80
-  );
-}
-
-
 /* =========================
    GOOGLE SYNC
    =========================
@@ -3122,6 +2925,24 @@ function clearSettingsDirty(){
   localStorage.removeItem(SETTINGS_DIRTY_KEY);
 }
 
+let autoSyncTimer=null;
+let autoSyncBusy=false;
+
+function scheduleAutoSync(){
+  if(autoSyncTimer) clearTimeout(autoSyncTimer);
+  autoSyncTimer=setTimeout(async()=>{
+    if(autoSyncBusy) return;
+    autoSyncBusy=true;
+    try{
+      await googlePush();
+    }catch(e){
+      console.warn("Babki auto sync:",e);
+    }finally{
+      autoSyncBusy=false;
+    }
+  },1200);
+}
+
 
 function localSyncData(){
 
@@ -3154,16 +2975,8 @@ function localSyncData(){
         :[],
 
     settings:{
-      salary:Number(salary)||0,
-      advance:Number(advance)||0,
-      advanceDate:
-        advanceDate===null
-          ?null
-          :Number(advanceDate)||null,
-      mainSalaryDate:
-        Number(mainSalaryDate)||15,
-      savingsPercent:
-        Number(savingsPercent)||0
+      // Сохраняем только действительно используемую настройку.
+      savingsPercent:Number(savingsPercent)||0
     }
 
   };
@@ -3365,30 +3178,7 @@ function normalizeSyncData(data){
 
 
   const normalizedSettings={
-
-    salary:Number(
-      s.salary||0
-    ),
-
-    advance:Number(
-      s.advance||0
-    ),
-
-    advanceDate:
-      s.advanceDate===null ||
-      s.advanceDate==="" ||
-      typeof s.advanceDate==="undefined"
-        ?null
-        :Number(s.advanceDate)||null,
-
-    mainSalaryDate:Number(
-      s.mainSalaryDate||15
-    ),
-
-    savingsPercent:Number(
-      s.savingsPercent||0
-    )
-
+    savingsPercent:Number(s.savingsPercent||0)
   };
 
 
@@ -3938,20 +3728,6 @@ function applyGoogleData(data){
       normalized.settings;
 
 
-    salary=
-      Number(s.salary)||0;
-
-    advance=
-      Number(s.advance)||0;
-
-    advanceDate=
-      s.advanceDate===null
-        ?null
-        :Number(s.advanceDate)||null;
-
-    mainSalaryDate=
-      Number(s.mainSalaryDate)||15;
-
     savingsPercent=
       Math.min(
         100,
@@ -3961,22 +3737,7 @@ function applyGoogleData(data){
         )
       );
 
-
-    save(
-      FK,
-      {
-        salary,
-        advance,
-        advanceDate,
-        mainSalaryDate
-      }
-    );
-
-
-    save(
-      SK,
-      savingsPercent
-    );
+    save(SK,savingsPercent);
 
   }
 
@@ -4078,27 +3839,6 @@ async function syncWithGoogle(){
           :{}
 
     };
-
-    /* Если финансовые настройки только что изменили на этом устройстве,
-       именно они считаются актуальными. Это не дает старому авансу из
-       Google перезаписать новое значение при синхронизации. */
-    const settingsDirty=Boolean(read(SETTINGS_DIRTY_KEY,null));
-    if(settingsDirty){
-      setSyncStatus("Сохраняю измененные финансовые настройки в Google…");
-      await googlePush();
-      try{
-        const verify=await googleLoad();
-        if(sameSyncData(localSyncData(),verify)){
-          clearSettingsDirty();
-          setSyncStatus("Аванс и другие финансовые настройки сохранены ✓","success");
-        }else{
-          setSyncStatus("Настройки отправлены, но Google пока не подтвердил новое значение.","error");
-        }
-      }catch(e){
-        setSyncStatus("Настройки отправлены в Google ✓","success");
-      }
-      return;
-    }
 
 
     const googleIsEmpty=
@@ -4563,6 +4303,10 @@ quickExpenseButton.addEventListener("click", () => {
 });
 
 
+quickTransferButton.addEventListener("click", () => {
+  prepareTransfer();
+});
+
 quickIncomeButton.addEventListener("click", () => {
 
   editingTransactionIndex=null;
@@ -4604,7 +4348,7 @@ incomeCategory.addEventListener("change", () => {
   const other=incomeCategory.value==="other";
   incomeNameLabel.style.display=other ? "block" : "none";
   incomeName.style.display=other ? "block" : "none";
-  if(!other) incomeName.value=incomeCategory.value==="salary" ? "Зарплата" : "Аванс";
+  if(!other) incomeName.value=incomeCategory.value==="salary" ? "Зарплата" : "";
 });
 
 
@@ -4675,7 +4419,7 @@ saveExpenseButton.addEventListener("click", () => {
   if(isIncome){
     accountIndex=Number(incomeAccount.value);
     incomeCategoryValue=incomeCategory.value || "other";
-    name=incomeCategoryValue==="salary" ? "Зарплата" : incomeCategoryValue==="advance" ? "Аванс" : (incomeName.value.trim() || "Доход");
+    name=incomeCategoryValue==="salary" ? "Зарплата" : (incomeName.value.trim() || "Доход");
   }else{
     category=categorySelect.value;
     accountIndex=Number(expenseAccount.value);
@@ -4716,6 +4460,7 @@ saveExpenseButton.addEventListener("click", () => {
     transactions[editingTransactionIndex]=updated;
     save(AK,accounts);
     save(TY,transactions);
+    scheduleAutoSync();
     close("expenseOverlay");
     editingTransactionIndex=null;
     deleteOperationButton.style.display="none";
@@ -4749,6 +4494,7 @@ saveExpenseButton.addEventListener("click", () => {
   transactions.push(transaction);
   save(AK,accounts);
   save(TY,transactions);
+  scheduleAutoSync();
   close("expenseOverlay");
   renderAccounts();
   renderDebts();
@@ -4809,6 +4555,7 @@ saveCategoryLimitButton.addEventListener(
       );
 
     saveCategories();
+    scheduleAutoSync();
 
     close("categoryEditOverlay");
 
@@ -4839,6 +4586,7 @@ clearAllLimitsButton.addEventListener(
     });
 
     saveCategories();
+    scheduleAutoSync();
 
     renderCats();
     home();
@@ -5006,6 +4754,7 @@ saveAccountButton.addEventListener(
       AK,
       accounts
     );
+    scheduleAutoSync();
 
 
     close("accountOverlay");
@@ -5366,193 +5115,12 @@ saveTransferButton.addEventListener(
     accounts[to].balance += value;
 
     save(AK,accounts);
+    scheduleAutoSync();
 
     close("transferOverlay");
 
     renderAccounts();
     renderDebts();
-    home();
-
-  }
-);
-
-
-/* ФАКТИЧЕСКИЕ ВЫПЛАТЫ */
-
-addPaymentFactButton.addEventListener("click",openPaymentFact);
-closePaymentFactButton.addEventListener("click",()=>close("paymentFactOverlay"));
-savePaymentFactButton.addEventListener("click",savePaymentFact);
-
-
-/* ФИНАНСЫ */
-
-editSalaryButton.addEventListener(
-  "click",
-  () => editFin("salary")
-);
-
-editAdvanceButton.addEventListener(
-  "click",
-  () => editFin("advance")
-);
-
-
-closeFinanceButton.addEventListener(
-  "click",
-  () => close("financeOverlay")
-);
-
-
-saveFinanceButton.addEventListener(
-  "click",
-  () => {
-
-    const value =
-      Math.max(
-        0,
-        Number(financeInput.value || 0)
-      );
-
-    if(financeType === "salary")
-      salary = value;
-
-    if(financeType === "advance")
-      advance = value;
-
-
-    save(
-      FK,
-      {
-        salary,
-        advance,
-        advanceDate,
-        mainSalaryDate
-      }
-    );
-    markSettingsDirty();
-
-
-    close("financeOverlay");
-
-    updateFinance();
-    home();
-
-  }
-);
-
-
-/* ДАТЫ */
-
-editAdvanceDateButton.addEventListener(
-  "click",
-  () => editDate("advance")
-);
-
-
-editMainSalaryDateButton.addEventListener(
-  "click",
-  () => editDate("main")
-);
-
-
-closeDateButton.addEventListener(
-  "click",
-  () => close("dateOverlay")
-);
-
-
-saveDateButton.addEventListener(
-  "click",
-  () => {
-
-    let value =
-      Number(dateInput.value || 0);
-
-    value =
-      Math.min(
-        31,
-        Math.max(1,value)
-      );
-
-    if(dateType === "advance")
-      advanceDate = value;
-
-    if(dateType === "main")
-      mainSalaryDate = value;
-
-
-    save(
-      FK,
-      {
-        salary,
-        advance,
-        advanceDate,
-        mainSalaryDate
-      }
-    );
-    markSettingsDirty();
-
-
-    close("dateOverlay");
-
-    updateFinance();
-    home();
-
-  }
-);
-
-
-/* НАКОПЛЕНИЯ */
-
-editSavingsButton.addEventListener(
-  "click",
-  () => {
-
-    financeType =
-      "savings";
-
-    financeTitle.textContent =
-      "Цель накоплений";
-
-    financeLabel.textContent =
-      "Процент от общего дохода";
-
-    financeInput.value =
-      savingsPercent;
-
-    open("financeOverlay");
-
-  }
-);
-
-
-/* расширяем сохранение финансовых настроек */
-
-saveFinanceButton.addEventListener(
-  "click",
-  () => {
-
-    if(financeType !== "savings")
-      return;
-
-    savingsPercent =
-      Math.min(
-        100,
-        Math.max(
-          0,
-          Number(financeInput.value || 0)
-        )
-      );
-
-    save(
-      SK,
-      savingsPercent
-    );
-    markSettingsDirty();
-
-    close("financeOverlay");
-
-    updateFinance();
     home();
 
   }
@@ -5630,6 +5198,7 @@ goalsList.addEventListener("click", e => {
     goals.splice(i,1);
 
     save(GK,goals);
+    scheduleAutoSync();
 
     renderGoals();
 
@@ -5677,6 +5246,7 @@ saveGoalButton.addEventListener(
 
 
     save(GK,goals);
+    scheduleAutoSync();
 
     close("goalOverlay");
 
@@ -5751,6 +5321,7 @@ saveDebtButton.addEventListener(
       DK,
       debts
     );
+    scheduleAutoSync();
 
     close("debtOverlay");
     renderDebts();
@@ -5836,6 +5407,7 @@ debtsList.addEventListener(
         DK,
         debts
       );
+      scheduleAutoSync();
 
       renderDebts();
     }
@@ -5877,7 +5449,7 @@ function setupCalculators(){
     const button=document.createElement("button");
     button.type="button";
     button.className="calc-button";
-    button.textContent="∑";
+    button.textContent="▦";
     button.title="Открыть калькулятор";
     button.addEventListener("click",()=>openCalculator(input));
     wrap.appendChild(button);
