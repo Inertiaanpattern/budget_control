@@ -1,0 +1,5605 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Бабки в шапку</title>
+<link rel="icon" type="image/png" href="IMG_5931.png">
+<link rel="apple-touch-icon" href="IMG_5931.png">
+
+<style>
+:root{
+  --bg:#f8f2f1;
+  --card:#fffafa;
+  --text:#292526;
+  --muted:#8c8181;
+  --pink:#c98f9d;
+  --pl:#f1dfe3;
+  --pp:#f8ecee;
+  --danger:#b85f68;
+  --border:#eadedf;
+  --dark:#302b2c
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Arial,sans-serif
+}
+
+/* Pull-to-refresh */
+.refresh-indicator{
+  position:fixed;
+  left:50%;
+  top:8px;
+  z-index:50;
+  width:38px;
+  height:38px;
+  margin-left:-19px;
+  border-radius:50%;
+  background:var(--card);
+  border:1px solid var(--border);
+  box-shadow:0 6px 20px #00000014;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--pink);
+  font-size:20px;
+  font-weight:800;
+  opacity:0;
+  transform:translateY(-58px) scale(.8);
+  pointer-events:none;
+  transition:opacity .15s,transform .15s;
+}
+.refresh-indicator.visible{
+  opacity:1;
+}
+.refresh-indicator.ready{
+  transform:translateY(8px) scale(1);
+}
+.refresh-indicator.refreshing{
+  transform:translateY(8px) scale(1);
+}
+.refresh-indicator.refreshing span{
+  animation:refresh-spin .7s linear infinite;
+}
+@keyframes refresh-spin{
+  to{transform:rotate(360deg)}
+}
+
+button,input,select,textarea{
+  font:inherit
+}
+
+button{
+  appearance:none;
+  cursor:pointer
+}
+
+.app{
+  max-width:480px;
+  margin:auto;
+  padding:18px 16px 105px
+}
+
+.header{
+  margin-bottom:18px
+}
+
+.header-title{
+  font-size:27px;
+  font-weight:800
+}
+
+.month{
+  color:var(--muted);
+  font-size:14px
+}
+
+.hero{
+  background:var(--dark);
+  color:#fff;
+  border-radius:28px;
+  padding:24px;
+  margin-bottom:14px
+}
+
+.hero-label{
+  font-size:14px;
+  opacity:.7
+}
+
+.hero-number{
+  font-size:43px;
+  font-weight:800;
+  margin-top:8px
+}
+
+.hero-sub{
+  margin-top:8px;
+  font-size:14px;
+  opacity:.72
+}
+
+.progress{
+  height:7px;
+  background:#ffffff24;
+  border-radius:10px;
+  margin-top:20px
+}
+
+.progress-inner{
+  height:100%;
+  background:#e5b9c3;
+  border-radius:10px
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:23px;
+  padding:19px;
+  margin-bottom:12px
+}
+
+.card-title{
+  font-size:15px;
+  font-weight:750;
+  margin-bottom:14px
+}
+
+.clickable-card{
+  cursor:pointer;
+  transition:transform .15s, box-shadow .15s, background .15s
+}
+.clickable-card:active{
+  transform:scale(.985);
+  box-shadow:0 5px 18px #00000010
+}
+.card-hint{
+  float:right;
+  color:var(--pink);
+  font-size:11px;
+  font-weight:700
+}
+
+.calculator-result{
+  margin-top:10px;
+  padding:12px 14px;
+  border-radius:14px;
+  background:var(--pp);
+  font-size:18px;
+  font-weight:800
+}
+
+.calc-wrap{
+  display:flex;
+  align-items:center;
+  gap:7px
+}
+.calc-wrap > input{
+  flex:1;
+  min-width:0
+}
+.calc-button{
+  flex:0 0 40px;
+  width:40px;
+  height:40px;
+  border:0;
+  border-radius:12px;
+  background:var(--pp);
+  color:#64484f;
+  font-size:18px;
+  font-weight:800
+}
+
+.calc-button svg{
+  width:20px;
+  height:20px;
+  display:block;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.7;
+  stroke-linecap:round;
+  stroke-linejoin:round
+}
+
+.calc-button .calc-screen{
+  fill:currentColor;
+  stroke:none;
+  opacity:.16
+}
+
+.history-filter.active{
+  background:var(--pink);
+  color:#fff
+}
+.history-date{
+  font-size:12px;
+  color:var(--muted);
+  margin:12px 0 5px
+}
+.history-row{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:11px 0;
+  border-bottom:1px solid var(--border)
+}
+.history-row:last-child{border-bottom:0}
+.history-main{flex:1;min-width:0}
+.history-name{font-size:14px;font-weight:700}
+.history-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.history-amount{font-weight:800;white-space:nowrap}
+.history-amount.income{color:#66856f}
+.history-amount.expense{color:var(--danger)}
+.history-edit{
+  width:32px;height:32px;border:0;border-radius:10px;background:var(--pp);color:#64484f;font-size:15px
+}
+.history-delete{
+  width:32px;height:32px;border:0;border-radius:10px;background:#f5dddd;color:var(--danger);font-size:15px
+}
+
+.stat-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:8px 0;
+  font-size:14px
+}
+
+.stat-row>span:first-child{
+  color:var(--muted)
+}
+
+.stat-value{
+  font-weight:750
+}
+
+.primary,
+.secondary{
+  width:100%;
+  border:0;
+  padding:15px;
+  border-radius:17px;
+  font-weight:750
+}
+
+.primary{
+  background:var(--pink);
+  color:#fff
+}
+
+.secondary{
+  background:var(--pl);
+  color:#64484f
+}
+
+.small-button{
+  border:0;
+  background:var(--pp);
+  color:#64484f;
+  width:34px;
+  height:34px;
+  border-radius:11px;
+  font-size:17px
+}
+
+.clear-limits-button{
+  width:100%;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--danger);
+  padding:13px;
+  border-radius:15px;
+  margin-bottom:12px
+}
+
+.section-heading{
+  font-size:21px;
+  font-weight:800;
+  margin:8px 0 14px
+}
+
+.section-heading-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:8px 0 14px
+}
+
+.section-heading-row .section-heading{
+  margin:0
+}
+
+.small-note{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.4;
+  margin-top:10px
+}
+
+.settings-group{
+  padding:4px 0 10px
+}
+
+.settings-group+.settings-group{
+  border-top:1px solid var(--border);
+  padding-top:12px
+}
+
+.settings-group-title{
+  font-size:12px;
+  font-weight:800;
+  color:var(--muted);
+  margin:4px 0 6px;
+  text-transform:uppercase;
+  letter-spacing:.04em
+}
+
+.screen{
+  display:none;
+  will-change:transform,opacity;
+}
+
+.screen.active{
+  display:block;
+}
+
+@keyframes babkiSwipeInLeft{
+  from{opacity:.35;transform:translate3d(22px,0,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+}
+
+@keyframes babkiSwipeInRight{
+  from{opacity:.35;transform:translate3d(-22px,0,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+}
+
+.screen.swipe-in-left{animation:babkiSwipeInLeft .24s cubic-bezier(.22,.61,.36,1)}
+.screen.swipe-in-right{animation:babkiSwipeInRight .24s cubic-bezier(.22,.61,.36,1)}
+
+
+.category-row,
+.account-row,
+.debt-row,
+.goal-row{
+  padding:13px 0;
+  border-bottom:1px solid var(--border)
+}
+
+.category-row:last-child,
+.account-row:last-child,
+.debt-row:last-child,
+.goal-row:last-child{
+  border:0
+}
+
+.category-top,
+.account-row,
+.debt-top,
+.goal-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px
+}
+
+.category-left,
+.account-left,
+.debt-left,
+.goal-left{
+  flex:1;
+  min-width:0
+}
+
+.category-name,
+.account-name,
+.debt-name,
+.goal-name{
+  font-size:14px;
+  font-weight:700
+}
+
+.category-limit{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:4px
+}
+
+.category-actions,
+.account-actions{
+  display:flex;
+  align-items:center;
+  gap:8px
+}
+
+.category-remaining,
+.account-balance{
+  font-weight:800
+}
+
+.negative,
+.danger{
+  color:var(--danger)
+}
+
+.category-meta{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:5px
+}
+
+.category-bar{
+  height:5px;
+  background:#eee4e4;
+  border-radius:10px;
+  margin-top:8px
+}
+
+.category-bar-inner{
+  height:100%;
+  background:var(--pink);
+  border-radius:10px
+}
+
+.total-card{
+  background:var(--dark);
+  color:#fff
+}
+
+.total-card .stat-row>span:first-child{
+  color:#ffffffa6
+}
+
+.account-main{
+  display:flex;
+  align-items:center;
+  gap:12px
+}
+
+.bank-logo{
+  width:42px;
+  height:42px;
+  border-radius:13px;
+  object-fit:cover;
+  background:#eee
+}
+
+/* Весь счёт можно зажать и перетащить для перевода */
+.account-row{
+  position:relative;
+  touch-action:pan-y;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+  cursor:grab;
+  transition:background .18s, box-shadow .18s, transform .18s, opacity .18s;
+}
+.account-row:active{cursor:grabbing}
+.account-row.transfer-source{
+  background:var(--pp);
+  border-radius:16px;
+  padding-left:10px;
+  padding-right:10px;
+  margin-left:-10px;
+  margin-right:-10px;
+  box-shadow:0 0 0 2px var(--pink), 0 8px 22px #00000014;
+}
+.account-row.transfer-source::after{
+  content:"⇄  Перетащите на другой счёт";
+  position:absolute;
+  right:8px;
+  top:-10px;
+  padding:5px 9px;
+  border-radius:10px;
+  background:var(--dark);
+  color:#fff;
+  font-size:10px;
+  font-weight:700;
+  pointer-events:none;
+  white-space:nowrap;
+  box-shadow:0 4px 12px #0002;
+}
+.account-row.transfer-target{
+  background:var(--pp);
+  border-radius:16px;
+  padding-left:10px;
+  padding-right:10px;
+  margin-left:-10px;
+  margin-right:-10px;
+  box-shadow:0 0 0 2px var(--pink);
+}
+.transfer-ghost{
+  position:fixed;
+  z-index:9999;
+  pointer-events:none;
+  transform:translate(-50%,-50%) scale(.96);
+  opacity:.94;
+  box-shadow:0 12px 30px #0003;
+  background:#fff;
+  border-radius:16px;
+  padding:0 10px;
+  min-width:260px;
+  max-width:calc(100vw - 30px);
+}
+.transfer-ghost .small-button{display:none}
+.transfer-ghost .account-row{padding:13px 0 !important; margin:0 !important; border:0 !important; box-shadow:none !important; background:transparent !important}
+.transfer-ghost::after{display:none}
+
+.bank-fallback{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  background:var(--pp);
+  color:#64484f
+}
+
+.account-type{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:3px
+}
+
+.chip{
+  display:inline-block;
+  padding:5px 9px;
+  border-radius:10px;
+  background:var(--pp);
+  font-size:11px;
+  color:#64484f
+}
+
+.chip.danger{
+  background:#f5dddd
+}
+
+.debt-amount,
+.goal-amount{
+  font-weight:800
+}
+
+.debt-meta,
+.goal-meta{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:5px
+}
+
+.goal-progress{
+  height:6px;
+  background:#eee4e4;
+  border-radius:10px;
+  margin-top:9px
+}
+
+.goal-progress-inner{
+  height:100%;
+  background:var(--pink);
+  border-radius:10px
+}
+
+.overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#28232461;
+  z-index:20;
+  align-items:flex-end;
+  justify-content:center
+}
+
+.overlay.open{
+  display:flex
+}
+
+.modal{
+  width:100%;
+  max-width:480px;
+  background:#fffafa;
+  border-radius:28px 28px 0 0;
+  padding:20px 17px 30px;
+  max-height:92vh;
+  overflow:auto
+}
+
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px
+}
+
+.modal-title{
+  font-size:21px;
+  font-weight:800
+}
+
+.close{
+  width:34px;
+  height:34px;
+  border:0;
+  border-radius:50%;
+  background:var(--pp);
+  font-size:20px
+}
+
+.field-label{
+  color:var(--muted);
+  font-size:12px;
+  margin:14px 0 7px
+}
+
+.amount,
+.text-input,
+.select,
+.textarea{
+  width:100%;
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:15px;
+  padding:14px;
+  outline:0
+}
+
+.amount{
+  background:var(--pp);
+  border:0;
+  font-size:36px;
+  text-align:center;
+  font-weight:800;
+  margin-bottom:15px
+}
+
+.edit-value{
+  font-size:28px;
+  text-align:center
+}
+
+.category-info{
+  margin-top:12px;
+  background:var(--pp);
+  border-radius:17px;
+  padding:14px
+}
+
+.category-info-title{
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:7px
+}
+
+.category-info-main{
+  font-size:21px;
+  font-weight:800
+}
+
+.consequence{
+  margin-top:10px;
+  padding:13px;
+  border-radius:15px;
+  background:#fff;
+  border:1px solid var(--border);
+  font-size:13px
+}
+
+.modal-button{
+  margin-top:18px
+}
+
+.nav{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  background:#fffafaF0;
+  backdrop-filter:blur(15px);
+  border-top:1px solid var(--border);
+  z-index:10
+}
+
+.nav-inner{
+  max-width:480px;
+  margin:auto;
+  display:flex;
+  justify-content:space-around;
+  padding:9px 5px 11px
+}
+
+.nav button{
+  border:0;
+  background:none;
+  color:var(--muted);
+  font-size:10px;
+  padding:0 5px
+}
+
+.nav button.active{
+  color:var(--pink);
+  font-weight:800
+}
+
+.nav-icon{
+  font-size:20px;
+  display:block;
+  margin:0 auto 2px
+}
+
+.nav-date-icon{
+  width:21px;
+  height:21px;
+  box-sizing:border-box;
+  border:1.7px solid currentColor;
+  border-radius:5px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  overflow:hidden;
+}
+.nav-date-top{
+  position:absolute; top:0; left:0; right:0; height:5px;
+  border-bottom:1.4px solid currentColor;
+}
+.nav-date-top::before,.nav-date-top::after{
+  content:""; position:absolute; top:-2px; width:2px; height:5px;
+  border-radius:2px; background:currentColor;
+}
+.nav-date-top::before{left:5px}.nav-date-top::after{right:5px}
+.nav-date-number{
+  margin-top:5px; font-size:9px; line-height:1; font-weight:800; letter-spacing:-.2px
+}
+.nav-icon-svg svg{
+  width:21px; height:21px; display:block; margin:0 auto; fill:none;
+  stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round
+}
+
+.inline-button{
+  border:0;
+  background:var(--pp);
+  color:#64484f;
+  border-radius:12px;
+  padding:9px 11px;
+  font-size:12px;
+  font-weight:700
+}
+
+.danger-button{
+  border:0;
+  background:#f5dddd;
+  color:var(--danger);
+  border-radius:12px;
+  padding:9px 11px;
+  font-size:12px;
+  font-weight:700
+}
+
+.actions-row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px
+}
+
+.empty{
+  text-align:center;
+  color:var(--muted);
+  padding:18px 4px;
+  font-size:13px
+}
+
+.grid2{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px
+}
+
+.sync-status{
+  margin-top:10px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.4
+}
+
+.sync-status.success{
+  color:#66856f
+}
+
+.sync-status.error{
+  color:var(--danger)
+}
+
+.list-search{margin:0 0 12px;width:100%;box-sizing:border-box}
+.account-action-icons{justify-content:flex-end;margin-top:6px}
+.danger-icon{color:var(--danger);background:#f8e8e8}
+</style>
+</head>
+
+<body>
+
+<div class="refresh-indicator" id="refreshIndicator"><span>↻</span></div>
+
+<div class="app">
+
+<section id="home" class="screen active">
+  <div class="header">
+    <div class="month" id="currentMonthLabel"></div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-label">Сегодня можно потратить</div>
+    <div class="hero-number" id="dailyLimit">0 ₽</div>
+    <div class="hero-sub" id="dailyDescription">Учитываю реальные деньги и ближайшую выплату</div>
+    <div class="progress">
+      <div class="progress-inner" id="monthProgress"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Сегодня</div>
+    <div class="stat-row">
+      <span>Потрачено</span>
+      <span class="stat-value" id="todaySpent">0 ₽</span>
+    </div>
+    <div class="stat-row">
+      <span>Осталось сегодня</span>
+      <span class="stat-value" id="todayLeft">0 ₽</span>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <button class="primary" id="quickIncomeButton" aria-label="Добавить доход" title="Доход">＋</button>
+    <button class="secondary" id="quickExpenseButton" aria-label="Добавить расход" title="Расход">−</button>
+    <button class="secondary" id="quickTransferButton" aria-label="Перевод между счетами" title="Перевод">⇄</button>
+  </div>
+
+  <div style="height:18px"></div>
+
+  <div class="card clickable-card" id="monthlyHistoryCard">
+    <div class="card-title"><span id="currentMonthShortLabel"></span> <span class="card-hint">История операций →</span></div>
+    <div class="stat-row">
+      <span>План расходов</span>
+      <span class="stat-value" id="monthPlan">0 ₽</span>
+    </div>
+    <div class="stat-row">
+      <span>Потрачено</span>
+      <span class="stat-value" id="monthSpent">0 ₽</span>
+    </div>
+    <div class="stat-row">
+      <span>Осталось</span>
+      <span class="stat-value" id="monthLeft">0 ₽</span>
+    </div>
+  </div>
+</section>
+
+
+<section id="budget" class="screen">
+  <div class="section-heading">Бюджет</div>
+
+  <div class="card">
+    <div class="stat-row">
+      <span>Доход</span>
+      <span class="stat-value" id="budgetSalary">0 ₽</span>
+    </div>
+
+    <div class="stat-row">
+      <span>План расходов</span>
+      <span class="stat-value" id="budgetTotal">0 ₽</span>
+    </div>
+
+    <div class="stat-row">
+      <span>Цель накоплений</span>
+      <span class="stat-value" id="budgetSavings">0 ₽</span>
+    </div>
+
+    <div class="stat-row">
+      <span>Можно распоряжаться</span>
+      <span class="stat-value" id="budgetAvailable">0 ₽</span>
+    </div>
+  </div>
+
+  <div class="section-heading">Категории</div>
+
+  <button class="clear-limits-button" id="clearAllLimitsButton">
+    Стереть все лимиты
+  </button>
+
+  <div class="card" id="categoryList"></div>
+</section>
+
+
+<section id="accounts" class="screen">
+  <div class="section-heading">Счета</div>
+
+  <div class="card total-card">
+    <div class="stat-row">
+      <span>Общий баланс</span>
+      <span class="stat-value" id="accountsTotal">0 ₽</span>
+    </div>
+
+    <div class="stat-row">
+      <span>Доступно для трат</span>
+      <span class="stat-value" id="spendableTotal">0 ₽</span>
+    </div>
+  </div>
+
+  <input id="accountsSearch" class="text-input list-search" type="search" placeholder="Поиск счёта…" autocomplete="off">
+
+  <div class="card" id="accountsList"></div>
+
+  <button class="secondary" id="addAccountButton">
+    ＋ Добавить счёт
+  </button>
+
+  <div class="small-note">
+    Дебетовые карты и наличные входят в доступный баланс.
+    Кредитные карты — нет: их задолженность показывается отдельно.
+  </div>
+</section>
+
+
+<section id="debts" class="screen">
+  <div class="section-heading-row">
+    <div class="section-heading">Долги</div>
+    <button class="inline-button" id="addDebtButton">＋ Добавить долг</button>
+  </div>
+
+  <div class="card" id="debtsList"></div>
+</section>
+
+
+<section id="goals" class="screen">
+  <div class="section-heading-row">
+    <div class="section-heading">Цели</div>
+    <button class="inline-button" id="addGoalButton">＋ Добавить</button>
+  </div>
+
+  <div class="card" id="goalsList"></div>
+</section>
+
+
+<section id="budgetHistory" class="screen">
+  <div class="section-heading-row">
+    <div class="section-heading">История бюджета</div>
+    <button class="inline-button" id="backFromBudgetHistoryButton">← Назад</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Средний месячный лимит за <span id="budgetHistoryYear"></span></div>
+    <div class="stat-row">
+      <span>Средний план расходов</span>
+      <span class="stat-value" id="budgetYearAverage">0 ₽</span>
+    </div>
+    <div class="small-note" id="budgetHistoryNote"></div>
+  </div>
+
+  <div class="card" id="budgetHistoryList"></div>
+</section>
+
+
+<section id="history" class="screen">
+  <div class="section-heading-row">
+    <div class="section-heading" id="historyTitle">История операций</div>
+    <button class="inline-button" id="backFromHistoryButton">← Назад</button>
+  </div>
+
+  <div class="actions-row history-filters">
+    <button class="inline-button history-filter active" data-history-filter="all">Все</button>
+    <button class="inline-button history-filter" data-history-filter="expense">Расходы</button>
+    <button class="inline-button history-filter" data-history-filter="income">Поступления</button>
+  </div>
+
+  <input id="historySearch" class="text-input list-search" type="search" placeholder="Поиск в истории…" autocomplete="off">
+
+  <div class="card" id="historyList"></div>
+</section>
+
+
+<section id="settings" class="screen">
+  <div class="section-heading">Настройки</div>
+
+  <div class="card">
+
+    <div class="settings-group">
+      <div class="settings-group-title">Прогноз</div>
+      <div class="small-note" style="margin-top:0">
+        Выплаты для прогноза берутся только из фактических операций с категорией «Зарплата».
+        Суммы и даты не нужно вводить отдельно.
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Накопления</div>
+
+      <div class="stat-row">
+        <span>Цель накоплений</span>
+        <div class="category-actions">
+          <span class="stat-value" id="savingsPercentDisplay"></span>
+          <button class="small-button" id="editSavingsButton">✎</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <div class="card">
+    <div class="card-title">История бюджета</div>
+    <div class="small-note">Здесь отдельно сохраняются месячные лимиты и считается средний месячный лимит по сохраненным месяцам.</div>
+    <button class="secondary" id="openBudgetHistoryButton" style="margin-top:12px">Посмотреть прошлые месяцы</button>
+  </div>
+
+
+  <div class="card">
+    <div class="card-title">Синхронизация</div>
+
+    <button class="primary" id="syncButton">
+      ↻ Синхронизировать с Google
+    </button>
+
+    <div class="sync-status" id="syncStatus">
+      Синхронизируются все данные приложения.
+    </div>
+  </div>
+
+
+  <div class="card">
+    <div class="card-title">Что учитывает приложение</div>
+
+    <div class="small-note">
+      Дневной лимит смотрит на реальные деньги на дебетовых счетах
+      и количество дней до следующей выплаты.
+      Кредитные карты не увеличивают доступный баланс.
+      Долги и цели показываются отдельно, чтобы не путать их
+      с уже потраченными деньгами.
+    </div>
+  </div>
+</section>
+
+</div>
+
+
+<!-- РАСХОД / ДОХОД -->
+
+<div class="overlay" id="expenseOverlay">
+  <div class="modal">
+
+    <div class="modal-header">
+      <div class="modal-title" id="operationModalTitle">Расход</div>
+      <button class="close" id="closeExpenseButton">×</button>
+    </div>
+
+    <div class="field-label">Дата операции</div>
+    <input
+      id="operationDate"
+      class="text-input"
+      type="date"
+    >
+
+    <div id="incomeFields" style="display:none">
+
+      <input
+        id="incomeAmount"
+        class="amount"
+        type="number"
+        inputmode="decimal"
+        placeholder="0 ₽"
+      >
+
+      <div class="field-label">Категория дохода</div>
+      <select id="incomeCategory" class="select">
+        <option value="salary">Зарплата</option>
+        <option value="other">Другой доход</option>
+      </select>
+
+      <div class="field-label" id="incomeNameLabel">Источник дохода</div>
+      <input
+        id="incomeName"
+        class="text-input"
+        placeholder="Например, премия"
+      >
+
+      <div class="field-label">Счёт, куда пришли деньги</div>
+      <select id="incomeAccount" class="select"></select>
+
+    </div>
+
+
+    <div id="expenseFields">
+
+      <input
+        id="amount"
+        class="amount"
+        type="number"
+        inputmode="decimal"
+        placeholder="0 ₽"
+      >
+
+      <div class="field-label">Счёт, с которого списаны деньги</div>
+      <select id="expenseAccount" class="select"></select>
+
+      <div class="field-label">Категория</div>
+
+      <select id="categorySelect" class="select"></select>
+
+      <div class="category-info" id="roundingBox" style="display:none">
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700">
+          <input id="roundingEnabled" type="checkbox" style="width:18px;height:18px;accent-color:var(--pink)">
+          Округлить до 50 ₽ и перевести остаток в Инвесткопилку
+        </label>
+        <div class="small-note" id="roundingPreview" style="margin-top:8px">—</div>
+      </div>
+
+      <div class="category-info">
+        <div class="category-info-title">Осталось в категории</div>
+        <div class="category-info-main" id="categoryRemaining">—</div>
+
+        <div class="consequence" id="categoryConsequence">
+          Введи сумму — я покажу, что произойдёт.
+        </div>
+      </div>
+
+      <div class="category-info">
+        <div class="category-info-title">
+          Общий бюджет после покупки
+        </div>
+        <div class="category-info-main" id="monthRemainingAfter">—</div>
+      </div>
+
+    </div>
+
+
+    <div id="debtFields" style="display:none">
+
+      <div class="field-label">Сумма долга</div>
+      <input
+        id="debtAmount"
+        class="text-input edit-value"
+        type="number"
+        inputmode="decimal"
+        placeholder="0"
+      >
+
+      <div class="field-label">Кому / что</div>
+      <input
+        id="debtName"
+        class="text-input"
+        placeholder="Например, долг человеку"
+      >
+
+      <div class="field-label">Срок возврата</div>
+      <input
+        id="debtDueDate"
+        class="text-input"
+        type="date"
+      >
+
+    </div>
+
+
+    <div class="modal-button">
+      <button class="primary" id="saveExpenseButton">
+        Записать
+      </button>
+      <button class="danger-button" id="deleteOperationButton" style="display:none;margin-top:8px;width:100%">
+        Удалить операцию
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- КАЛЬКУЛЯТОР -->
+
+<div class="overlay" id="calculatorOverlay">
+  <div class="modal calculator-modal">
+    <div class="modal-header">
+      <div class="modal-title">Калькулятор</div>
+      <button class="close" id="closeCalculatorButton">×</button>
+    </div>
+    <div class="small-note" style="margin:0 0 10px">Можно считать прямо здесь: например, 15000+700 или 25000/3.</div>
+    <input id="calculatorInput" class="amount" type="text" inputmode="decimal" placeholder="0+0">
+    <div class="calculator-result" id="calculatorResult">= 0 ₽</div>
+    <div class="modal-button">
+      <button class="primary" id="applyCalculatorButton">Подставить результат</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- РЕДАКТИРОВАНИЕ ЛИМИТА -->
+
+<div class="overlay" id="categoryEditOverlay">
+  <div class="modal">
+
+    <div class="modal-header">
+      <div class="modal-title">Лимит категории</div>
+      <button class="close" id="closeCategoryEditButton">×</button>
+    </div>
+
+    <div class="field-label" id="editingCategoryName"></div>
+
+    <input
+      id="categoryLimitInput"
+      class="text-input edit-value"
+      type="number"
+      inputmode="decimal"
+    >
+
+    <button
+      class="primary"
+      id="saveCategoryLimitButton"
+      style="margin-top:15px"
+    >
+      Сохранить лимит
+    </button>
+
+    <button
+      class="danger-button"
+      id="deleteCategoryButton"
+      style="margin-top:8px;width:100%"
+    >
+      Удалить категорию
+    </button>
+
+  </div>
+</div>
+
+
+<!-- СЧЁТ -->
+
+<div class="overlay" id="accountOverlay">
+  <div class="modal">
+
+    <div class="modal-header">
+      <div class="modal-title" id="accountModalTitle">Новый счёт</div>
+      <button class="close" id="closeAccountButton">×</button>
+    </div>
+
+    <div class="field-label">Тип</div>
+
+    <select id="accountTypeInput" class="select">
+      <option value="debit">Дебетовая карта</option>
+      <option value="cash">Наличные</option>
+      <option value="savings">Накопительный счёт</option>
+      <option value="investment">Инвесткопилка</option>
+      <option value="credit">Кредитная карта</option>
+    </select>
+
+    <div class="field-label">Банк / название</div>
+
+    <input
+      id="accountNameInput"
+      class="text-input"
+      placeholder="Например, Сбер"
+    >
+
+    <div class="field-label">Реальный остаток</div>
+
+   <input
+  id="accountBalanceInput"
+  class="text-input"
+  type="text"
+  inputmode="text"
+  autocomplete="off"
+  placeholder="Например, -15700"
+>
+
+    <div id="creditFields" style="display:none">
+
+      <div class="field-label">Кредитный лимит</div>
+
+      <input
+        id="creditLimitInput"
+        class="text-input"
+        type="number"
+        inputmode="decimal"
+      >
+
+    </div>
+
+    <div class="small-note">
+      Для кредитной карты отрицательный остаток — это текущая задолженность.
+      Она автоматически попадает в раздел «Долги» и не увеличивает доступные деньги.
+    </div>
+
+    <button
+      class="primary"
+      id="saveAccountButton"
+      style="margin-top:18px"
+    >
+      Добавить счёт
+    </button>
+
+  </div>
+</div>
+
+
+<!-- ФИНАНСОВЫЕ НАСТРОЙКИ -->
+
+<div class="overlay" id="financeOverlay">
+  <div class="modal">
+
+    <div class="modal-header">
+      <div class="modal-title" id="financeTitle">Изменить</div>
+      <button class="close" id="closeFinanceButton">×</button>
+    </div>
+
+    <div class="field-label" id="financeLabel"></div>
+
+    <input
+      id="financeInput"
+      class="text-input edit-value"
+      type="number"
+      inputmode="decimal"
+    >
+
+    <button
+      class="primary"
+      id="saveFinanceButton"
+      style="margin-top:15px"
+    >
+      Сохранить
+    </button>
+
+  </div>
+</div>
+
+
+<!-- ПЕРЕВОД -->
+
+<div class="overlay" id="transferOverlay">
+  <div class="modal">
+
+    <div class="modal-header">
+      <div class="modal-title">Перевод между своими счетами</div>
+      <button class="close" id="closeTransferButton">×</button>
+    </div>
+
+    <div class="field-label">Откуда</div>
+    <select id="transferFrom" class="select"></select>
+
+    <div class="field-label">Куда</div>
+    <select id="transferTo" class="select"></select>
+
+    <div class="field-label">Сумма</div>
+
+    <input
+      id="transferAmount"
+      class="text-input edit-value"
+      type="number"
+      inputmode="decimal"
+      placeholder="0"
+    >
+
+    <div class="field-label">Дата</div>
+    <input
+      id="transferDate"
+      class="text-input"
+      type="date"
+    >
+
+    <button
+      class="primary"
+      id="saveTransferButton"
+      style="margin-top:18px"
+    >
+      Перевести
+    </button>
+
+  </div>
+</div>
+
+
+<!-- ЦЕЛЬ -->
+
+<div class="overlay" id="goalOverlay">
+  <div class="modal">
+
+    <div class="modal-header">
+      <div class="modal-title" id="goalModalTitle">Новая цель</div>
+      <button class="close" id="closeGoalButton">×</button>
+    </div>
+
+    <div class="field-label">Название / что купить</div>
+
+    <input
+      id="goalName"
+      class="text-input"
+      placeholder="Например, кроссовки"
+    >
+
+    <div class="field-label">Ссылка (необязательно)</div>
+
+    <input
+      id="goalLink"
+      class="text-input"
+      placeholder="Вставь ссылку на товар"
+    >
+
+    <div class="field-label">Цена / сумма цели</div>
+
+    <input
+      id="goalTarget"
+      class="text-input"
+      type="number"
+      inputmode="decimal"
+      placeholder="0"
+    >
+
+    <div class="field-label">Уже накоплено</div>
+
+    <input
+      id="goalSaved"
+      class="text-input"
+      type="number"
+      inputmode="decimal"
+      placeholder="0"
+    >
+
+    <div class="field-label">Желаемая дата</div>
+
+    <input
+      id="goalDate"
+      class="text-input"
+      type="date"
+    >
+
+    <div class="modal-button">
+      <button class="primary" id="saveGoalButton">
+        Сохранить цель
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ЛИЧНЫЙ ДОЛГ -->
+
+<div class="overlay" id="debtOverlay">
+  <div class="modal">
+
+    <div class="modal-header">
+      <div class="modal-title" id="debtModalTitle">Новый долг</div>
+      <button class="close" id="closeDebtButton">×</button>
+    </div>
+
+    <div class="field-label">Кому / что</div>
+
+    <input
+      id="manualDebtName"
+      class="text-input"
+      placeholder="Например, долг человеку"
+    >
+
+    <div class="field-label">Сумма</div>
+
+    <input
+      id="manualDebtAmount"
+      class="text-input edit-value"
+      type="number"
+      inputmode="decimal"
+    >
+
+    <div class="field-label">Тип обязательства</div>
+    <select id="manualDebtType" class="select">
+      <option value="personal">Личный долг</option>
+      <option value="installment">Рассрочка</option>
+    </select>
+
+    <div id="personalDebtFields">
+      <div class="field-label">Срок возврата</div>
+      <input
+        id="manualDebtDueDate"
+        class="text-input"
+        type="date"
+      >
+    </div>
+
+    <div id="installmentDebtFields" style="display:none">
+      <div class="field-label">Первый платёж</div>
+      <input id="installmentFirstDate" class="text-input" type="date">
+
+      <div class="field-label">Ежемесячный платёж</div>
+      <input id="installmentPayment" class="text-input" type="number" inputmode="decimal" placeholder="0">
+
+      <div class="field-label">Количество платежей</div>
+      <input id="installmentCount" class="text-input" type="number" inputmode="numeric" min="1" step="1" placeholder="36">
+
+      <div class="small-note" style="margin-top:8px">Можно также загрузить CSV-график с колонками «Дата» и «Сумма».</div>
+      <input id="installmentFile" type="file" accept=".csv,text/csv" class="text-input">
+    </div>
+
+    <button
+      class="primary"
+      id="saveDebtButton"
+      style="margin-top:18px"
+    >
+      Сохранить долг
+    </button>
+
+  </div>
+</div>
+
+
+<!-- НИЖНЯЯ НАВИГАЦИЯ -->
+
+<div class="nav">
+  <div class="nav-inner">
+    <button class="active" data-screen="home">
+      <span class="nav-icon nav-date-icon" id="navTodayDate" aria-hidden="true"><span class="nav-date-top"></span><span class="nav-date-number">7</span></span>
+      Сегодня
+    </button>
+    <button data-screen="budget">
+      <span class="nav-icon nav-icon-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><rect x="8" y="6" width="8" height="3" rx=".5"/><path d="M8 12h1M12 12h1M16 12h0M8 16h1M12 16h1M16 16h0M8 19h1M12 19h1M16 19h0"/></svg></span>
+      Бюджет
+    </button>
+    <button data-screen="accounts">
+      <span class="nav-icon nav-icon-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M7 8h10M7 12h7M7 16h5"/></svg></span>
+      Счета
+    </button>
+    <button data-screen="debts">
+      <span class="nav-icon nav-icon-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9a5 5 0 0 1 10 0v3.2l1.7 2.3H5.3L7 12.2Z"/><path d="M9.5 17.2a2.7 2.7 0 0 0 5 0"/><path d="M8.2 5.2 6.7 3.8M15.8 5.2l1.5-1.4"/></svg></span>
+      Долги
+    </button>
+    <button data-screen="goals">
+      <span class="nav-icon nav-icon-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 4V2M20 12h2"/></svg></span>
+      Цели
+    </button>
+    <button data-screen="settings">
+      <span class="nav-icon nav-icon-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.7 3.8 10.4 2h3.2l.7 1.8 1.6.9 1.8-.5 2.3 2.3-.5 1.8.9 1.6 1.8.7v3.2l-1.8.7-.9 1.6.5 1.8-2.3 2.3-1.8-.5-1.6.9-.7 1.8h-3.2l-.7-1.8-1.6-.9-1.8.5-2.3-2.3.5-1.8-.9-1.6-1.8-.7v-3.2l1.8-.7.9-1.6-.5-1.8 2.3-2.3 1.8.5 1.6-.9Z"/><circle cx="12" cy="12" r="3.2"/></svg></span>
+      Настройки
+    </button>
+  </div>
+</div>
+
+
+<script>
+
+let budgetYear=new Date().getFullYear();
+let budgetMonth=new Date().getMonth();
+let TY="";
+let CK="";
+const AK="babki_accounts_real_v1";
+const FK="babki_finance_settings_v1";
+const SK="babki_savings_goal_percent_v1";
+const GK="babki_goals_v1";
+const DK="babki_personal_debts_v1";
+const PK="babki_planned_payments_v1";
+const SETTINGS_DIRTY_KEY="babki_finance_settings_dirty_v1";
+const SYNC_UPDATED_AT_KEY="babki_sync_updated_at_v2";
+const SYNC_LAST_GOOGLE_KEY="babki_sync_last_google_v2";
+let syncPollTimer=null;
+
+
+/* GOOGLE SHEETS */
+
+const GOOGLE_SYNC_URL=
+  "https://script.google.com/macros/s/AKfycbyzPDsAXBCE58pYtFfAswCpzsyjG0o2lWG6q9j_QxHx11AwMyvma1H_d8JGyeCwiV13/exec";
+
+
+// Старые финансовые настройки оставлены только для миграции старых данных.
+let salary=0;
+let advance=0;
+let advanceDate=null;
+let mainSalaryDate=15;
+let savingsPercent=20;
+let paymentFacts={};
+
+let transactions=[];
+let accounts=[];
+let goals=[];
+let debts=[];
+let plannedPayments=[];
+
+let editingCategory=null;
+let editingAccount=null;
+let editingGoal=null;
+let editingDebt=null;
+let financeType=null;
+let dateType=null;
+let editingTransactionIndex=null;
+let historyAccountId=null;
+let historyFilter="all";
+let historyReturnScreen="home";
+let calculatorTarget=null;
+let suppressAccountClickUntil=0;
+
+
+const categories=[
+  ["Еда вне дома",25000],
+  ["Транспорт (общ.)",6000],
+  ["Дом",5000],
+  ["Одежда",7000],
+  ["Здоровье",3000],
+  ["Кредиты | Долги",29096],
+  ["Подарки",8700],
+  ["Подписки",2500],
+  ["Досуг",35000],
+  ["Продукты",19000],
+  ["Книги",0],
+  ["Канцелярия",500],
+  ["Бьюти",4200],
+  ["Путешествия",0],
+  ["Аксессуары",0],
+  ["Проценты",500],
+  ["Комиссии/обслуживание карт",350],
+  ["Гигиена",500],
+  ["Коммунальные платежи",6000],
+  ["Налоги",0],
+  ["Транспорт (такси)",12000],
+  ["Мобильная связь",350],
+  ["Техника",0],
+  ["Прочие",2300],
+  ["Благотворительность",1200],
+  ["Хобби",0]
+].map(x=>({
+  name:x[0],
+  plan:x[1]
+}));
+
+categories.sort((a,b)=>a.name.localeCompare(b.name,"ru",{sensitivity:"base"}));
+
+const DEFAULT_CATEGORY_PLANS=categories.map(c=>({name:c.name,plan:c.plan}));
+
+function monthStorageKey(prefix,year,month){
+  return `babki_${prefix}_${year}_${String(month+1).padStart(2,"0")}`;
+}
+
+function monthLabelLong(year,month){
+  return new Intl.DateTimeFormat("ru-RU",{month:"long",year:"numeric"})
+    .format(new Date(year,month,1));
+}
+
+function monthLabelShort(year,month){
+  return new Intl.DateTimeFormat("ru-RU",{month:"long"})
+    .format(new Date(year,month,1));
+}
+
+function updateMonthLabels(){
+  currentMonthLabel.textContent=monthLabelLong(budgetYear,budgetMonth);
+  currentMonthShortLabel.textContent=monthLabelShort(budgetYear,budgetMonth);
+}
+
+function resetCategoryPlans(){
+  categories.forEach(c=>{
+    const d=DEFAULT_CATEGORY_PLANS.find(x=>x.name===c.name);
+    c.plan=d?d.plan:0;
+  });
+}
+
+function setBudgetPeriod(year,month){
+  budgetYear=year;
+  budgetMonth=month;
+  TY=monthStorageKey("transactions",year,month);
+  CK=monthStorageKey("categories",year,month);
+  updateMonthLabels();
+}
+
+function previousBudgetPeriod(){
+  const d=new Date(budgetYear,budgetMonth-1,1);
+  return {year:d.getFullYear(),month:d.getMonth()};
+}
+
+function ensureCurrentBudgetMonth(){
+  const now=new Date();
+  const y=now.getFullYear();
+  const m=now.getMonth();
+  if(y===budgetYear && m===budgetMonth){
+    updateMonthLabels();
+    return false;
+  }
+  setBudgetPeriod(y,m);
+  return true;
+}
+
+
+const money=v=>
+  new Intl.NumberFormat("ru-RU",{
+    maximumFractionDigits:2
+  }).format(
+    Math.round((Number(v)||0)*100)/100
+  )+" ₽";
+
+
+const cat=n=>
+  categories.find(x=>x.name===n);
+
+
+const today=()=>{
+  let d=new Date();
+  return d.toISOString().slice(0,10);
+};
+
+
+function updateNavTodayDate(){
+  const el=document.getElementById("navTodayDate")?.querySelector(".nav-date-number");
+  if(el) el.textContent=String(new Date().getDate());
+}
+
+const save=(k,v)=>
+  localStorage.setItem(k,JSON.stringify(v));
+
+
+const read=(k,f)=>{
+  try{
+    const v=JSON.parse(localStorage.getItem(k));
+    return v===null?f:v;
+  }catch(e){
+    return f;
+  }
+};
+
+
+const spent=()=>
+  transactions
+    .filter(x=>x.type==="expense")
+    .reduce(
+      (s,x)=>s+Number(x.amount||0),
+      0
+    );
+
+
+const catSpent=n=>
+  transactions
+    .filter(
+      x=>x.type==="expense"&&x.category===n
+    )
+    .reduce(
+      (s,x)=>s+Number(x.amount||0),
+      0
+    );
+
+
+const budget=()=>
+  categories.reduce(
+    (s,x)=>s+Number(x.plan||0),
+    0
+  );
+
+
+function ensureAccountIds(list){
+
+  return (Array.isArray(list)?list:[]).map(a=>({
+
+    ...a,
+
+    id:
+      a.id ||
+      ("acc_"+Date.now()+"_"+Math.random().toString(36).slice(2,8)),
+
+    type:
+      a.type||"debit",
+
+    creditLimit:
+      Number(a.creditLimit||0),
+
+    bank:
+      a.bank||a.name||"",
+
+    balance:
+      Number(a.balance||0)
+
+  }));
+}
+
+
+function load(){
+
+  updateNavTodayDate();
+  const periodChanged=ensureCurrentBudgetMonth();
+  resetCategoryPlans();
+
+  const t=read(TY,null);
+
+  if(Array.isArray(t) && t.length){
+    transactions=t.map(x=>({...x,type:x.type||"expense"}));
+  }else{
+    const prefix=String(budgetYear)+"-"+String(budgetMonth+1).padStart(2,"0");
+    const recovered=[];
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);
+      if(!key || key===TY || !key.includes("transactions")) continue;
+      const data=read(key,null);
+      if(Array.isArray(data)) data.forEach(x=>{
+        if(String(x?.date||"").startsWith(prefix)) recovered.push({...x,type:x.type||"expense"});
+      });
+    }
+    if(recovered.length){ transactions=recovered; save(TY,transactions); }
+  }
+
+
+  const p=read(CK,null);
+
+  if(Array.isArray(p)){
+
+    p.forEach(saved=>{
+      const c=categories.find(
+        x=>x.name===saved?.name
+      );
+
+      if(
+        c &&
+        Object.prototype.hasOwnProperty.call(
+          saved,
+          "plan"
+        )
+      ){
+        c.plan=Math.max(
+          0,
+          Number(saved.plan)||0
+        );
+      }
+    });
+
+  }else if(
+    p &&
+    typeof p==="object"
+  ){
+
+    const plans=
+      p.plans &&
+      typeof p.plans==="object"
+        ?p.plans
+        :p;
+
+    categories.forEach(c=>{
+
+      if(
+        Object.prototype.hasOwnProperty.call(
+          plans,
+          c.name
+        )
+      ){
+        c.plan=Math.max(
+          0,
+          Number(plans[c.name])||0
+        );
+      }
+
+    });
+
+  }
+
+  /* Новый месяц: переносим только лимиты предыдущего месяца,
+     но не его операции. Это сохраняет привычные лимиты и
+     одновременно отделяет расходы каждого месяца. */
+  if(!Array.isArray(p)){
+    const prev=previousBudgetPeriod();
+    const prevKey=monthStorageKey("categories",prev.year,prev.month);
+    const legacyPrevKey=(prev.year===2026 && prev.month===8)
+      ?"babki_september_2026_categories"
+      :prevKey;
+    const prevData=read(prevKey,read(legacyPrevKey,null));
+    const prevPlans=prevData && prevData.plans && typeof prevData.plans==="object"
+      ?prevData.plans
+      :prevData;
+    if(prevPlans && typeof prevPlans==="object")
+      categories.forEach(c=>{
+        if(Object.prototype.hasOwnProperty.call(prevPlans,c.name))
+          c.plan=Math.max(0,Number(prevPlans[c.name])||0);
+      });
+    saveCategories();
+  }
+
+
+  const a=read(AK,null);
+
+  if(Array.isArray(a)){
+
+    accounts=ensureAccountIds(a);
+
+    save(
+      AK,
+      accounts
+    );
+
+  }
+
+
+  const f=read(FK,null);
+
+  if(
+    f &&
+    typeof f==="object"
+  ){
+
+    if(Number.isFinite(+f.salary))
+      salary=+f.salary;
+
+    if(Number.isFinite(+f.advance))
+      advance=+f.advance;
+
+    if(
+      Number.isFinite(+f.advanceDate)&&
+      +f.advanceDate>=1
+    )
+      advanceDate=+f.advanceDate;
+
+    if(
+      Number.isFinite(+f.mainSalaryDate)&&
+      +f.mainSalaryDate>=1
+    )
+      mainSalaryDate=+f.mainSalaryDate;
+  }
+
+
+  const pf=read("babki_payment_facts_v1",{});
+
+  if(pf && typeof pf==="object")
+    paymentFacts=pf;
+
+
+  const sp=read(SK,null);
+
+  if(Number.isFinite(+sp)){
+    savingsPercent=Math.min(
+      100,
+      Math.max(0,+sp)
+    );
+  }
+
+
+  const g=read(GK,[]);
+
+  if(Array.isArray(g))
+    goals=g;
+
+
+  const d=read(DK,[]);
+
+  if(Array.isArray(d))
+    debts=d;
+
+  const pp=read(PK,[]);
+  if(Array.isArray(pp))
+    plannedPayments=pp;
+}
+
+
+function saveCategories(){
+
+  save(
+    CK,
+    {
+      version:2,
+      plans:Object.fromEntries(
+        categories.map(
+          c=>[c.name,c.plan]
+        )
+      )
+    }
+  );
+
+  saveBudgetHistorySnapshot();
+}
+
+const BH="babki_budget_history_v1";
+
+function budgetMonthKey(){
+  return `${budgetYear}-${String(budgetMonth+1).padStart(2,"0")}`;
+}
+
+function readBudgetHistory(){
+  const h=read(BH,{});
+  return h && typeof h==="object" ? h : {};
+}
+
+function saveBudgetHistorySnapshot(){
+  const h=readBudgetHistory();
+  const key=budgetMonthKey();
+  h[key]={
+    year:budgetYear,
+    month:budgetMonth+1,
+    categories:Object.fromEntries(
+      categories.map(c=>[c.name,Number(c.plan||0)])
+    ),
+    total:categories.reduce((s,c)=>s+Number(c.plan||0),0)
+  };
+  save(BH,h);
+}
+
+function renderBudgetHistory(){
+  if(typeof budgetHistoryYear!=="undefined" && budgetHistoryYear)
+    budgetHistoryYear.textContent=String(budgetYear);
+  saveBudgetHistorySnapshot();
+  const h=readBudgetHistory();
+  const keys=Object.keys(h).filter(k=>String(k).startsWith(String(budgetYear)+"-")).sort();
+  const totals=keys.map(k=>Number(h[k]?.total||0));
+  const avg=totals.length ? totals.reduce((s,v)=>s+v,0)/totals.length : 0;
+  budgetYearAverage.textContent=money(avg);
+  budgetHistoryNote.textContent=
+    totals.length
+      ? `Сохранено месяцев: ${totals.length}. Среднее считается только по месяцам, которые Babki успела сохранить.`
+      : "Пока нет сохраненных месяцев.";
+
+  if(!keys.length){
+    budgetHistoryList.innerHTML='<div class="empty">История лимитов пока пустая.</div>';
+    return;
+  }
+
+  budgetHistoryList.innerHTML=keys.slice().reverse().map(key=>{
+    const m=h[key]||{};
+    const label=new Intl.DateTimeFormat("ru-RU",{month:"long",year:"numeric"})
+      .format(new Date(Number(m.year)||budgetYear,(Number(m.month)||1)-1,1));
+    const cats=Object.entries(m.categories||{})
+      .filter(([,v])=>Number(v||0)>0)
+      .sort((a,b)=>Number(b[1])-Number(a[1]))
+      .map(([name,v])=>`<div class="stat-row"><span>${name}</span><span class="stat-value">${money(v)}</span></div>`)
+      .join("");
+    return `<div class="history-month-block">
+      <div class="card-title" style="margin-bottom:6px;text-transform:capitalize">${label}</div>
+      <div class="stat-row"><span>Всего лимитов</span><span class="stat-value">${money(m.total||0)}</span></div>
+      ${cats ? `<div class="small-note" style="margin:8px 0 2px">По категориям</div>${cats}` : ""}
+    </div>`;
+  }).join('<div style="height:10px"></div>');
+}
+
+
+
+function actualSalaryIncomeForCurrentMonth(){
+  return transactions
+    .filter(x=>x.type==="income" && normalizeIncomeCategory(x)==="salary")
+    .reduce((s,x)=>s+Math.max(0,Number(x.amount)||0),0);
+}
+
+function updateFinance(){
+  const monthlyIncome=actualSalaryIncomeForCurrentMonth();
+
+  // Эти элементы больше не являются настройками, но могут существовать
+  // в старых сохранённых DOM-версиях. Заполняем их безопасно.
+  if(typeof salaryDisplay!=="undefined" && salaryDisplay)
+    salaryDisplay.textContent=money(monthlyIncome);
+  if(typeof advanceDisplay!=="undefined" && advanceDisplay)
+    advanceDisplay.textContent="—";
+  if(typeof advanceDateDisplay!=="undefined" && advanceDateDisplay)
+    advanceDateDisplay.textContent="—";
+  if(typeof mainSalaryDisplay!=="undefined" && mainSalaryDisplay)
+    mainSalaryDisplay.textContent="—";
+  if(typeof mainSalaryDateDisplay!=="undefined" && mainSalaryDateDisplay)
+    mainSalaryDateDisplay.textContent="—";
+
+  if(typeof savingsPercentDisplay!=="undefined" && savingsPercentDisplay)
+    savingsPercentDisplay.textContent=savingsPercent+"%";
+
+  budgetSalary.textContent=money(monthlyIncome);
+  budgetSavings.textContent=money(monthlyIncome*savingsPercent/100);
+  budgetTotal.textContent=money(budget());
+  budgetAvailable.textContent=money(
+    Math.max(0,spendableBalance()-budget())
+  );
+}
+
+
+function renderCats(){
+
+  categoryList.innerHTML="";
+
+  categories.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru",{sensitivity:"base"})).forEach((c,i)=>{
+
+    const s=catSpent(c.name);
+
+    const r=c.plan-s;
+
+    const p=c.plan
+      ?Math.min(
+        100,
+        Math.max(
+          0,
+          s/c.plan*100
+        )
+      )
+      :0;
+
+    const row=
+      document.createElement("div");
+
+    row.className="category-row";
+
+    row.innerHTML=`
+      <div class="category-top">
+
+        <div class="category-left">
+
+          <div class="category-name">
+            ${c.name}
+          </div>
+
+          <div class="category-limit">
+            Лимит: ${money(c.plan)}
+          </div>
+
+        </div>
+
+        <div class="category-actions">
+
+          <div class="category-remaining ${r<0?"negative":""}">
+            ${r>=0?"осталось ":"перерасход "}
+            ${money(Math.abs(r))}
+          </div>
+
+          <button
+            class="small-button"
+            data-ci="${i}"
+          >✎</button>
+
+        </div>
+
+      </div>
+
+      <div class="category-meta">
+        ${money(s)} из ${money(c.plan)}
+      </div>
+
+      <div class="category-bar">
+        <div
+          class="category-bar-inner"
+          style="width:${p}%"
+        ></div>
+      </div>
+    `;
+
+    categoryList.appendChild(row);
+
+  });
+
+  updateFinance();
+}
+
+
+function logoFor(a){
+
+  const name=
+    (a.bank||a.name||"")
+      .toLowerCase();
+
+  const domains={
+    sber:"sberbank.ru",
+    "сбер":"sberbank.ru",
+    "т-банк":"tbank.ru",
+    "тинькофф":"tbank.ru",
+    tinkoff:"tbank.ru",
+    "альфа":"alfabank.ru",
+    alfa:"alfabank.ru",
+    "втб":"vtb.ru",
+    vtb:"vtb.ru",
+    "дебанк":"debank.com",
+    debank:"debank.com",
+    "озон":"ozon.ru",
+    ozon:"ozon.ru"
+  };
+
+  const d=
+    Object.keys(domains)
+      .find(
+        k=>name.includes(k)
+      );
+
+  if(d){
+
+    return `
+      <img
+        class="bank-logo"
+        src="https://www.google.com/s2/favicons?domain=${domains[d]}&sz=128"
+        alt=""
+      >
+    `;
+  }
+
+  return `
+    <div class="bank-logo bank-fallback">
+      ${(a.name||"С").slice(0,1).toUpperCase()}
+    </div>
+  `;
+}
+
+
+function renderAccounts(){
+
+  if(!Array.isArray(accounts))
+    accounts=[];
+
+  const q=String(document.getElementById("accountsSearch")?.value||"").trim().toLocaleLowerCase("ru-RU");
+  const visibleAccounts=accounts.map((a,i)=>({a,i})).filter(({a})=>!q || String(a.name||"").toLocaleLowerCase("ru-RU").includes(q) || String(a.bank||"").toLocaleLowerCase("ru-RU").includes(q));
+
+  accountsList.innerHTML=
+    visibleAccounts.length
+      ?visibleAccounts.map(({a,i})=>{
+
+        const type=
+          a.type==="credit" ? "Кредитная карта" :
+          a.type==="cash" ? "Наличные" :
+          a.type==="savings" ? "Накопительный счёт" :
+          a.type==="investment" ? "Инвесткопилка" :
+          "Дебетовая карта";
+
+        const debt=
+          a.type==="credit"
+            ?Math.max(
+              0,
+              -Number(a.balance||0)
+            )
+            :0;
+
+        return `
+          <div
+            class="account-row"
+            data-transfer-index="${i}"
+            title="Зажмите счёт и перетащите его на другой счёт для перевода"
+          >
+
+            <div class="account-main">
+
+              <div>
+                ${logoFor(a)}
+              </div>
+
+              <div class="account-left">
+
+                <div class="account-name">
+                  ${a.name||"Счёт"}
+                </div>
+
+                <div class="account-type">
+                  ${type}
+                  ${
+                    a.type==="credit"&&a.creditLimit
+                      ?` · лимит ${money(a.creditLimit)}`
+                      :""
+                  }
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="account-actions">
+
+              <div class="account-balance ${debt?"negative":""}">
+                ${Number(a.balance||0).toLocaleString("ru-RU")}
+              </div>
+
+              <div class="actions-row account-action-icons">
+                <button class="small-button" data-ai="${i}" title="Изменить" aria-label="Изменить">✎</button>
+                <button class="small-button danger-icon" data-ad="${i}" title="Удалить" aria-label="Удалить">🗑</button>
+              </div>
+
+            </div>
+
+          </div>
+        `;
+
+      }).join("")
+      :'<div class="empty">Пока нет добавленных счетов.</div>';
+
+
+  const total=
+    accounts.reduce(
+      (s,a)=>s+Number(a.balance||0),
+      0
+    );
+
+  const spendable=
+    accounts
+      .filter(a=>a.type!=="credit" && a.type!=="investment" && a.type!=="savings")
+      .reduce(
+        (s,a)=>s+Number(a.balance||0),
+        0
+      );
+
+  accountsTotal.textContent=
+    money(total);
+
+  spendableTotal.textContent=
+    money(spendable);
+}
+
+
+function renderDebts(){
+
+  const cards=
+    accounts
+      .filter(
+        a=>
+          a.type==="credit" &&
+          Number(a.balance||0)<0
+      )
+      .map(a=>({
+        id:"card_"+a.name,
+        name:a.name+" — кредитная карта",
+        amount:Math.max(
+          0,
+          -Number(a.balance)
+        ),
+        dueDate:null,
+        kind:"credit"
+      }));
+
+
+  const all=
+    cards.concat(debts);
+
+
+  debtsList.innerHTML=
+    all.length
+      ?all.map((d,i)=>{
+
+        const due=
+          d.dueDate
+            ?new Date(
+              d.dueDate+"T00:00:00"
+            ).toLocaleDateString("ru-RU")
+            :"";
+
+        const days=
+          d.dueDate
+            ?Math.max(
+              1,
+              Math.ceil(
+                (
+                  new Date(
+                    d.dueDate+"T00:00:00"
+                  )-new Date()
+                )/86400000
+              )
+            )
+            :null;
+
+        const monthly=
+          days
+            ?d.amount/
+              Math.max(
+                1,
+                Math.ceil(days/30)
+              )
+            :d.amount;
+
+        return `
+          <div class="debt-row">
+
+            <div class="debt-top">
+
+              <div class="debt-left">
+
+                <div class="debt-name">
+                  ${d.name}
+                </div>
+
+                <div class="debt-meta">
+                  ${
+                    d.kind==="credit"
+                      ?"Задолженность по кредитной карте"
+                      :(due
+                        ?"Вернуть до "+due
+                        :"Личный долг")
+                  }
+                </div>
+
+                ${
+                  due
+                    ?`
+                      <div class="debt-meta">
+                        Запланировано в лимите: ${money(d.amount)} до ${due}
+                      </div>
+                    `
+                    :""
+                }
+
+              </div>
+
+              <div>
+
+                <div class="debt-amount negative">
+                  ${Number(d.amount||0).toLocaleString("ru-RU")}
+                </div>
+
+                ${
+                  d.kind!=="credit"
+                    ?`
+                      <div class="actions-row account-action-icons">
+                        <button class="small-button" data-dei="${i}" title="Изменить" aria-label="Изменить">✎</button>
+                        <button class="small-button danger-icon" data-di="${i}" title="Удалить" aria-label="Удалить">🗑</button>
+                      </div>
+                    `
+                    :""
+                }
+
+              </div>
+
+            </div>
+
+          </div>
+        `;
+
+      }).join("")
+      :'<div class="empty">Пока нет долгов и обязательств.</div>';
+}
+
+
+function renderGoals(){
+
+  goalsList.innerHTML=
+    goals.length
+      ?goals.map((g,i)=>{
+
+        const target=
+          Number(g.target)||0;
+
+        const saved=
+          Number(g.saved)||0;
+
+        const left=
+          Math.max(
+            0,
+            target-saved
+          );
+
+        const p=
+          target
+            ?Math.min(
+              100,
+              saved/target*100
+            )
+            :0;
+
+        let monthly=left;
+
+        if(g.date){
+
+          const days=
+            Math.max(
+              1,
+              Math.ceil(
+                (
+                  new Date(
+                    g.date+"T00:00:00"
+                  )-new Date()
+                )/86400000
+              )
+            );
+
+          monthly=
+            left/
+            Math.max(
+              1,
+              Math.ceil(days/30)
+            );
+        }
+
+
+        return `
+          <div class="goal-row">
+
+            <div class="goal-top">
+
+              <div class="goal-left">
+
+                <div class="goal-name">
+                  ${g.name||"Цель"}
+                </div>
+
+                <div class="goal-meta">
+                  ${g.link?`🔗 ${g.link}`:""}
+                  ${g.date
+                    ?` · до ${new Date(g.date+"T00:00:00").toLocaleDateString("ru-RU")}`
+                    :""
+                  }
+                </div>
+
+              </div>
+
+              <div>
+
+                <div class="goal-amount">
+                  ${money(left)}
+                </div>
+
+                <div class="goal-meta">
+                  осталось
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="goal-meta">
+              Накоплено ${money(saved)}
+              из ${money(target)}
+              · откладывать ${money(monthly)} в месяц
+            </div>
+
+            <div class="goal-progress">
+              <div
+                class="goal-progress-inner"
+                style="width:${p}%"
+              ></div>
+            </div>
+
+            <div class="actions-row">
+
+              <button
+                class="inline-button"
+                data-gi="${i}"
+              >
+                ✎ Изменить
+              </button>
+
+              <button
+                class="danger-button"
+                data-gd="${i}"
+              >
+                Удалить
+              </button>
+
+            </div>
+
+          </div>
+        `;
+
+      }).join("")
+      :'<div class="empty">Добавь цель — например, кроссовки, поездку или покупку по ссылке.</div>';
+}
+
+
+function normalizeIncomeCategory(t){
+  if(!t || t.type!=="income") return "";
+  // В новой логике любая фактическая выплата, относящаяся к зарплате,
+  // имеет одну категорию — «Зарплата». Старые «авансы» считаем зарплатой,
+  // чтобы не потерять уже внесённые операции.
+  if(t.incomeCategory==="salary") return "salary";
+  if(t.incomeCategory==="advance") return "salary";
+  if(t.incomeCategory==="other") return "other";
+  const name=String(t.name||"").trim().toLowerCase();
+  if(name==="зарплата" || name.includes("зарплат") || name==="аванс" || name.includes("аванс"))
+    return "salary";
+  return "other";
+}
+
+function getTransactionsForMonth(year,month){
+  const key=monthStorageKey("transactions",year,month);
+  const data=read(key,[]);
+  return Array.isArray(data)
+    ?data.map(x=>({...x,type:x.type||"expense"}))
+    :[];
+}
+
+function salaryTransactions(){
+  // Берём фактические операции «Зарплата» из текущего месяца,
+  // а также соседних месяцев — это нужно, чтобы определить интервал выплат.
+  const months=[];
+  const base=new Date();
+  for(let offset=-6;offset<=2;offset++){
+    const d=new Date(base.getFullYear(),base.getMonth()+offset,1);
+    months.push(...getTransactionsForMonth(d.getFullYear(),d.getMonth()));
+  }
+
+  return months
+    .filter(x=>x.type==="income" && normalizeIncomeCategory(x)==="salary" && x.date)
+    .map(x=>({...x,dateObj:new Date(x.date+"T00:00:00")}))
+    .filter(x=>!Number.isNaN(x.dateObj.getTime()) && Number(x.amount||0)>0)
+    .sort((a,b)=>a.dateObj-b.dateObj);
+}
+
+function salaryHistory(){
+  const unique=new Map();
+  salaryTransactions().forEach(x=>{
+    const key=x.date+"|"+String(x.id||"");
+    unique.set(key,x);
+  });
+  return [...unique.values()].sort((a,b)=>a.dateObj-b.dateObj);
+}
+
+function median(values){
+  if(!values.length) return 0;
+  const a=values.slice().sort((x,y)=>x-y);
+  const mid=Math.floor(a.length/2);
+  return a.length%2 ? a[mid] : (a[mid-1]+a[mid])/2;
+}
+
+function salaryIntervalDays(){
+  const history=salaryHistory();
+  if(history.length<2) return null;
+
+  const diffs=[];
+  for(let i=1;i<history.length;i++){
+    const days=Math.round((history[i].dateObj-history[i-1].dateObj)/86400000);
+    // Реалистичные интервалы выплат: от 7 до 45 дней.
+    if(days>=7 && days<=45) diffs.push(days);
+  }
+
+  return diffs.length ? Math.round(median(diffs)) : null;
+}
+
+function salaryPeriodInfo(){
+  const now=new Date();
+  const todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const history=salaryHistory();
+
+  const previous=history
+    .filter(x=>x.dateObj<=todayStart)
+    .sort((a,b)=>b.dateObj-a.dateObj)[0] || null;
+
+  if(!previous){
+    // Новый пользователь: пока нет ни одной фактической зарплаты,
+    // временно считаем ближайшей выплатой 15-е число текущего/следующего месяца.
+    const nextDate=new Date(todayStart.getFullYear(),todayStart.getMonth(),15);
+    if(nextDate<=todayStart) nextDate.setMonth(nextDate.getMonth()+1);
+    return {
+      previous:null,
+      next:{date:nextDate,dateObj:nextDate,amount:0,type:"salary",inferred:true,startup:true},
+      periodStart:todayStart,
+      periodEnd:nextDate,
+      days:Math.max(1,Math.ceil((nextDate-todayStart)/86400000)),
+      intervalDays:null
+    };
+  }
+
+  let interval=salaryIntervalDays();
+
+  // Если пока есть только одна фактическая выплата, используем её
+  // как месячную опорную дату. После появления второй выплаты приложение
+  // перейдёт на реальный интервал между выплатами.
+  if(!interval && history.length===1)
+    interval=15;
+
+  // Если есть история выплат, следующую дату определяем по фактическому
+  // интервалу между зарплатами. Никаких ручных дат выплат больше не нужно.
+  let next=null;
+  if(interval){
+    const nextDate=new Date(previous.dateObj);
+    nextDate.setDate(nextDate.getDate()+interval);
+
+    while(nextDate<=todayStart)
+      nextDate.setDate(nextDate.getDate()+interval);
+
+    next={
+      date:nextDate,
+      dateObj:nextDate,
+      amount:0,
+      type:"salary",
+      inferred:true
+    };
+  }
+
+  const days=next
+    ?Math.max(1,Math.ceil((next.dateObj-todayStart)/86400000))
+    :null;
+
+  return {
+    previous,
+    next,
+    periodStart:new Date(previous.dateObj),
+    periodEnd:next ? new Date(next.dateObj) : null,
+    days,
+    intervalDays:interval
+  };
+}
+
+function spendableBalance(){
+  return accounts
+    .filter(a=>a.type!=="credit")
+    .reduce((s,a)=>s+Number(a.balance||0),0);
+}
+
+function plannedPaymentsForMonth(year=budgetYear,month=budgetMonth){
+  const prefix=`${year}-${String(month+1).padStart(2,"0")}`;
+  return plannedPayments.filter(p=>
+    !p.paid && String(p.date||"").startsWith(prefix)
+  );
+}
+
+function plannedDebtTotalForMonth(year=budgetYear,month=budgetMonth){
+  return plannedPaymentsForMonth(year,month)
+    .filter(p=>p.category==="Кредиты | Долги")
+    .reduce((s,p)=>s+Number(p.amount||0),0);
+}
+
+function remainingBudget(){
+  return Math.max(0,budget()-spent()-plannedDebtTotalForMonth());
+}
+
+function periodDailyLimit(){
+  const info=salaryPeriodInfo();
+  const realMoney=Math.max(0,spendableBalance());
+  const remaining=remainingBudget();
+
+  // Без подтверждённой истории двух выплат мы не знаем,
+  // сколько дней осталось до следующей выплаты.
+  if(!info.next || !info.days)
+    return 0;
+
+  const byCash=realMoney/info.days;
+  const byBudget=remaining/info.days;
+
+  return Math.max(0,Math.min(byCash,byBudget));
+}
+
+function home(){
+
+  const b=budget();
+  const s=spent();
+  const d=periodDailyLimit();
+
+  const ts=
+    transactions
+      .filter(
+        x=>
+          x.date===today() &&
+          x.type==="expense"
+      )
+      .reduce(
+        (a,x)=>a+Number(x.amount||0),
+        0
+      );
+
+  monthPlan.textContent=
+    money(b);
+
+  monthSpent.textContent=
+    money(s);
+
+  monthLeft.textContent=
+    money(b-s);
+
+  dailyLimit.textContent=
+    money(d);
+
+  todaySpent.textContent=
+    money(ts);
+
+  todayLeft.textContent=
+    money(
+      Math.max(
+        0,
+        d-ts
+      )
+    );
+
+  monthProgress.style.width=
+    (b
+      ?Math.min(
+        100,
+        s/b*100
+      )
+      :0
+    )+"%";
+
+
+  const period=salaryPeriodInfo();
+
+  if(period.next && period.days){
+    const dateText=period.next.dateObj.toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
+    dailyDescription.textContent=
+      `До следующей зарплаты: ${period.days} ${
+        period.days===1 ? "день" : period.days<5 ? "дня" : "дней"
+      } · ориентировочно ${dateText}`;
+  }else if(period.previous){
+    dailyDescription.textContent=
+      "Нужна ещё одна фактическая выплата «Зарплата», чтобы определить следующий период";
+  }else{
+    dailyDescription.textContent=
+      "Пока использую 15-е число как временную дату выплаты";
+  }
+
+  updateFinance();
+}
+
+
+function accountNameById(id){
+  const a=accounts.find(x=>String(x.id)===String(id));
+  return a?.name || "Счёт удален";
+}
+
+function formatHistoryDate(date){
+  if(!date) return "Без даты";
+  const d=new Date(date+"T00:00:00");
+  if(Number.isNaN(d.getTime())) return date;
+  return d.toLocaleDateString("ru-RU",{day:"numeric",month:"long",year:"numeric"});
+}
+
+function openHistory(accountId=null, returnScreen="home"){
+  historyAccountId=accountId;
+  historyReturnScreen=returnScreen;
+  historyFilter="all";
+  historyTitle.textContent=accountId===null ? "История операций" : `История: ${accountNameById(accountId)}`;
+  document.querySelectorAll(".history-filter").forEach(b=>b.classList.toggle("active",b.dataset.historyFilter==="all"));
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById("history").classList.add("active");
+  renderHistory();
+}
+
+function renderHistory(){
+  const q=String(document.getElementById("historySearch")?.value||"").trim().toLocaleLowerCase("ru-RU");
+  const rows=transactions
+    .map((x,index)=>({x,index}))
+    .filter(({x})=>historyAccountId===null || String(x.account)===String(historyAccountId) || (x.type==="transfer" && String(x.toAccount)===String(historyAccountId)))
+    .filter(({x})=>historyFilter==="all" || (historyFilter==="income" ? (x.type==="income" || (x.type==="transfer" && String(x.toAccount)===String(historyAccountId))) : x.type===historyFilter))
+    .filter(({x})=>{
+      if(!q) return true;
+      const hay=[x.name,x.category,x.incomeCategory,accountNameById(x.account),accountNameById(x.toAccount),x.date].join(" ").toLocaleLowerCase("ru-RU");
+      return hay.includes(q);
+    })
+    .sort((a,b)=>String(b.x.date||"").localeCompare(String(a.x.date||"")) || b.index-a.index);
+
+  if(!rows.length){
+    historyList.innerHTML='<div class="empty">Операций пока нет.</div>';
+    return;
+  }
+
+  let lastDate=null;
+  const html=[];
+  rows.forEach(({x,index})=>{
+    if(x.date!==lastDate){
+      lastDate=x.date;
+      html.push(`<div class="history-date">${formatHistoryDate(x.date)}</div>`);
+    }
+    const isTransfer=x.type==="transfer";
+    const isInvestmentIncoming=isTransfer && historyAccountId!==null && String(x.toAccount)===String(historyAccountId);
+    const isIncome=x.type==="income" || isInvestmentIncoming;
+    const title=isTransfer ? (x.name||"Перевод между своими счетами") : (isIncome ? (x.name||"Доход") : (x.category||"Расход"));
+    const meta=isTransfer ? `${accountNameById(x.account)} → ${accountNameById(x.toAccount)}` : accountNameById(x.account);
+    const amount=(isIncome?"+":"−")+money(x.amount||0);
+    html.push(`<div class="history-row" data-history-index="${index}">
+      <div class="history-main">
+        <div class="history-name">${title}</div>
+        <div class="history-meta">${meta}</div>
+      </div>
+      <div class="history-amount ${isIncome?"income":"expense"}">${amount}</div>
+      ${isTransfer ? "" : `<button class="history-edit" data-history-edit="${index}" title="Изменить">✎</button><button class="history-delete" data-history-delete="${index}" title="Удалить">🗑</button>`}
+    </div>`);
+  });
+  historyList.innerHTML=html.join("");
+}
+
+function reverseTransactionEffect(t){
+  if(!t) return;
+  const a=accounts.find(x=>String(x.id)===String(t.account));
+  const v=Number(t.amount||0);
+  if(t.type==="income"){ if(a) a.balance=Number(a.balance||0)-v; }
+  else if(t.type==="expense"){ if(a) a.balance=Number(a.balance||0)+v; }
+  else if(t.type==="transfer"){
+    if(a) a.balance=Number(a.balance||0)+v;
+    const to=accounts.find(x=>String(x.id)===String(t.toAccount));
+    if(to) to.balance=Number(to.balance||0)-v;
+  }
+}
+
+function applyTransactionEffect(t){
+  if(!t) return false;
+  const a=accounts.find(x=>String(x.id)===String(t.account));
+  const v=Number(t.amount||0);
+  if(t.type==="income"){ if(!a) return false; a.balance=Number(a.balance||0)+v; return true; }
+  if(t.type==="expense"){ if(!a) return false; a.balance=Number(a.balance||0)-v; return true; }
+  if(t.type==="transfer"){
+    const to=accounts.find(x=>String(x.id)===String(t.toAccount));
+    if(!a || !to) return false;
+    a.balance=Number(a.balance||0)-v;
+    to.balance=Number(to.balance||0)+v;
+    return true;
+  }
+  return false;
+}
+
+function editTransaction(index){
+  const t=transactions[index];
+  if(!t || t.type==="transfer") return;
+  editingTransactionIndex=index;
+  operationModalTitle.textContent=t.type==="income" ? "Изменить доход" : "Изменить расход";
+  incomeFields.style.display=t.type==="income" ? "block" : "none";
+  expenseFields.style.display=t.type==="expense" ? "block" : "none";
+  debtFields.style.display="none";
+  operationDate.value=t.date||today();
+  deleteOperationButton.style.display="block";
+  saveExpenseButton.textContent="Сохранить";
+
+  if(t.type==="income"){
+    incomeAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}">${a.name||"Счёт"}</option>`).join("");
+    const ai=accounts.findIndex(a=>String(a.id)===String(t.account));
+    if(ai>=0) incomeAccount.value=String(ai);
+    incomeAmount.value=t.amount||"";
+    incomeCategory.value=normalizeIncomeCategory(t)==="salary" ? "salary" : "other";
+    incomeName.value=t.name||"";
+    incomeNameLabel.style.display=incomeCategory.value==="other" ? "block" : "none";
+    incomeName.style.display=incomeCategory.value==="other" ? "block" : "none";
+  }else{
+    expenseAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}">${a.name||"Счёт"}</option>`).join("");
+    const ai=accounts.findIndex(a=>String(a.id)===String(t.account));
+    if(ai>=0) expenseAccount.value=String(ai);
+    amount.value=t.amount||"";
+    populate();
+    categorySelect.value=t.category||categories[0]?.name||"";
+    const toggle=document.getElementById("roundingEnabled");
+    if(toggle) toggle.checked=!!t.roundingEnabled;
+    updateRoundingUI();
+    calc();
+  }
+  open("expenseOverlay");
+}
+
+function deleteTransaction(index){
+  const t=transactions[index];
+  if(!t) return;
+  if(!confirm("Удалить эту операцию?")) return;
+  reverseTransactionEffect(t);
+  if(t.roundingTransactionId){
+    const ri=transactions.findIndex(x=>String(x.id)===String(t.roundingTransactionId));
+    if(ri>=0){
+      reverseTransactionEffect(transactions[ri]);
+      transactions.splice(ri,1);
+      if(ri<index) index--;
+    }
+  }
+  transactions.splice(index,1);
+  save(AK,accounts);
+  save(TY,transactions);
+  scheduleAutoSync();
+  close("expenseOverlay");
+  editingTransactionIndex=null;
+  renderAccounts();
+  renderDebts();
+  renderCats();
+  home();
+  renderHistory();
+}
+
+function screen(id,b){
+
+  document
+    .querySelectorAll(".screen")
+    .forEach(x=>
+      x.classList.remove("active")
+    );
+
+  document
+    .getElementById(id)
+    .classList.add("active");
+
+
+  document
+    .querySelectorAll(".nav button")
+    .forEach(x=>
+      x.classList.remove("active")
+    );
+
+  b.classList.add("active");
+
+
+  if(id==="budget")
+    renderCats();
+
+  if(id==="accounts")
+    renderAccounts();
+
+  if(id==="debts")
+    renderDebts();
+
+  if(id==="goals")
+    renderGoals();
+
+  if(id==="budgetHistory")
+    renderBudgetHistory();
+
+  if(id==="history")
+    renderHistory();
+
+  home();
+}
+
+
+function open(id){
+  document
+    .getElementById(id)
+    .classList.add("open");
+}
+
+
+function close(id){
+  document
+    .getElementById(id)
+    .classList.remove("open");
+}
+
+
+function populate(){
+
+  categorySelect.innerHTML=
+    categories.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru",{sensitivity:"base"}))
+      .map(
+        c=>`<option>${c.name}</option>`
+      )
+      .join("");
+}
+
+
+function investmentAccount(){
+  return accounts.find(a=>a && a.type==="investment");
+}
+
+function isTBankAccount(a){
+  const text=String(a?.bank||a?.name||"").toLowerCase().replace(/ё/g,"е");
+  const icon=String(a?.icon||"").toLowerCase();
+  return text.includes("т-банк") || text.includes("т банк") || text.includes("тинькофф") || text.includes("t-bank") || text.includes("t bank") || text.includes("tinkoff") || text.includes("tbank") || icon==="tbank";
+}
+
+function roundingAmount(value){
+  const v=Math.max(0,Number(value)||0);
+  const rounded=Math.ceil((v-1e-9)/50)*50;
+  return Math.max(0,Math.round((rounded-v)*100)/100);
+}
+
+function transactionRounding(t){
+  return t?.type==="expense" && t.roundingEnabled===true ? Number(t.roundingAmount||0) : 0;
+}
+
+function updateRoundingUI(forceState=null){
+  const box=document.getElementById("roundingBox");
+  const toggle=document.getElementById("roundingEnabled");
+  const preview=document.getElementById("roundingPreview");
+  if(!box || !toggle || !preview) return;
+  const idx=Number(expenseAccount?.value);
+  const account=Number.isInteger(idx) && accounts[idx] ? accounts[idx] : null;
+  const inv=investmentAccount();
+  const eligible=!!account && isTBankAccount(account) && !!inv;
+  box.style.display=eligible ? "block" : "none";
+  if(forceState!==null) toggle.checked=!!forceState;
+  const value=Number(amount?.value||0);
+  const extra=toggle.checked ? roundingAmount(value) : 0;
+  preview.textContent=extra>0 ? `Покупка ${money(value)} → округление ${money(extra)} в «${inv?.name||"Инвесткопилка"}».` : "Округление выключено.";
+}
+
+function calc(){
+
+  const a=+amount.value||0;
+
+  const c=
+    cat(categorySelect.value);
+
+  const r=
+    c
+      ?c.plan-catSpent(c.name)
+      :0;
+
+  categoryRemaining.textContent=
+    money(r);
+
+  categoryRemaining.className=
+    "category-info-main"+
+    (r<0?" danger":"");
+
+
+  categoryConsequence.innerHTML=
+    a
+      ?(
+        r-a>=0
+          ?`После покупки в категории останется <strong>${money(r-a)}</strong>.`
+          :`После покупки будет перерасход <strong>${money(a-r)}</strong>.`
+      )
+      :"Введи сумму — я покажу, что произойдёт.";
+
+
+  const m=
+    budget()-spent()-a;
+
+  monthRemainingAfter.textContent=
+    money(m);
+
+  monthRemainingAfter.className=
+    "category-info-main"+
+    (m<0?" danger":"");
+}
+
+
+/* =========================
+   GOOGLE SYNC
+   =========================
+   
+   ВАЖНО:
+   Здесь нет fetch().
+   Для чтения используется JSONP,
+   для записи — обычная HTML-форма в скрытый iframe.
+   
+   Это сделано специально для Safari/iPhone,
+   где предыдущий вариант упирался в CORS.
+*/
+
+
+function setSyncStatus(text,type=""){
+
+  syncStatus.textContent=text;
+
+  syncStatus.className=
+    "sync-status"+
+    (type
+      ?" "+type
+      :"");
+}
+
+
+/* -------------------------
+   ДАННЫЕ ДЛЯ СИНХРОНИЗАЦИИ
+------------------------- */
+
+function markSettingsDirty(){
+  save(SETTINGS_DIRTY_KEY,Date.now());
+}
+
+function clearSettingsDirty(){
+  localStorage.removeItem(SETTINGS_DIRTY_KEY);
+}
+
+let autoSyncTimer=null;
+let autoSyncBusy=false;
+
+function touchLocalSync(){
+  localStorage.setItem(SYNC_UPDATED_AT_KEY,String(Date.now()));
+}
+
+function localUpdatedAt(){
+  return Number(localStorage.getItem(SYNC_UPDATED_AT_KEY)||0);
+}
+
+function scheduleAutoSync(){
+  touchLocalSync();
+  if(autoSyncTimer) clearTimeout(autoSyncTimer);
+  autoSyncTimer=setTimeout(()=>{
+    autoSyncOnce(true);
+  },900);
+}
+
+function startAutoSyncPolling(){
+  if(syncPollTimer) clearInterval(syncPollTimer);
+  syncPollTimer=setInterval(()=>{
+    if(document.hidden || autoSyncBusy) return;
+    autoSyncOnce(false);
+  },15000);
+}
+
+
+function localSyncData(){
+
+  return {
+
+    updatedAt:localUpdatedAt(),
+
+    plans:Object.fromEntries(
+      categories.map(
+        c=>[
+          c.name,
+          Number(c.plan)||0
+        ]
+      )
+    ),
+
+    accounts:ensureAccountIds(accounts),
+
+    transactions:
+      Array.isArray(transactions)
+        ?transactions
+        :[],
+
+    goals:
+      Array.isArray(goals)
+        ?goals
+        :[],
+
+    debts:
+      Array.isArray(debts)
+        ?debts
+        :[],
+
+    plannedPayments:
+      Array.isArray(plannedPayments)
+        ?plannedPayments
+        :[],
+
+    settings:{
+      // Сохраняем только действительно используемую настройку.
+      savingsPercent:Number(savingsPercent)||0
+    }
+
+  };
+}
+
+
+/* -------------------------
+   НОРМАЛИЗАЦИЯ
+------------------------- */
+
+function normalizeSyncData(data){
+
+  const d=data||{};
+
+  const updatedAt=Number(d.updatedAt||d?.settings?.updatedAt||0)||0;
+
+  const plans=
+    d.plans &&
+    typeof d.plans==="object"
+      ?d.plans
+      :{};
+
+
+  const normalizedPlans=
+    Object.fromEntries(
+      Object.entries(plans)
+        .map(
+          ([name,value])=>[
+            String(name),
+            Number(value)||0
+          ]
+        )
+        .sort(
+          (a,b)=>
+            a[0].localeCompare(b[0])
+        )
+    );
+
+
+  const normalizedAccounts=
+    (
+      Array.isArray(d.accounts)
+        ?d.accounts
+        :[]
+    )
+    .map(x=>({
+
+      id:String(x.id||""),
+
+      name:String(x.name||""),
+
+      type:String(
+        x.type||"debit"
+      ),
+
+      balance:Number(
+        x.balance||0
+      ),
+
+      bank:String(
+        x.bank||x.name||""
+      ),
+
+      creditLimit:Number(
+        x.creditLimit||0
+      )
+
+    }))
+    .sort(
+      (a,b)=>
+        a.id.localeCompare(b.id)
+    );
+
+
+  const normalizedTransactions=
+    (
+      Array.isArray(d.transactions)
+        ?d.transactions
+        :[]
+    )
+    .map(x=>({
+
+      id:String(x.id||""),
+
+      type:String(
+        x.type||"expense"
+      ),
+
+      amount:Number(
+        x.amount||0
+      ),
+
+      category:String(
+        x.category||""
+      ),
+
+      incomeCategory:String(
+        x.incomeCategory||normalizeIncomeCategory(x)||""
+      ),
+
+      name:String(
+        x.name||""
+      ),
+
+      account:String(
+        x.account||""
+      ),
+
+      date:String(
+        x.date||""
+      )
+
+    }))
+    .sort(
+      (a,b)=>
+        a.id.localeCompare(b.id)
+    );
+
+
+  const normalizedGoals=
+    (
+      Array.isArray(d.goals)
+        ?d.goals
+        :[]
+    )
+    .map(x=>({
+
+      name:String(
+        x.name||""
+      ),
+
+      link:String(
+        x.link||""
+      ),
+
+      target:Number(
+        x.target||0
+      ),
+
+      saved:Number(
+        x.saved||0
+      ),
+
+      date:x.date
+        ?String(x.date)
+        :null
+
+    }))
+    .sort(
+      (a,b)=>
+        (
+          a.name+
+          "|" +
+          a.link+
+          "|" +
+          (a.date||"")
+        ).localeCompare(
+          b.name+
+          "|" +
+          b.link+
+          "|" +
+          (b.date||"")
+        )
+    );
+
+
+  const normalizedDebts=
+    (
+      Array.isArray(d.debts)
+        ?d.debts
+        :[]
+    )
+    .map(x=>({
+
+      id:String(x.id||""),
+
+      name:String(
+        x.name||""
+      ),
+
+      amount:Number(
+        x.amount||0
+      ),
+
+      dueDate:x.dueDate
+        ?String(x.dueDate)
+        :null
+
+    }))
+    .sort(
+      (a,b)=>
+        a.id.localeCompare(b.id)
+    );
+
+
+  const normalizedPlannedPayments=
+    (Array.isArray(d.plannedPayments) ? d.plannedPayments : [])
+      .map(x=>({
+        id:String(x.id||""),
+        debtId:String(x.debtId||""),
+        name:String(x.name||""),
+        amount:Number(x.amount||0),
+        date:x.date?String(x.date):null,
+        category:String(x.category||"Кредиты | Долги"),
+        paid:Boolean(x.paid),
+        source:String(x.source||"debt")
+      }))
+      .filter(x=>x.amount>0 && x.date);
+
+
+  const s=
+    d.settings &&
+    typeof d.settings==="object"
+      ?d.settings
+      :{};
+
+
+  const normalizedSettings={
+    savingsPercent:Number(s.savingsPercent||0)
+  };
+
+
+  return {
+
+    updatedAt,
+
+    plans:normalizedPlans,
+
+    accounts:normalizedAccounts,
+
+    transactions:
+      normalizedTransactions,
+
+    goals:
+      normalizedGoals,
+
+    debts:
+      normalizedDebts,
+
+    plannedPayments:
+      normalizedPlannedPayments,
+
+    settings:
+      normalizedSettings
+
+  };
+}
+
+
+function sameSyncData(a,b){
+
+  return JSON.stringify(
+    normalizeSyncData(a)
+  )===
+  JSON.stringify(
+    normalizeSyncData(b)
+  );
+
+}
+
+
+/* -------------------------
+   ПРОВЕРКА LEGACY GOOGLE
+------------------------- */
+
+function googleIsLegacy(data){
+
+  const hasPlans=
+    data &&
+    data.plans &&
+    typeof data.plans==="object" &&
+    Object.keys(data.plans).length>0;
+
+  const hasAccounts=
+    data &&
+    Array.isArray(data.accounts) &&
+    data.accounts.length>0;
+
+  const hasTransactions=
+    data &&
+    Array.isArray(data.transactions) &&
+    data.transactions.length>0;
+
+  const hasGoals=
+    data &&
+    Array.isArray(data.goals) &&
+    data.goals.length>0;
+
+  const hasDebts=
+    data &&
+    Array.isArray(data.debts) &&
+    data.debts.length>0;
+
+  const hasSettings=
+    data &&
+    data.settings &&
+    typeof data.settings==="object" &&
+    Object.keys(data.settings).length>0;
+
+
+  return (
+    (hasPlans||hasAccounts) &&
+    !hasTransactions &&
+    !hasGoals &&
+    !hasDebts &&
+    !hasSettings
+  );
+}
+
+
+/* -------------------------
+   GOOGLE LOAD — JSONP
+------------------------- */
+
+function googleLoad(){
+
+  return new Promise(
+    (resolve,reject)=>{
+
+      const callbackName=
+        "babkiGoogleCallback_"+Date.now()+"_"+Math.random()
+          .toString(36)
+          .slice(2,8);
+
+
+      const script=
+        document.createElement("script");
+
+
+      let finished=false;
+
+
+      const cleanup=()=>{
+
+        try{
+          delete window[callbackName];
+        }catch(e){
+          window[callbackName]=undefined;
+        }
+
+        if(script.parentNode)
+          script.parentNode.removeChild(script);
+
+      };
+
+
+      const finishError=error=>{
+
+        if(finished)
+          return;
+
+        finished=true;
+
+        cleanup();
+
+        reject(error);
+
+      };
+
+
+      const timer=
+        setTimeout(
+          ()=>{
+            finishError(
+              new Error(
+                "Google не ответил вовремя."
+              )
+            );
+          },
+          15000
+        );
+
+
+      window[callbackName]=data=>{
+
+        if(finished)
+          return;
+
+        finished=true;
+
+        clearTimeout(timer);
+
+        cleanup();
+
+
+        if(!data || !data.ok){
+
+          reject(
+            new Error(
+              data?.error ||
+              "Не удалось получить данные из Google."
+            )
+          );
+
+          return;
+        }
+
+
+        resolve(data);
+
+      };
+
+
+      script.onerror=()=>{
+
+        clearTimeout(timer);
+
+        finishError(
+          new Error(
+            "Не удалось подключиться к Google Sheets."
+          )
+        );
+
+      };
+
+
+      script.src=
+        GOOGLE_SYNC_URL+
+        "?action=sync"+
+        "&callback="+
+        encodeURIComponent(callbackName)+
+        "&ts="+
+        Date.now();
+
+
+      document.body.appendChild(script);
+
+    }
+  );
+}
+
+
+/* -------------------------
+   GOOGLE PUSH — FORM + IFRAME
+------------------------- */
+
+function googlePush(){
+
+  const local=
+    localSyncData();
+
+
+  return new Promise(
+    (resolve,reject)=>{
+
+      const iframeName=
+        "babkiGoogleFrame_"+Date.now()+"_"+Math.random()
+          .toString(36)
+          .slice(2,8);
+
+
+      const iframe=
+        document.createElement("iframe");
+
+      iframe.name=iframeName;
+
+      iframe.style.display="none";
+
+
+      const form=
+        document.createElement("form");
+
+      form.method="POST";
+
+      form.action=
+        GOOGLE_SYNC_URL;
+
+      form.target=
+        iframeName;
+
+      form.style.display="none";
+
+
+      const payload=
+        document.createElement("input");
+
+      payload.type="hidden";
+
+      payload.name="payload";
+
+      payload.value=
+        JSON.stringify({
+          action:"sync",
+          ...local
+        });
+
+
+      form.appendChild(payload);
+
+      document.body.appendChild(iframe);
+
+      document.body.appendChild(form);
+
+
+      let finished=false;
+
+
+      const cleanup=()=>{
+
+        if(form.parentNode)
+          form.parentNode.removeChild(form);
+
+        if(iframe.parentNode)
+          iframe.parentNode.removeChild(iframe);
+
+      };
+
+
+      const finishSuccess=()=>{
+
+        if(finished)
+          return;
+
+        finished=true;
+
+        cleanup();
+
+        resolve({
+          ok:true
+        });
+
+      };
+
+
+      const finishError=error=>{
+
+        if(finished)
+          return;
+
+        finished=true;
+
+        cleanup();
+
+        reject(error);
+
+      };
+
+
+      /*
+       * Apps Script возвращает страницу после выполнения POST.
+       * Поэтому onload здесь означает, что запрос дошёл
+       * до веб-приложения.
+       */
+
+      iframe.onload=()=>{
+
+        setTimeout(
+          finishSuccess,
+          250
+        );
+
+      };
+
+
+      iframe.onerror=()=>{
+
+        finishError(
+          new Error(
+            "Не удалось отправить данные в Google."
+          )
+        );
+
+      };
+
+
+      const timeout=
+        setTimeout(
+          ()=>{
+            if(!finished){
+
+              /*
+               * Safari иногда не вызывает onload
+               * для скрытого iframe.
+               *
+               * В этом случае запрос уже мог быть
+               * успешно обработан Apps Script.
+               *
+               * Поэтому здесь считаем отправку завершённой.
+               */
+
+              finishSuccess();
+
+            }
+          },
+          10000
+        );
+
+
+      const originalCleanup=
+        cleanup;
+
+
+      /*
+       * Сбрасываем таймер после завершения.
+       */
+
+      const wrappedSuccess=()=>{
+
+        clearTimeout(timeout);
+
+        originalCleanup();
+
+        resolve({
+          ok:true
+        });
+
+      };
+
+
+      const wrappedError=error=>{
+
+        clearTimeout(timeout);
+
+        originalCleanup();
+
+        reject(error);
+
+      };
+
+
+      iframe.onload=()=>{
+
+        if(finished)
+          return;
+
+        finished=true;
+
+        clearTimeout(timeout);
+
+        originalCleanup();
+
+        resolve({
+          ok:true
+        });
+
+      };
+
+
+      iframe.onerror=()=>{
+
+        if(finished)
+          return;
+
+        finished=true;
+
+        clearTimeout(timeout);
+
+        originalCleanup();
+
+        reject(
+          new Error(
+            "Не удалось отправить данные в Google."
+          )
+        );
+
+      };
+
+
+      try{
+
+        form.submit();
+
+      }catch(error){
+
+        clearTimeout(timeout);
+
+        finishError(error);
+
+      }
+
+    }
+  );
+}
+
+
+/* -------------------------
+   ПРИМЕНЕНИЕ GOOGLE DATA
+------------------------- */
+
+function applyGoogleData(data){
+
+  const normalized=normalizeSyncData(data);
+  if(normalized.updatedAt){
+    localStorage.setItem(SYNC_UPDATED_AT_KEY,String(normalized.updatedAt));
+  }
+
+
+    normalizeSyncData(data);
+
+
+  const plans=
+    normalized.plans;
+
+
+  categories.forEach(c=>{
+
+    if(
+      Object.prototype.hasOwnProperty.call(
+        plans,
+        c.name
+      )
+    ){
+
+      c.plan=Math.max(
+        0,
+        Number(plans[c.name])||0
+      );
+
+    }
+
+  });
+
+
+  saveCategories();
+
+
+  accounts=
+    ensureAccountIds(
+      normalized.accounts
+    );
+
+  save(
+    AK,
+    accounts
+  );
+
+
+  transactions=
+    Array.isArray(
+      normalized.transactions
+    )
+      ?normalized.transactions
+      :[];
+
+
+  save(
+    TY,
+    transactions
+  );
+
+
+  goals=
+    Array.isArray(
+      normalized.goals
+    )
+      ?normalized.goals
+      :[];
+
+
+  save(
+    GK,
+    goals
+  );
+
+
+  debts=
+    Array.isArray(
+      normalized.debts
+    )
+      ?normalized.debts
+      :[];
+
+
+  save(
+    DK,
+    debts
+  );
+
+  plannedPayments=Array.isArray(normalized.plannedPayments)
+    ?normalized.plannedPayments
+    :[];
+  save(PK,plannedPayments);
+
+
+  if(
+    normalized.settings &&
+    typeof normalized.settings==="object"
+  ){
+
+    const s=
+      normalized.settings;
+
+
+    savingsPercent=
+      Math.min(
+        100,
+        Math.max(
+          0,
+          Number(s.savingsPercent)||0
+        )
+      );
+
+    save(SK,savingsPercent);
+
+  }
+
+}
+
+
+/* -------------------------
+   LEGACY GOOGLE + LOCAL DATA
+------------------------- */
+
+function mergeLegacyGoogleWithLocal(google){
+
+  const local=
+    localSyncData();
+
+
+  return {
+
+    plans:
+      google.plans||local.plans,
+
+    accounts:
+      Array.isArray(google.accounts)
+        ?google.accounts
+        :local.accounts,
+
+    transactions:
+      local.transactions,
+
+    goals:
+      local.goals,
+
+    debts:
+      local.debts,
+
+    plannedPayments:
+      local.plannedPayments,
+
+    settings:
+      local.settings
+
+  };
+
+}
+
+
+/* -------------------------
+   ПОЛНАЯ СИНХРОНИЗАЦИЯ
+------------------------- */
+
+async function syncWithGoogle(){
+  return autoSyncOnce(true);
+}
+
+async function autoSyncOnce(showStatus=false){
+  if(autoSyncBusy) return;
+  autoSyncBusy=true;
+  try{
+    if(showStatus){
+      syncButton.disabled=true;
+      syncButton.textContent="Синхронизация…";
+      setSyncStatus("Проверяю данные…");
+    }
+
+    const google=await googleLoad();
+    const local=localSyncData();
+    const googleUpdatedAt=Number(google.updatedAt||google?.settings?.updatedAt||0)||0;
+    const localUpdated=localUpdatedAt();
+
+    if(googleUpdatedAt>localUpdated){
+      applyGoogleData(google);
+      renderCats(); renderAccounts(); renderDebts(); renderGoals();
+      updateFinance(); home(); renderHistory();
+      localStorage.setItem(SYNC_LAST_GOOGLE_KEY,JSON.stringify(normalizeSyncData(google)));
+      if(showStatus) setSyncStatus("Данные из Google обновлены на телефоне ✓","success");
+      return;
+    }
+
+    if(localUpdated>googleUpdatedAt){
+      await googlePush();
+      localStorage.setItem(SYNC_LAST_GOOGLE_KEY,JSON.stringify(normalizeSyncData(localSyncData())));
+      if(showStatus) setSyncStatus("Последние данные телефона сохранены в Google ✓","success");
+      return;
+    }
+
+    const same=sameSyncData(local,google);
+    if(!same){
+      const lastRaw=localStorage.getItem(SYNC_LAST_GOOGLE_KEY);
+      const last=lastRaw?JSON.parse(lastRaw):null;
+      const googleChanged=last ? !sameSyncData(google,last) : false;
+      const localChanged=last ? !sameSyncData(local,last) : false;
+
+      if(googleChanged && !localChanged){
+        applyGoogleData(google);
+        renderCats(); renderAccounts(); renderDebts(); renderGoals(); updateFinance(); home(); renderHistory();
+        if(showStatus) setSyncStatus("Данные из Google обновлены на телефоне ✓","success");
+      }else{
+        await googlePush();
+        localStorage.setItem(SYNC_LAST_GOOGLE_KEY,JSON.stringify(normalizeSyncData(localSyncData())));
+        if(showStatus) setSyncStatus("Последние данные сохранены в Google ✓","success");
+      }
+    }else if(showStatus){
+      setSyncStatus("Телефон и Google уже синхронизированы ✓","success");
+    }
+
+    localStorage.setItem(SYNC_LAST_GOOGLE_KEY,JSON.stringify(normalizeSyncData(google)));
+  }catch(error){
+    console.warn("Babki auto sync:",error);
+    if(showStatus) setSyncStatus("Не удалось синхронизировать автоматически. Проверь соединение.","error");
+  }finally{
+    autoSyncBusy=false;
+    if(showStatus){
+      syncButton.disabled=false;
+      syncButton.textContent="↻ Синхронизировать с Google";
+    }
+  }
+}
+
+
+/* =========================
+   PULL-TO-REFRESH
+========================= */
+
+let refreshStartY=0;
+let refreshTracking=false;
+let refreshBusy=false;
+const refreshIndicator=document.getElementById("refreshIndicator");
+
+function refreshIndicatorReset(){
+  refreshIndicator.classList.remove("visible","ready","refreshing");
+}
+
+function refreshApp(){
+  if(refreshBusy) return;
+  refreshBusy=true;
+
+  refreshIndicator.classList.add("visible","refreshing");
+
+  /*
+   * Перечитываем только уже существующие данные.
+   * Ничего не создаём и не обнуляем.
+   */
+  load();
+  populate();
+  renderCats();
+  renderAccounts();
+  renderDebts();
+  renderGoals();
+  renderBudgetHistory();
+  renderHistory();
+  updateFinance();
+  home();
+
+  setTimeout(()=>{
+    refreshBusy=false;
+    refreshIndicatorReset();
+  },450);
+}
+
+document.addEventListener("touchstart",e=>{
+  if(refreshBusy || e.touches.length!==1) return;
+  if(document.querySelector(".overlay.open")) return;
+  if(window.scrollY>0) return;
+
+  refreshStartY=e.touches[0].clientY;
+  refreshTracking=true;
+}, {passive:true});
+
+document.addEventListener("touchmove",e=>{
+  if(!refreshTracking || refreshBusy || e.touches.length!==1) return;
+  if(document.querySelector(".overlay.open")) return;
+
+  const dy=e.touches[0].clientY-refreshStartY;
+  if(dy<=0) return;
+
+  const pull=Math.min(90,dy);
+  refreshIndicator.style.transform=`translateY(${Math.max(-20,pull-50)}px) scale(${Math.min(1,pull/65)})`;
+  refreshIndicator.classList.add("visible");
+
+  if(pull>=65)
+    refreshIndicator.classList.add("ready");
+  else
+    refreshIndicator.classList.remove("ready");
+}, {passive:true});
+
+document.addEventListener("touchend",e=>{
+  if(!refreshTracking) return;
+  refreshTracking=false;
+
+  const touch=e.changedTouches && e.changedTouches[0];
+  const dy=touch ? touch.clientY-refreshStartY : 0;
+
+  refreshIndicator.style.transform="";
+
+  if(dy>=65 && window.scrollY<=1){
+    refreshApp();
+  }else{
+    refreshIndicatorReset();
+  }
+}, {passive:true});
+
+document.addEventListener("touchcancel",()=>{
+  refreshTracking=false;
+  refreshIndicator.style.transform="";
+  refreshIndicatorReset();
+}, {passive:true});
+
+
+const mainNavScreens=["home","budget","accounts","debts","goals","settings"];
+let swipeStartX=0,swipeStartY=0,swipeTracking=false;
+
+document.addEventListener("touchstart",e=>{
+  if(e.touches.length!==1 || document.querySelector(".overlay.open")) return;
+  const target=e.target;
+  if(target.closest("input,select,textarea,button,.account-row")) return;
+  swipeStartX=e.touches[0].clientX;
+  swipeStartY=e.touches[0].clientY;
+  swipeTracking=true;
+},{passive:true});
+
+document.addEventListener("touchend",e=>{
+  if(!swipeTracking) return;
+  swipeTracking=false;
+  const t=e.changedTouches?.[0];
+  if(!t) return;
+  const dx=t.clientX-swipeStartX, dy=t.clientY-swipeStartY;
+  if(Math.abs(dx)<55 || Math.abs(dx)<Math.abs(dy)*1.45) return;
+  const active=document.querySelector(".screen.active");
+  const id=active?.id;
+  const idx=mainNavScreens.indexOf(id);
+  if(idx<0) return;
+  const next=idx+(dx<0?1:-1);
+  if(next<0 || next>=mainNavScreens.length) return;
+  const btn=document.querySelector(`.nav button[data-screen="${mainNavScreens[next]}"]`);
+  if(!btn) return;
+  screen(mainNavScreens[next],btn);
+  const newScreen=document.getElementById(mainNavScreens[next]);
+  newScreen.classList.remove("swipe-in-left","swipe-in-right");
+  void newScreen.offsetWidth;
+  newScreen.classList.add(dx<0?"swipe-in-left":"swipe-in-right");
+},{passive:true});
+
+startAutoSyncPolling();
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden) autoSyncOnce(false);
+});
+
+
+/* =========================
+   СТАРТ ПРИЛОЖЕНИЯ
+========================= */
+
+document
+  .querySelectorAll(".nav button")
+  .forEach(button => {
+
+    button.addEventListener("click", () => {
+      screen(
+        button.dataset.screen,
+        button
+      );
+    });
+
+  });
+
+
+/* РАСХОД / ДОХОД */
+
+quickExpenseButton.addEventListener("click", () => {
+
+  editingTransactionIndex=null;
+  operationModalTitle.textContent = "Расход";
+
+  incomeFields.style.display = "none";
+  expenseFields.style.display = "block";
+  debtFields.style.display = "none";
+
+  saveExpenseButton.textContent = "Записать";
+  deleteOperationButton.style.display = "none";
+  operationDate.value = today();
+
+  amount.value = "";
+
+  expenseAccount.innerHTML =
+    accounts.length
+      ? accounts.map((a,i) =>
+          `<option value="${i}">${a.name || "Счёт"}</option>`
+        ).join("")
+      : `<option value="">Сначала добавь счёт</option>`;
+
+  document.getElementById("roundingEnabled").checked=false;
+  updateRoundingUI();
+  open("expenseOverlay");
+
+  setTimeout(() => {
+    amount.focus();
+  }, 100);
+
+});
+
+
+quickTransferButton.addEventListener("click", () => {
+  prepareTransfer();
+});
+
+quickIncomeButton.addEventListener("click", () => {
+
+  editingTransactionIndex=null;
+  operationModalTitle.textContent = "Доход";
+
+  incomeFields.style.display = "block";
+  expenseFields.style.display = "none";
+  debtFields.style.display = "none";
+
+  saveExpenseButton.textContent = "Записать";
+  deleteOperationButton.style.display = "none";
+  operationDate.value = today();
+
+  incomeAmount.value = "";
+  incomeCategory.value = "salary";
+  incomeName.value = "Зарплата";
+  incomeNameLabel.style.display = "none";
+  incomeName.style.display = "none";
+
+  incomeAccount.innerHTML =
+    accounts.length
+      ? accounts.map((a,i) =>
+          `<option value="${i}">${a.name || "Счёт"}</option>`
+        ).join("")
+      : `<option value="">Сначала добавь счёт</option>`;
+
+  open("expenseOverlay");
+
+  setTimeout(() => {
+    incomeAmount.focus();
+  }, 100);
+
+});
+
+
+incomeCategory.addEventListener("change", () => {
+  const other=incomeCategory.value==="other";
+  incomeNameLabel.style.display=other ? "block" : "none";
+  incomeName.style.display=other ? "block" : "none";
+  if(!other) incomeName.value=incomeCategory.value==="salary" ? "Зарплата" : "";
+});
+
+
+closeExpenseButton.addEventListener("click", () => {
+  close("expenseOverlay");
+});
+
+deleteOperationButton.addEventListener("click", () => {
+  if(editingTransactionIndex!==null)
+    deleteTransaction(editingTransactionIndex);
+});
+
+monthlyHistoryCard.addEventListener("click", () => openHistory(null,"home"));
+
+historyList.addEventListener("click", e => {
+  const edit=e.target.closest("[data-history-edit]");
+  if(edit){ editTransaction(Number(edit.dataset.historyEdit)); return; }
+  const del=e.target.closest("[data-history-delete]");
+  if(del){ deleteTransaction(Number(del.dataset.historyDelete)); }
+});
+
+document.getElementById("accountsSearch")?.addEventListener("input",renderAccounts);
+document.getElementById("historySearch")?.addEventListener("input",renderHistory);
+
+document.querySelectorAll(".history-filter").forEach(button => {
+  button.addEventListener("click", () => {
+    historyFilter=button.dataset.historyFilter;
+    document.querySelectorAll(".history-filter").forEach(b=>b.classList.toggle("active",b===button));
+    renderHistory();
+  });
+});
+
+backFromHistoryButton.addEventListener("click", () => {
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById(historyReturnScreen).classList.add("active");
+  if(historyReturnScreen==="accounts") renderAccounts();
+  home();
+});
+
+openBudgetHistoryButton.addEventListener("click", () => {
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById("budgetHistory").classList.add("active");
+  renderBudgetHistory();
+});
+
+backFromBudgetHistoryButton.addEventListener("click", () => {
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById("settings").classList.add("active");
+});
+
+
+amount.addEventListener("input", calc);
+
+categorySelect.addEventListener("change", calc);
+expenseAccount.addEventListener("change", ()=>updateRoundingUI());
+document.getElementById("roundingEnabled")?.addEventListener("change", ()=>updateRoundingUI());
+amount.addEventListener("input", ()=>updateRoundingUI());
+
+
+/* СОХРАНЕНИЕ РАСХОДА / ДОХОДА */
+
+saveExpenseButton.addEventListener("click", () => {
+  const isIncome = incomeFields.style.display !== "none";
+  const value = Number((isIncome ? incomeAmount.value : amount.value) || 0);
+  if(value <= 0) return;
+  const date = operationDate.value || today();
+  let accountIndex, category, name, incomeCategoryValue;
+  if(isIncome){
+    accountIndex=Number(incomeAccount.value);
+    incomeCategoryValue=incomeCategory.value || "other";
+    name=incomeCategoryValue==="salary" ? "Зарплата" : (incomeName.value.trim() || "Доход");
+  }else{
+    category=categorySelect.value;
+    accountIndex=Number(expenseAccount.value);
+    if(!category) return;
+  }
+  if(!Number.isInteger(accountIndex) || !accounts[accountIndex]){
+    alert(isIncome ? "Выбери счёт, куда пришли деньги." : "Выбери счёт, с которого списаны деньги.");
+    return;
+  }
+  const account=accounts[accountIndex];
+  const inv=investmentAccount();
+  const roundingEnabled=!isIncome && isTBankAccount(account) && !!inv && document.getElementById("roundingEnabled")?.checked===true;
+  const extra=roundingEnabled ? roundingAmount(value) : 0;
+
+  if(editingTransactionIndex!==null){
+    const old=transactions[editingTransactionIndex];
+    if(!old) return;
+    reverseTransactionEffect(old);
+    if(old.roundingTransactionId){
+      const ri=transactions.findIndex(x=>String(x.id)===String(old.roundingTransactionId));
+      if(ri>=0){ reverseTransactionEffect(transactions[ri]); transactions.splice(ri,1); }
+    }
+    const updated={...old,amount:value,account:account.id,date,type:isIncome?"income":"expense"};
+    if(isIncome){
+      updated.name=name; updated.incomeCategory=incomeCategoryValue;
+      delete updated.roundingEnabled; delete updated.roundingAmount; delete updated.roundingAccount; delete updated.roundingTransactionId;
+      applyTransactionEffect(updated);
+    }else{
+      updated.category=category;
+      updated.roundingEnabled=extra>0; updated.roundingAmount=extra; updated.roundingAccount=extra>0?inv.id:null;
+      updated.roundingTransactionId=extra>0?"round-"+updated.id:null;
+      applyTransactionEffect(updated);
+      if(extra>0){
+        applyTransactionEffect({id:updated.roundingTransactionId,type:"transfer",amount:extra,account:updated.account,toAccount:inv.id,date,name:"Округление покупки",roundingFor:String(updated.id)});
+        transactions.push({id:updated.roundingTransactionId,type:"transfer",amount:extra,account:updated.account,toAccount:inv.id,date,name:"Округление покупки",roundingFor:String(updated.id)});
+      }
+    }
+    transactions[editingTransactionIndex]=updated;
+  }else{
+    const transaction={id:Date.now(),type:isIncome?"income":"expense",amount:value,account:account.id,date};
+    if(isIncome){
+      transaction.name=name; transaction.incomeCategory=incomeCategoryValue; applyTransactionEffect(transaction);
+    }else{
+      transaction.category=category; transaction.roundingEnabled=extra>0; transaction.roundingAmount=extra; transaction.roundingAccount=extra>0?inv.id:null; transaction.roundingTransactionId=extra>0?"round-"+transaction.id:null;
+      applyTransactionEffect(transaction);
+      transactions.push(transaction);
+      if(extra>0){
+        const transfer={id:transaction.roundingTransactionId,type:"transfer",amount:extra,account:account.id,toAccount:inv.id,date,name:"Округление покупки",roundingFor:String(transaction.id)};
+        applyTransactionEffect(transfer); transactions.push(transfer);
+      }
+    }
+    if(isIncome || !transactions.includes(transaction)) transactions.push(transaction);
+  }
+  save(AK,accounts); save(TY,transactions); scheduleAutoSync();
+  close("expenseOverlay"); editingTransactionIndex=null; deleteOperationButton.style.display="none";
+  renderAccounts(); renderDebts(); renderCats(); home(); renderHistory();
+});
+
+/* ЛИМИТ КАТЕГОРИИ */
+
+categoryList.addEventListener("click", e => {
+
+  const button =
+    e.target.closest("[data-ci]");
+
+  if(!button)
+    return;
+
+  editingCategory =
+    Number(button.dataset.ci);
+
+  const c =
+    categories[editingCategory];
+
+  editingCategoryName.textContent =
+    c.name;
+
+  categoryLimitInput.value =
+    c.plan;
+
+  open("categoryEditOverlay");
+
+  setTimeout(() => {
+    categoryLimitInput.focus();
+    categoryLimitInput.select();
+  },100);
+
+});
+
+
+closeCategoryEditButton.addEventListener(
+  "click",
+  () => close("categoryEditOverlay")
+);
+
+
+saveCategoryLimitButton.addEventListener(
+  "click",
+  () => {
+
+    if(editingCategory === null)
+      return;
+
+    categories[editingCategory].plan =
+      Math.max(
+        0,
+        Number(categoryLimitInput.value || 0)
+      );
+
+    saveCategories();
+    scheduleAutoSync();
+
+    close("categoryEditOverlay");
+
+    renderCats();
+    home();
+
+  }
+);
+
+
+deleteCategoryButton.addEventListener("click",()=>{
+  if(editingCategory===null) return;
+  const c=categories[editingCategory];
+  if(!c) return;
+  if(!confirm(`Удалить категорию «${c.name}»?\n\nСуществующие операции останутся в истории, но категория исчезнет из новых операций и бюджета.`)) return;
+  categories.splice(editingCategory,1);
+  editingCategory=null;
+  saveCategories();
+  scheduleAutoSync();
+  populate();
+  close("categoryEditOverlay");
+  renderCats();
+  home();
+});
+
+
+/* СТЕРЕТЬ ВСЕ ЛИМИТЫ */
+
+clearAllLimitsButton.addEventListener(
+  "click",
+  () => {
+
+    const ok =
+      confirm(
+        "Стереть лимиты всех категорий?\n\n"+
+        "Все месячные лимиты будут установлены в 0 ₽."
+      );
+
+    if(!ok)
+      return;
+
+    categories.forEach(c => {
+      c.plan = 0;
+    });
+
+    saveCategories();
+    scheduleAutoSync();
+
+    renderCats();
+    home();
+
+  }
+);
+
+
+/* СЧЕТА */
+
+addAccountButton.addEventListener(
+  "click",
+  () => {
+
+    editingAccount = null;
+
+    accountModalTitle.textContent =
+      "Новый счёт";
+
+    accountTypeInput.value =
+      "debit";
+
+    accountNameInput.value = "";
+    accountBalanceInput.value = "";
+    creditLimitInput.value = "";
+
+    creditFields.style.display =
+      "none";
+
+    saveAccountButton.textContent =
+      "Добавить счёт";
+
+    open("accountOverlay");
+
+  }
+);
+
+
+accountsList.addEventListener("click", e => {
+
+  const button =
+    e.target.closest("[data-ai]");
+
+  const deleteButton=e.target.closest("[data-ad]");
+  if(deleteButton){
+    const i=Number(deleteButton.dataset.ad);
+    if(!Number.isInteger(i) || !accounts[i]) return;
+    const a=accounts[i];
+    if(!confirm(`Удалить счёт «${a.name||"Счёт"}»?`)) return;
+    accounts.splice(i,1);
+    save(AK,accounts);
+    scheduleAutoSync();
+    renderAccounts();
+    renderDebts();
+    home();
+    return;
+  }
+
+  if(button){
+    editingAccount =
+    Number(button.dataset.ai);
+
+  const a =
+    accounts[editingAccount];
+
+  accountModalTitle.textContent =
+    "Изменить счёт";
+
+  accountTypeInput.value =
+    a.type || "debit";
+
+  accountNameInput.value =
+    a.name || "";
+
+  accountBalanceInput.value =
+    a.balance || 0;
+
+  creditLimitInput.value =
+    a.creditLimit || 0;
+
+  creditFields.style.display =
+    a.type === "credit"
+      ? "block"
+      : "none";
+
+  saveAccountButton.textContent =
+    "Сохранить";
+
+  open("accountOverlay");
+    return;
+  }
+
+  const row=e.target.closest(".account-row");
+  if(row && Date.now()>suppressAccountClickUntil){
+    const i=Number(row.dataset.transferIndex);
+    if(Number.isInteger(i) && accounts[i])
+      openHistory(accounts[i].id,"accounts");
+  }
+
+});
+
+
+accountTypeInput.addEventListener(
+  "change",
+  () => {
+
+    creditFields.style.display =
+      accountTypeInput.value === "credit"
+        ? "block"
+        : "none";
+
+  }
+);
+
+
+closeAccountButton.addEventListener(
+  "click",
+  () => close("accountOverlay")
+);
+
+
+saveAccountButton.addEventListener(
+  "click",
+  () => {
+
+    const old =
+      editingAccount !== null
+        ? accounts[editingAccount]
+        : null;
+
+    const account = {
+
+      ...(old || {}),
+
+      id:
+        old?.id ||
+        (
+          "acc_" +
+          Date.now() +
+          "_" +
+          Math.random()
+            .toString(36)
+            .slice(2,8)
+        ),
+
+      name:
+        accountNameInput.value.trim() ||
+        "Счёт",
+
+      type:
+        accountTypeInput.value,
+
+     balance:
+  parseFloat(
+    String(accountBalanceInput.value || "0")
+      .replace(/\s/g,"")
+      .replace(",", ".")
+  ) || 0,
+
+      bank:
+        accountNameInput.value.trim() ||
+        "Счёт",
+
+      creditLimit:
+        accountTypeInput.value === "credit"
+          ? Number(
+              creditLimitInput.value || 0
+            )
+          : 0
+    };
+
+
+    if(editingAccount === null){
+      accounts.push(account);
+    }else{
+      accounts[editingAccount] =
+        account;
+    }
+
+
+    save(
+      AK,
+      accounts
+    );
+    scheduleAutoSync();
+
+
+    close("accountOverlay");
+
+    renderAccounts();
+    renderDebts();
+    home();
+
+  }
+);
+
+
+/* ПЕРЕВОД */
+
+function prepareTransfer(fromIndex=null, toIndex=null){
+  if(accounts.length < 2){
+    alert("Для перевода нужно минимум два счёта.");
+    return;
+  }
+
+  transferFrom.innerHTML =
+    accounts.map((a,i) =>
+      `<option value="${i}">${a.name || "Счёт"}</option>`
+    ).join("");
+
+  transferTo.innerHTML =
+    accounts.map((a,i) =>
+      `<option value="${i}">${a.name || "Счёт"}</option>`
+    ).join("");
+
+  if(fromIndex !== null)
+    transferFrom.value = String(fromIndex);
+
+  if(toIndex !== null && toIndex !== fromIndex)
+    transferTo.value = String(toIndex);
+
+  transferAmount.value = "";
+  transferDate.value = today();
+  open("transferOverlay");
+}
+
+
+
+/* ДОЛГОЕ НАЖАТИЕ + ПЕРЕТАСКИВАНИЕ ВСЕГО СЧЁТА */
+let transferDragTimer = null;
+let transferDragActive = false;
+let transferDragFrom = null;
+let transferDragRow = null;
+let transferDragGhost = null;
+let transferDragTarget = null;
+let transferDragStartX = 0;
+let transferDragStartY = 0;
+
+function clearTransferDrag(){
+  if(transferDragTimer){
+    clearTimeout(transferDragTimer);
+    transferDragTimer = null;
+  }
+
+  if(transferDragRow)
+    transferDragRow.classList.remove("transfer-source");
+
+  if(transferDragTarget)
+    transferDragTarget.classList.remove("transfer-target");
+
+  if(transferDragGhost){
+    transferDragGhost.remove();
+    transferDragGhost = null;
+  }
+
+  transferDragActive = false;
+  transferDragFrom = null;
+  transferDragRow = null;
+  transferDragTarget = null;
+}
+
+function getTransferTarget(x,y){
+  const el = document.elementFromPoint(x,y);
+  const row = el && el.closest(".account-row");
+
+  if(!row || !accountsList.contains(row))
+    return null;
+
+  const index = Number(row.dataset.transferIndex);
+
+  if(!Number.isInteger(index) || index === transferDragFrom)
+    return null;
+
+  return row;
+}
+
+function startTransferDrag(){
+  if(!transferDragRow)
+    return;
+
+  transferDragActive = true;
+  transferDragRow.classList.add("transfer-source");
+
+  transferDragGhost = transferDragRow.cloneNode(true);
+  transferDragGhost.classList.add("transfer-ghost");
+  transferDragGhost.classList.remove("transfer-source");
+  transferDragGhost.removeAttribute("data-transfer-index");
+  transferDragGhost.style.width = Math.min(390, Math.max(260, transferDragRow.getBoundingClientRect().width)) + "px";
+
+  document.body.appendChild(transferDragGhost);
+  moveTransferGhost(transferDragStartX,transferDragStartY);
+}
+
+function moveTransferGhost(x,y){
+  if(!transferDragGhost)
+    return;
+
+  transferDragGhost.style.left = x + "px";
+  transferDragGhost.style.top = y + "px";
+
+  const row = getTransferTarget(x,y);
+
+  if(transferDragTarget && transferDragTarget !== row)
+    transferDragTarget.classList.remove("transfer-target");
+
+  transferDragTarget = row;
+
+  if(transferDragTarget)
+    transferDragTarget.classList.add("transfer-target");
+}
+
+function finishTransferDrag(x,y){
+  if(!transferDragRow)
+    return;
+
+  const wasActive = transferDragActive;
+  const from = transferDragFrom;
+  const row = wasActive ? getTransferTarget(x,y) : null;
+  const to = row ? Number(row.dataset.transferIndex) : null;
+
+  clearTransferDrag();
+
+  if(wasActive)
+    suppressAccountClickUntil=Date.now()+900;
+
+  if(
+    wasActive &&
+    Number.isInteger(from) &&
+    Number.isInteger(to) &&
+    from !== to
+  ){
+    prepareTransfer(from,to);
+  }
+}
+
+function beginTransferFromEvent(target,x,y){
+  const row = target && target.closest(".account-row");
+
+  /* Кнопка редактирования остаётся обычной кнопкой. */
+  if(!row || target.closest(".small-button"))
+    return;
+
+  const index = Number(row.dataset.transferIndex);
+
+  if(!Number.isInteger(index))
+    return;
+
+  clearTransferDrag();
+
+  transferDragFrom = index;
+  transferDragRow = row;
+  transferDragStartX = x;
+  transferDragStartY = y;
+
+  transferDragTimer = setTimeout(
+    startTransferDrag,
+    500
+  );
+}
+
+/* iPhone / touch */
+accountsList.addEventListener(
+  "touchstart",
+  e => {
+    if(e.touches.length !== 1)
+      return;
+
+    const touch = e.touches[0];
+    beginTransferFromEvent(
+      e.target,
+      touch.clientX,
+      touch.clientY
+    );
+  },
+  {passive:false}
+);
+
+accountsList.addEventListener(
+  "touchmove",
+  e => {
+    if(!transferDragRow || e.touches.length !== 1)
+      return;
+
+    const touch = e.touches[0];
+    const dx = touch.clientX - transferDragStartX;
+    const dy = touch.clientY - transferDragStartY;
+    const distance = Math.hypot(dx,dy);
+
+    if(!transferDragActive){
+      /* Обычный вертикальный свайп должен оставаться обычным скроллом. */
+      if(distance > 12){
+        clearTransferDrag();
+      }
+      return;
+    }
+
+    e.preventDefault();
+    moveTransferGhost(touch.clientX,touch.clientY);
+  },
+  {passive:false}
+);
+
+accountsList.addEventListener(
+  "touchend",
+  e => {
+    if(!transferDragRow)
+      return;
+
+    const touch =
+      e.changedTouches && e.changedTouches[0];
+
+    if(!touch){
+      clearTransferDrag();
+      return;
+    }
+
+    finishTransferDrag(
+      touch.clientX,
+      touch.clientY
+    );
+  },
+  {passive:false}
+);
+
+accountsList.addEventListener(
+  "touchcancel",
+  () => clearTransferDrag(),
+  {passive:true}
+);
+
+/* Компьютер */
+accountsList.addEventListener(
+  "pointerdown",
+  e => {
+    if(e.pointerType === "touch")
+      return;
+
+    if(e.pointerType === "mouse" && e.button !== 0)
+      return;
+
+    beginTransferFromEvent(
+      e.target,
+      e.clientX,
+      e.clientY
+    );
+  }
+);
+
+accountsList.addEventListener(
+  "pointermove",
+  e => {
+    if(e.pointerType === "touch" || !transferDragRow)
+      return;
+
+    const dx = e.clientX - transferDragStartX;
+    const dy = e.clientY - transferDragStartY;
+
+    if(!transferDragActive){
+      if(Math.hypot(dx,dy) > 20)
+        clearTransferDrag();
+      return;
+    }
+
+    e.preventDefault();
+    moveTransferGhost(e.clientX,e.clientY);
+  }
+);
+
+accountsList.addEventListener(
+  "pointerup",
+  e => {
+    if(e.pointerType === "touch" || !transferDragRow)
+      return;
+
+    finishTransferDrag(
+      e.clientX,
+      e.clientY
+    );
+  }
+);
+
+accountsList.addEventListener(
+  "pointercancel",
+  e => {
+    if(e.pointerType !== "touch")
+      clearTransferDrag();
+  }
+);
+
+accountsList.addEventListener(
+  "contextmenu",
+  e => {
+    if(e.target.closest(".account-row"))
+      e.preventDefault();
+  }
+);
+
+closeTransferButton.addEventListener(
+  "click",
+  () => close("transferOverlay")
+);
+
+
+saveTransferButton.addEventListener(
+  "click",
+  () => {
+
+    const from =
+      Number(transferFrom.value);
+
+    const to =
+      Number(transferTo.value);
+
+    const value =
+      Number(transferAmount.value || 0);
+
+    if(from === to){
+
+      alert(
+        "Выбери разные счета."
+      );
+
+      return;
+    }
+
+    if(value <= 0)
+      return;
+
+    if(
+      Number(accounts[from].balance || 0) <
+      value
+    ){
+
+      alert(
+        "На счёте недостаточно денег."
+      );
+
+      return;
+    }
+
+    accounts[from].balance -= value;
+    accounts[to].balance += value;
+
+    const transferDateValue=transferDate.value || today();
+    transactions.push({
+      id:Date.now()+Math.random(),
+      type:"transfer",
+      amount:value,
+      account:accounts[from].id,
+      toAccount:accounts[to].id,
+      date:transferDateValue,
+      name:"Перевод между своими счетами"
+    });
+
+    save(AK,accounts);
+    save(TY,transactions);
+    scheduleAutoSync();
+
+    close("transferOverlay");
+
+    renderAccounts();
+    renderDebts();
+    home();
+    renderHistory();
+
+  }
+);
+
+
+/* ЦЕЛИ */
+
+addGoalButton.addEventListener(
+  "click",
+  () => {
+
+    editingGoal = null;
+
+    goalModalTitle.textContent =
+      "Новая цель";
+
+    goalName.value = "";
+    goalLink.value = "";
+    goalTarget.value = "";
+    goalSaved.value = "";
+    goalDate.value = "";
+
+    open("goalOverlay");
+
+  }
+);
+
+
+goalsList.addEventListener("click", e => {
+
+  const edit =
+    e.target.closest("[data-gi]");
+
+  const del =
+    e.target.closest("[data-gd]");
+
+
+  if(edit){
+
+    editingGoal =
+      Number(edit.dataset.gi);
+
+    const g =
+      goals[editingGoal];
+
+    goalModalTitle.textContent =
+      "Изменить цель";
+
+    goalName.value =
+      g.name || "";
+
+    goalLink.value =
+      g.link || "";
+
+    goalTarget.value =
+      g.target || 0;
+
+    goalSaved.value =
+      g.saved || 0;
+
+    goalDate.value =
+      g.date || "";
+
+    open("goalOverlay");
+
+  }
+
+
+  if(del){
+
+    const i =
+      Number(del.dataset.gd);
+
+    goals.splice(i,1);
+
+    save(GK,goals);
+    scheduleAutoSync();
+
+    renderGoals();
+
+  }
+
+});
+
+
+closeGoalButton.addEventListener(
+  "click",
+  () => close("goalOverlay")
+);
+
+
+saveGoalButton.addEventListener(
+  "click",
+  () => {
+
+    const g={
+
+      name:
+        goalName.value.trim() ||
+        "Цель",
+
+      link:
+        goalLink.value.trim(),
+
+      target:
+        Number(goalTarget.value || 0),
+
+      saved:
+        Number(goalSaved.value || 0),
+
+      date:
+        goalDate.value || null
+
+    };
+
+
+    if(editingGoal === null){
+      goals.push(g);
+    }else{
+      goals[editingGoal] = g;
+    }
+
+
+    save(GK,goals);
+    scheduleAutoSync();
+
+    close("goalOverlay");
+
+    renderGoals();
+
+  }
+);
+
+
+/* ЛИЧНЫЙ ДОЛГ */
+
+addDebtButton.addEventListener(
+  "click",
+  () => {
+
+    editingDebt = null;
+    debtModalTitle.textContent = "Новое обязательство";
+    manualDebtName.value = "";
+    manualDebtAmount.value = "";
+    manualDebtDueDate.value = "";
+    manualDebtType.value = "personal";
+    installmentFirstDate.value = "";
+    installmentPayment.value = "";
+    installmentCount.value = "";
+    installmentFile.value = "";
+    personalDebtFields.style.display="block";
+    installmentDebtFields.style.display="none";
+    saveDebtButton.textContent = "Сохранить";
+
+    open("debtOverlay");
+
+  }
+);
+
+
+closeDebtButton.addEventListener(
+  "click",
+  () => close("debtOverlay")
+);
+
+
+manualDebtType.addEventListener("change",()=>{
+  const installment=manualDebtType.value==="installment";
+  personalDebtFields.style.display=installment?"none":"block";
+  installmentDebtFields.style.display=installment?"block":"none";
+});
+
+function removePlannedPaymentsForDebt(debtId){
+  plannedPayments=plannedPayments.filter(p=>String(p.debtId)!==String(debtId));
+}
+
+function addPlannedPayment(debtId,name,amount,date,source="debt"){
+  if(!date || Number(amount)<=0) return;
+  plannedPayments.push({
+    id:"plan_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),
+    debtId:String(debtId),
+    name,
+    amount:Number(amount),
+    date,
+    category:"Кредиты | Долги",
+    paid:false,
+    source
+  });
+}
+
+function addMonthlyPayments(debtId,name,amount,firstDate,count){
+  const d=new Date(firstDate+"T00:00:00");
+  for(let i=0;i<count;i++){
+    const y=d.getFullYear();
+    const m=d.getMonth()+i;
+    const day=d.getDate();
+    const target=new Date(y,m,Math.min(day,new Date(y,m+1,0).getDate()));
+    addPlannedPayment(debtId,name,amount,target.toISOString().slice(0,10),"installment");
+  }
+}
+
+function parseInstallmentCSV(text,name,debtId){
+  const rows=String(text||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  let added=0;
+  rows.forEach((row,index)=>{
+    if(index===0 && /дата|date/i.test(row)) return;
+    const parts=row.split(/[;,\t]/).map(x=>x.trim().replace(/^"|"$/g,""));
+    if(parts.length<2) return;
+    let date=parts[0];
+    let amount=Number(parts[1].replace(/\s/g,"").replace(",","."));
+    if(/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(date)){
+      const [dd,mm,yyyy]=date.split("."); date=`${yyyy}-${mm.padStart(2,"0")}-${dd.padStart(2,"0")}`;
+    }
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(amount) || amount<=0) return;
+    addPlannedPayment(debtId,name,amount,date,"file"); added++;
+  });
+  return added;
+}
+
+saveDebtButton.addEventListener(
+  "click",
+  async () => {
+    const type=manualDebtType.value;
+    const name=manualDebtName.value.trim() || "Обязательство";
+    const amount=Number(manualDebtAmount.value||0);
+    if(amount<=0) return;
+
+    const id=editingDebt!==null ? debts[editingDebt].id : Date.now();
+    const d={id,name,amount,dueDate:null,kind:type};
+
+    if(type==="personal"){
+      d.dueDate=manualDebtDueDate.value||null;
+      if(!d.dueDate){ alert("Укажи дату возврата."); return; }
+    }else{
+      const file=installmentFile.files?.[0];
+      if(!file && (!installmentFirstDate.value || Number(installmentPayment.value)<=0 || Number(installmentCount.value)<=0)){
+        alert("Укажи первый платёж, сумму и количество платежей или загрузи CSV-график.");
+        return;
+      }
+      d.dueDate=installmentFirstDate.value||null;
+    }
+
+    if(editingDebt===null) debts.push(d);
+    else debts[editingDebt]=d;
+
+    removePlannedPaymentsForDebt(id);
+
+    if(type==="personal"){
+      addPlannedPayment(id,name,amount,d.dueDate);
+    }else{
+      const file=installmentFile.files?.[0];
+      if(file){
+        const text=await file.text();
+        const added=parseInstallmentCSV(text,name,id);
+        if(!added){ alert("Не удалось найти в CSV строки с датой и суммой."); return; }
+      }else{
+        addMonthlyPayments(id,name,Number(installmentPayment.value),installmentFirstDate.value,Math.floor(Number(installmentCount.value)));
+      }
+    }
+
+    save(DK,debts);
+    save(PK,plannedPayments);
+    scheduleAutoSync();
+    close("debtOverlay");
+    renderDebts();
+    renderCats();
+    home();
+  }
+);
+
+/* РЕДАКТИРОВАНИЕ / УДАЛЕНИЕ ДОЛГА */
+
+debtsList.addEventListener(
+  "click",
+  e => {
+
+    const editButton =
+      e.target.closest("[data-dei]");
+
+    const deleteButton =
+      e.target.closest("[data-di]");
+
+    /* Для списка all сначала идут кредитные карты,
+       затем личные долги. Поэтому находим реальный объект
+       по его id, а не просто по позиции. */
+    const all =
+      accounts
+        .filter(
+          a =>
+            a.type === "credit" &&
+            Number(a.balance || 0) < 0
+        )
+        .map(a => ({
+          id:"card_"+a.name,
+          kind:"credit"
+        }))
+        .concat(
+          debts.map(d => ({
+            ...d,
+            kind:"personal"
+          }))
+        );
+
+    if(editButton){
+      const item =
+        all[Number(editButton.dataset.dei)];
+
+      if(!item || item.kind !== "personal")
+        return;
+
+      editingDebt =
+        debts.findIndex(d => d.id === item.id);
+
+      if(editingDebt < 0)
+        return;
+
+      const d = debts[editingDebt];
+
+      debtModalTitle.textContent = "Изменить обязательство";
+      manualDebtName.value = d.name || "";
+      manualDebtAmount.value = d.amount || 0;
+      manualDebtDueDate.value = d.dueDate || "";
+      manualDebtType.value = d.kind==="installment" ? "installment" : "personal";
+      personalDebtFields.style.display=manualDebtType.value==="personal"?"block":"none";
+      installmentDebtFields.style.display=manualDebtType.value==="installment"?"block":"none";
+      installmentFirstDate.value = d.dueDate || "";
+      installmentPayment.value = "";
+      installmentCount.value = "";
+      installmentFile.value = "";
+      saveDebtButton.textContent = "Сохранить изменения";
+
+      open("debtOverlay");
+      return;
+    }
+
+    if(deleteButton){
+      const item =
+        all[Number(deleteButton.dataset.di)];
+
+      if(!item || item.kind !== "personal")
+        return;
+
+      const i =
+        debts.findIndex(d => d.id === item.id);
+
+      if(i < 0)
+        return;
+
+      const removedId=debts[i].id;
+      debts.splice(i,1);
+      removePlannedPaymentsForDebt(removedId);
+
+      save(
+        DK,
+        debts
+      );
+      save(PK,plannedPayments);
+      scheduleAutoSync();
+
+      renderDebts();
+    }
+
+  }
+);
+
+/* GOOGLE */
+
+syncButton.addEventListener(
+  "click",
+  syncWithGoogle
+);
+
+
+/* ЗАПУСК */
+
+setBudgetPeriod(new Date().getFullYear(),new Date().getMonth());
+load();
+saveBudgetHistorySnapshot();
+populate();
+
+renderCats();
+function setupCalculators(){
+  const ids=[
+    "incomeAmount","amount","debtAmount","manualDebtAmount",
+    "accountBalanceInput","creditLimitInput","financeInput",
+    "transferAmount","categoryLimitInput","goalTarget","goalSaved"
+  ];
+
+  ids.forEach(id=>{
+    const input=document.getElementById(id);
+    if(!input || input.dataset.calcReady) return;
+    input.dataset.calcReady="1";
+    const wrap=document.createElement("div");
+    wrap.className="calc-wrap";
+    input.parentNode.insertBefore(wrap,input);
+    wrap.appendChild(input);
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="calc-button";
+    button.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="4" y="2.5" width="16" height="19" rx="2.5"></rect>
+      <rect x="7" y="5.5" width="10" height="3.5" rx="0.8" class="calc-screen"></rect>
+      <circle cx="8" cy="12" r="1.1"></circle>
+      <circle cx="12" cy="12" r="1.1"></circle>
+      <circle cx="16" cy="12" r="1.1"></circle>
+      <circle cx="8" cy="16" r="1.1"></circle>
+      <circle cx="12" cy="16" r="1.1"></circle>
+      <circle cx="16" cy="16" r="1.1"></circle>
+      <circle cx="8" cy="20" r="1.1"></circle>
+      <circle cx="12" cy="20" r="1.1"></circle>
+      <circle cx="16" cy="20" r="1.1"></circle>
+    </svg>`;
+    button.title="Открыть калькулятор";
+    button.addEventListener("click",()=>openCalculator(input));
+    wrap.appendChild(button);
+  });
+}
+
+function openCalculator(input){
+  calculatorTarget=input;
+  calculatorInput.value=input.value||"";
+  calculatorResult.textContent="= "+(Number(input.value||0).toLocaleString("ru-RU"))+" ₽";
+  open("calculatorOverlay");
+  setTimeout(()=>{calculatorInput.focus(); calculatorInput.select();},80);
+}
+
+function calculateExpression(value){
+  const expr=String(value||"").replace(/,/g,".").replace(/\s/g,"");
+  if(!expr || !/^[0-9+\-*/().]+$/.test(expr)) return null;
+  try{
+    const result=Function('"use strict";return ('+expr+')')();
+    return Number.isFinite(result) ? result : null;
+  }catch(e){
+    return null;
+  }
+}
+
+calculatorInput.addEventListener("input",()=>{
+  const result=calculateExpression(calculatorInput.value);
+  calculatorResult.textContent=result===null ? "Проверь выражение" : "= "+money(result);
+});
+
+closeCalculatorButton.addEventListener("click",()=>close("calculatorOverlay"));
+applyCalculatorButton.addEventListener("click",()=>{
+  const result=calculateExpression(calculatorInput.value);
+  if(result===null){ alert("Не удалось посчитать выражение."); return; }
+  if(calculatorTarget){
+    calculatorTarget.value=String(Math.round(result*100)/100);
+    calculatorTarget.dispatchEvent(new Event("input",{bubbles:true}));
+  }
+  close("calculatorOverlay");
+});
+
+setupCalculators();
+
+renderAccounts();
+renderDebts();
+renderGoals();
+updateFinance();
+home();
+setTimeout(()=>autoSyncOnce(false),1200);
+
+</script>
+
+</body>
+</html>
