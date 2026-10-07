@@ -245,11 +245,27 @@ button{
 .history-amount{font-weight:800;white-space:nowrap}
 .history-amount.income{color:#66856f}
 .history-amount.expense{color:var(--danger)}
+.history-edit,
+.history-delete{
+  width:32px;
+  height:32px;
+  min-width:32px;
+  min-height:32px;
+  padding:0;
+  border:0;
+  border-radius:10px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+}
 .history-edit{
-  width:32px;height:32px;border:0;border-radius:10px;background:var(--pp);color:#64484f;font-size:15px
+  background:var(--pp);
+  color:#64484f;
 }
 .history-delete{
-  width:32px;height:32px;border:0;border-radius:10px;background:#f5dddd;color:var(--danger);font-size:15px
+  background:#f5dddd;
+  color:var(--danger);
 }
 
 .stat-row{
@@ -295,7 +311,11 @@ button{
   width:34px;
   height:34px;
   border-radius:11px;
-  font-size:17px
+  font-size:17px;
+  padding:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .clear-limits-button{
@@ -425,6 +445,18 @@ button{
   display:flex;
   align-items:center;
   gap:8px
+}
+
+.action-icon{
+  width:16px;
+  height:16px;
+  display:block;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  pointer-events:none;
 }
 
 .category-remaining,
@@ -2290,8 +2322,8 @@ function renderAccounts(){
               </div>
 
               <div class="actions-row account-action-icons">
-                <button class="small-button" data-ai="${i}" title="Изменить" aria-label="Изменить">✎</button>
-                <button class="small-button danger-icon" data-ad="${i}" title="Удалить" aria-label="Удалить">🗑</button>
+                <button class="small-button action-button" data-ai="${i}" title="Изменить" aria-label="Изменить"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg></button>
+                <button class="small-button danger-icon action-button" data-ad="${i}" title="Удалить" aria-label="Удалить"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/><path d="M10 11v6M14 11v6"/></svg></button>
               </div>
 
             </div>
@@ -2427,8 +2459,8 @@ function renderDebts(){
                   d.kind!=="credit"
                     ?`
                       <div class="actions-row account-action-icons">
-                        <button class="small-button" data-dei="${i}" title="Изменить" aria-label="Изменить">✎</button>
-                        <button class="small-button danger-icon" data-di="${i}" title="Удалить" aria-label="Удалить">🗑</button>
+                        <button class="small-button action-button" data-dei="${i}" title="Изменить" aria-label="Изменить"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg></button>
+                        <button class="small-button danger-icon action-button" data-di="${i}" title="Удалить" aria-label="Удалить"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/><path d="M10 11v6M14 11v6"/></svg></button>
                       </div>
                     `
                     :""
@@ -2875,7 +2907,7 @@ function renderHistory(){
         <div class="history-meta">${meta}</div>
       </div>
       <div class="history-amount ${isIncome?"income":"expense"}">${amount}</div>
-      ${isTransfer ? "" : `<button class="history-edit" data-history-edit="${index}" title="Изменить">✎</button><button class="history-delete" data-history-delete="${index}" title="Удалить">🗑</button>`}
+      ${isTransfer ? "" : `<button class="history-edit" data-history-edit="${index}" title="Изменить" aria-label="Изменить"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg></button><button class="history-delete" data-history-delete="${index}" title="Удалить" aria-label="Удалить"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/><path d="M10 11v6M14 11v6"/></svg></button>`}
     </div>`);
   });
   historyList.innerHTML=html.join("");
