@@ -199,6 +199,23 @@ button{
   font-weight:800
 }
 
+.calc-button svg{
+  width:20px;
+  height:20px;
+  display:block;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.7;
+  stroke-linecap:round;
+  stroke-linejoin:round
+}
+
+.calc-button .calc-screen{
+  fill:currentColor;
+  stroke:none;
+  opacity:.16
+}
+
 .history-filter.active{
   background:var(--pink);
   color:#fff
@@ -459,7 +476,7 @@ button{
 /* Весь счёт можно зажать и перетащить для перевода */
 .account-row{
   position:relative;
-  touch-action:none;
+  touch-action:pan-y;
   user-select:none;
   -webkit-user-select:none;
   -webkit-touch-callout:none;
@@ -800,6 +817,10 @@ button{
 .sync-status.error{
   color:var(--danger)
 }
+
+.list-search{margin:0 0 12px;width:100%;box-sizing:border-box}
+.account-action-icons{justify-content:flex-end;margin-top:6px}
+.danger-icon{color:var(--danger);background:#f8e8e8}
 </style>
 </head>
 
@@ -897,10 +918,7 @@ button{
 
 
 <section id="accounts" class="screen">
-  <div class="section-heading-row">
-    <div class="section-heading">Счета</div>
-    <button class="inline-button" id="transferButton">⇄ Перевести</button>
-  </div>
+  <div class="section-heading">Счета</div>
 
   <div class="card total-card">
     <div class="stat-row">
@@ -913,6 +931,8 @@ button{
       <span class="stat-value" id="spendableTotal">0 ₽</span>
     </div>
   </div>
+
+  <input id="accountsSearch" class="text-input list-search" type="search" placeholder="Поиск счёта…" autocomplete="off">
 
   <div class="card" id="accountsList"></div>
 
@@ -977,6 +997,8 @@ button{
     <button class="inline-button history-filter" data-history-filter="expense">Расходы</button>
     <button class="inline-button history-filter" data-history-filter="income">Поступления</button>
   </div>
+
+  <input id="historySearch" class="text-input list-search" type="search" placeholder="Поиск в истории…" autocomplete="off">
 
   <div class="card" id="historyList"></div>
 </section>
@@ -1358,6 +1380,13 @@ button{
       type="number"
       inputmode="decimal"
       placeholder="0"
+    >
+
+    <div class="field-label">Дата</div>
+    <input
+      id="transferDate"
+      class="text-input"
+      type="date"
     >
 
     <button
@@ -2181,9 +2210,12 @@ function renderAccounts(){
   if(!Array.isArray(accounts))
     accounts=[];
 
+  const q=String(document.getElementById("accountsSearch")?.value||"").trim().toLocaleLowerCase("ru-RU");
+  const visibleAccounts=accounts.map((a,i)=>({a,i})).filter(({a})=>!q || String(a.name||"").toLocaleLowerCase("ru-RU").includes(q) || String(a.bank||"").toLocaleLowerCase("ru-RU").includes(q));
+
   accountsList.innerHTML=
-    accounts.length
-      ?accounts.map((a,i)=>{
+    visibleAccounts.length
+      ?visibleAccounts.map(({a,i})=>{
 
         const type=
           a.type==="credit" ? "Кредитная карта" :
@@ -2235,13 +2267,13 @@ function renderAccounts(){
             <div class="account-actions">
 
               <div class="account-balance ${debt?"negative":""}">
-                ${money(a.balance||0)}
+                ${Number(a.balance||0).toLocaleString("ru-RU")}
               </div>
 
-              <button
-                class="small-button"
-                data-ai="${i}"
-              >✎</button>
+              <div class="actions-row account-action-icons">
+                <button class="small-button" data-ai="${i}" title="Изменить" aria-label="Изменить">✎</button>
+                <button class="small-button danger-icon" data-ad="${i}" title="Удалить" aria-label="Удалить">🗑</button>
+              </div>
 
             </div>
 
@@ -2369,25 +2401,15 @@ function renderDebts(){
               <div>
 
                 <div class="debt-amount negative">
-                  ${money(d.amount)}
+                  ${Number(d.amount||0).toLocaleString("ru-RU")}
                 </div>
 
                 ${
                   d.kind!=="credit"
                     ?`
-                      <div class="actions-row">
-                        <button
-                          class="inline-button"
-                          data-dei="${i}"
-                        >
-                          ✎ Изменить
-                        </button>
-                        <button
-                          class="danger-button"
-                          data-di="${i}"
-                        >
-                          Удалить
-                        </button>
+                      <div class="actions-row account-action-icons">
+                        <button class="small-button" data-dei="${i}" title="Изменить" aria-label="Изменить">✎</button>
+                        <button class="small-button danger-icon" data-di="${i}" title="Удалить" aria-label="Удалить">🗑</button>
                       </div>
                     `
                     :""
@@ -2609,13 +2631,17 @@ function salaryPeriodInfo(){
     .sort((a,b)=>b.dateObj-a.dateObj)[0] || null;
 
   if(!previous){
+    // Новый пользователь: пока нет ни одной фактической зарплаты,
+    // временно считаем ближайшей выплатой 15-е число текущего/следующего месяца.
+    const nextDate=new Date(todayStart.getFullYear(),todayStart.getMonth(),15);
+    if(nextDate<=todayStart) nextDate.setMonth(nextDate.getMonth()+1);
     return {
       previous:null,
-      next:null,
+      next:{date:nextDate,dateObj:nextDate,amount:0,type:"salary",inferred:true,startup:true},
       periodStart:todayStart,
-      periodEnd:null,
-      days:null,
-      intervalDays:salaryIntervalDays()
+      periodEnd:nextDate,
+      days:Math.max(1,Math.ceil((nextDate-todayStart)/86400000)),
+      intervalDays:null
     };
   }
 
@@ -2625,7 +2651,7 @@ function salaryPeriodInfo(){
   // как месячную опорную дату. После появления второй выплаты приложение
   // перейдёт на реальный интервал между выплатами.
   if(!interval && history.length===1)
-    interval=30;
+    interval=15;
 
   // Если есть история выплат, следующую дату определяем по фактическому
   // интервалу между зарплатами. Никаких ручных дат выплат больше не нужно.
@@ -2763,7 +2789,7 @@ function home(){
       "Нужна ещё одна фактическая выплата «Зарплата», чтобы определить следующий период";
   }else{
     dailyDescription.textContent=
-      "Добавь фактическую выплату с категорией «Зарплата» — начну считать прогноз";
+      "Пока использую 15-е число как временную дату выплаты";
   }
 
   updateFinance();
@@ -2794,10 +2820,16 @@ function openHistory(accountId=null, returnScreen="home"){
 }
 
 function renderHistory(){
+  const q=String(document.getElementById("historySearch")?.value||"").trim().toLocaleLowerCase("ru-RU");
   const rows=transactions
     .map((x,index)=>({x,index}))
     .filter(({x})=>historyAccountId===null || String(x.account)===String(historyAccountId) || (x.type==="transfer" && String(x.toAccount)===String(historyAccountId)))
     .filter(({x})=>historyFilter==="all" || (historyFilter==="income" ? (x.type==="income" || (x.type==="transfer" && String(x.toAccount)===String(historyAccountId))) : x.type===historyFilter))
+    .filter(({x})=>{
+      if(!q) return true;
+      const hay=[x.name,x.category,x.incomeCategory,accountNameById(x.account),accountNameById(x.toAccount),x.date].join(" ").toLocaleLowerCase("ru-RU");
+      return hay.includes(q);
+    })
     .sort((a,b)=>String(b.x.date||"").localeCompare(String(a.x.date||"")) || b.index-a.index);
 
   if(!rows.length){
@@ -2824,7 +2856,7 @@ function renderHistory(){
         <div class="history-meta">${meta}</div>
       </div>
       <div class="history-amount ${isIncome?"income":"expense"}">${amount}</div>
-      ${isTransfer ? "" : `<button class="history-edit" data-history-edit="${index}" title="Изменить">✎</button><button class="history-delete" data-history-delete="${index}" title="Удалить">×</button>`}
+      ${isTransfer ? "" : `<button class="history-edit" data-history-edit="${index}" title="Изменить">✎</button><button class="history-delete" data-history-delete="${index}" title="Удалить">🗑</button>`}
     </div>`);
   });
   historyList.innerHTML=html.join("");
@@ -2857,6 +2889,42 @@ function applyTransactionEffect(t){
     return true;
   }
   return false;
+}
+
+function editTransaction(index){
+  const t=transactions[index];
+  if(!t || t.type==="transfer") return;
+  editingTransactionIndex=index;
+  operationModalTitle.textContent=t.type==="income" ? "Изменить доход" : "Изменить расход";
+  incomeFields.style.display=t.type==="income" ? "block" : "none";
+  expenseFields.style.display=t.type==="expense" ? "block" : "none";
+  debtFields.style.display="none";
+  operationDate.value=t.date||today();
+  deleteOperationButton.style.display="block";
+  saveExpenseButton.textContent="Сохранить";
+
+  if(t.type==="income"){
+    incomeAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}">${a.name||"Счёт"}</option>`).join("");
+    const ai=accounts.findIndex(a=>String(a.id)===String(t.account));
+    if(ai>=0) incomeAccount.value=String(ai);
+    incomeAmount.value=t.amount||"";
+    incomeCategory.value=normalizeIncomeCategory(t)==="salary" ? "salary" : "other";
+    incomeName.value=t.name||"";
+    incomeNameLabel.style.display=incomeCategory.value==="other" ? "block" : "none";
+    incomeName.style.display=incomeCategory.value==="other" ? "block" : "none";
+  }else{
+    expenseAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}">${a.name||"Счёт"}</option>`).join("");
+    const ai=accounts.findIndex(a=>String(a.id)===String(t.account));
+    if(ai>=0) expenseAccount.value=String(ai);
+    amount.value=t.amount||"";
+    populate();
+    categorySelect.value=t.category||categories[0]?.name||"";
+    const toggle=document.getElementById("roundingEnabled");
+    if(toggle) toggle.checked=!!t.roundingEnabled;
+    updateRoundingUI();
+    calc();
+  }
+  open("expenseOverlay");
 }
 
 function deleteTransaction(index){
@@ -4217,9 +4285,7 @@ quickExpenseButton.addEventListener("click", () => {
   expenseAccount.innerHTML =
     accounts.length
       ? accounts.map((a,i) =>
-          `<option value="${i}">
-            ${a.name || "Счёт"} · ${money(a.balance || 0)}
-          </option>`
+          `<option value="${i}">${a.name || "Счёт"}</option>`
         ).join("")
       : `<option value="">Сначала добавь счёт</option>`;
 
@@ -4260,9 +4326,7 @@ quickIncomeButton.addEventListener("click", () => {
   incomeAccount.innerHTML =
     accounts.length
       ? accounts.map((a,i) =>
-          `<option value="${i}">
-            ${a.name || "Счёт"} · ${money(a.balance || 0)}
-          </option>`
+          `<option value="${i}">${a.name || "Счёт"}</option>`
         ).join("")
       : `<option value="">Сначала добавь счёт</option>`;
 
@@ -4300,6 +4364,9 @@ historyList.addEventListener("click", e => {
   const del=e.target.closest("[data-history-delete]");
   if(del){ deleteTransaction(Number(del.dataset.historyDelete)); }
 });
+
+document.getElementById("accountsSearch")?.addEventListener("input",renderAccounts);
+document.getElementById("historySearch")?.addEventListener("input",renderHistory);
 
 document.querySelectorAll(".history-filter").forEach(button => {
   button.addEventListener("click", () => {
@@ -4549,6 +4616,21 @@ accountsList.addEventListener("click", e => {
   const button =
     e.target.closest("[data-ai]");
 
+  const deleteButton=e.target.closest("[data-ad]");
+  if(deleteButton){
+    const i=Number(deleteButton.dataset.ad);
+    if(!Number.isInteger(i) || !accounts[i]) return;
+    const a=accounts[i];
+    if(!confirm(`Удалить счёт «${a.name||"Счёт"}»?`)) return;
+    accounts.splice(i,1);
+    save(AK,accounts);
+    scheduleAutoSync();
+    renderAccounts();
+    renderDebts();
+    home();
+    return;
+  }
+
   if(button){
     editingAccount =
     Number(button.dataset.ai);
@@ -4622,6 +4704,8 @@ saveAccountButton.addEventListener(
         : null;
 
     const account = {
+
+      ...(old || {}),
 
       id:
         old?.id ||
@@ -4711,13 +4795,11 @@ function prepareTransfer(fromIndex=null, toIndex=null){
     transferTo.value = String(toIndex);
 
   transferAmount.value = "";
+  transferDate.value = today();
   open("transferOverlay");
 }
 
-transferButton.addEventListener(
-  "click",
-  () => prepareTransfer()
-);
+
 
 /* ДОЛГОЕ НАЖАТИЕ + ПЕРЕТАСКИВАНИЕ ВСЕГО СЧЁТА */
 let transferDragTimer = null;
@@ -4880,9 +4962,10 @@ accountsList.addEventListener(
     const distance = Math.hypot(dx,dy);
 
     if(!transferDragActive){
-      /* Пока ждём долгое нажатие, не отменяем его из-за мелкого движения пальца. */
-      if(distance > 45)
+      /* Обычный вертикальный свайп должен оставаться обычным скроллом. */
+      if(distance > 12){
         clearTransferDrag();
+      }
       return;
     }
 
@@ -5033,7 +5116,19 @@ saveTransferButton.addEventListener(
     accounts[from].balance -= value;
     accounts[to].balance += value;
 
+    const transferDateValue=transferDate.value || today();
+    transactions.push({
+      id:Date.now()+Math.random(),
+      type:"transfer",
+      amount:value,
+      account:accounts[from].id,
+      toAccount:accounts[to].id,
+      date:transferDateValue,
+      name:"Перевод между своими счетами"
+    });
+
     save(AK,accounts);
+    save(TY,transactions);
     scheduleAutoSync();
 
     close("transferOverlay");
@@ -5041,6 +5136,7 @@ saveTransferButton.addEventListener(
     renderAccounts();
     renderDebts();
     home();
+    renderHistory();
 
   }
 );
@@ -5440,7 +5536,19 @@ function setupCalculators(){
     const button=document.createElement("button");
     button.type="button";
     button.className="calc-button";
-    button.textContent="▦";
+    button.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="4" y="2.5" width="16" height="19" rx="2.5"></rect>
+      <rect x="7" y="5.5" width="10" height="3.5" rx="0.8" class="calc-screen"></rect>
+      <circle cx="8" cy="12" r="1.1"></circle>
+      <circle cx="12" cy="12" r="1.1"></circle>
+      <circle cx="16" cy="12" r="1.1"></circle>
+      <circle cx="8" cy="16" r="1.1"></circle>
+      <circle cx="12" cy="16" r="1.1"></circle>
+      <circle cx="16" cy="16" r="1.1"></circle>
+      <circle cx="8" cy="20" r="1.1"></circle>
+      <circle cx="12" cy="20" r="1.1"></circle>
+      <circle cx="16" cy="20" r="1.1"></circle>
+    </svg>`;
     button.title="Открыть калькулятор";
     button.addEventListener("click",()=>openCalculator(input));
     wrap.appendChild(button);
