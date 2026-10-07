@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>Бабки в шапку</title>
-<link rel="icon" type="image/png" href="money_pouch_icon.png">
-<link rel="apple-touch-icon" href="money_pouch_icon.png">
+<link rel="icon" type="image/png" href="IMG_5931.png">
+<link rel="apple-touch-icon" href="IMG_5931.png">
 
 <style>
 :root{
@@ -698,7 +698,37 @@ button{
 .nav-icon{
   font-size:20px;
   display:block;
-  margin-bottom:2px
+  margin:0 auto 2px
+}
+
+.nav-date-icon{
+  width:21px;
+  height:21px;
+  box-sizing:border-box;
+  border:1.7px solid currentColor;
+  border-radius:5px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  overflow:hidden;
+}
+.nav-date-top{
+  position:absolute; top:0; left:0; right:0; height:5px;
+  border-bottom:1.4px solid currentColor;
+}
+.nav-date-top::before,.nav-date-top::after{
+  content:""; position:absolute; top:-2px; width:2px; height:5px;
+  border-radius:2px; background:currentColor;
+}
+.nav-date-top::before{left:5px}.nav-date-top::after{right:5px}
+.nav-date-number{
+  margin-top:5px; font-size:9px; line-height:1; font-weight:800; letter-spacing:-.2px
+}
+.nav-icon-svg svg{
+  width:21px; height:21px; display:block; margin:0 auto; fill:none;
+  stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round
 }
 
 .inline-button{
@@ -791,9 +821,9 @@ button{
   </div>
 
   <div class="grid2">
-    <button class="primary" id="quickIncomeButton">＋ Доход</button>
-    <button class="secondary" id="quickExpenseButton">− Расход</button>
-    <button class="secondary" id="quickTransferButton">⇄ Перевод</button>
+    <button class="primary" id="quickIncomeButton" aria-label="Добавить доход" title="Доход">＋</button>
+    <button class="secondary" id="quickExpenseButton" aria-label="Добавить расход" title="Расход">−</button>
+    <button class="secondary" id="quickTransferButton" aria-label="Перевод между счетами" title="Перевод">⇄</button>
   </div>
 
   <div style="height:18px"></div>
@@ -1064,6 +1094,14 @@ button{
 
       <select id="categorySelect" class="select"></select>
 
+      <div class="category-info" id="roundingBox" style="display:none">
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700">
+          <input id="roundingEnabled" type="checkbox" style="width:18px;height:18px;accent-color:var(--pink)">
+          Округлить до 50 ₽ и перевести остаток в Инвесткопилку
+        </label>
+        <div class="small-note" id="roundingPreview" style="margin-top:8px">—</div>
+      </div>
+
       <div class="category-info">
         <div class="category-info-title">Осталось в категории</div>
         <div class="category-info-main" id="categoryRemaining">—</div>
@@ -1187,8 +1225,10 @@ button{
 
     <select id="accountTypeInput" class="select">
       <option value="debit">Дебетовая карта</option>
-      <option value="credit">Кредитная карта</option>
       <option value="cash">Наличные</option>
+      <option value="savings">Накопительный счёт</option>
+      <option value="investment">Инвесткопилка</option>
+      <option value="credit">Кредитная карта</option>
     </select>
 
     <div class="field-label">Банк / название</div>
@@ -1424,37 +1464,30 @@ button{
 
 <div class="nav">
   <div class="nav-inner">
-
     <button class="active" data-screen="home">
-      <span class="nav-icon">⌂</span>
+      <span class="nav-icon nav-date-icon" id="navTodayDate" aria-hidden="true"><span class="nav-date-top"></span><span class="nav-date-number">7</span></span>
       Сегодня
     </button>
-
     <button data-screen="budget">
-      <span class="nav-icon">▤</span>
+      <span class="nav-icon nav-icon-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><rect x="8" y="6" width="8" height="3" rx=".5"/><path d="M8 12h1M12 12h1M16 12h0M8 16h1M12 16h1M16 16h0M8 19h1M12 19h1M16 19h0"/></svg></span>
       Бюджет
     </button>
-
     <button data-screen="accounts">
-      <span class="nav-icon">▱</span>
+      <span class="nav-icon nav-icon-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M7 8h10M7 12h7M7 16h5"/></svg></span>
       Счета
     </button>
-
     <button data-screen="debts">
-      <span class="nav-icon">↺</span>
+      <span class="nav-icon nav-icon-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9a5 5 0 0 1 10 0v3.2l1.7 2.3H5.3L7 12.2Z"/><path d="M9.5 17.2a2.7 2.7 0 0 0 5 0"/><path d="M8.2 5.2 6.7 3.8M15.8 5.2l1.5-1.4"/></svg></span>
       Долги
     </button>
-
     <button data-screen="goals">
-      <span class="nav-icon">♡</span>
+      <span class="nav-icon nav-icon-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 4V2M20 12h2"/></svg></span>
       Цели
     </button>
-
     <button data-screen="settings">
-      <span class="nav-icon">⚙</span>
+      <span class="nav-icon nav-icon-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.7 3.8 10.4 2h3.2l.7 1.8 1.6.9 1.8-.5 2.3 2.3-.5 1.8.9 1.6 1.8.7v3.2l-1.8.7-.9 1.6.5 1.8-2.3 2.3-1.8-.5-1.6.9-.7 1.8h-3.2l-.7-1.8-1.6-.9-1.8.5-2.3-2.3.5-1.8-.9-1.6-1.8-.7v-3.2l1.8-.7.9-1.6-.5-1.8 2.3-2.3 1.8.5 1.6-.9Z"/><circle cx="12" cy="12" r="3.2"/></svg></span>
       Настройки
     </button>
-
   </div>
 </div>
 
@@ -1610,6 +1643,11 @@ const today=()=>{
 };
 
 
+function updateNavTodayDate(){
+  const el=document.getElementById("navTodayDate")?.querySelector(".nav-date-number");
+  if(el) el.textContent=String(new Date().getDate());
+}
+
 const save=(k,v)=>
   localStorage.setItem(k,JSON.stringify(v));
 
@@ -1679,16 +1717,26 @@ function ensureAccountIds(list){
 
 function load(){
 
+  updateNavTodayDate();
   const periodChanged=ensureCurrentBudgetMonth();
   resetCategoryPlans();
 
   const t=read(TY,null);
 
-  if(Array.isArray(t)){
-    transactions=t.map(x=>({
-      ...x,
-      type:x.type||"expense"
-    }));
+  if(Array.isArray(t) && t.length){
+    transactions=t.map(x=>({...x,type:x.type||"expense"}));
+  }else{
+    const prefix=String(budgetYear)+"-"+String(budgetMonth+1).padStart(2,"0");
+    const recovered=[];
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);
+      if(!key || key===TY || !key.includes("transactions")) continue;
+      const data=read(key,null);
+      if(Array.isArray(data)) data.forEach(x=>{
+        if(String(x?.date||"").startsWith(prefix)) recovered.push({...x,type:x.type||"expense"});
+      });
+    }
+    if(recovered.length){ transactions=recovered; save(TY,transactions); }
   }
 
 
@@ -2083,11 +2131,11 @@ function renderAccounts(){
       ?accounts.map((a,i)=>{
 
         const type=
-          a.type==="credit"
-            ?"Кредитная карта"
-            :a.type==="cash"
-              ?"Наличные"
-              :"Дебетовая карта";
+          a.type==="credit" ? "Кредитная карта" :
+          a.type==="cash" ? "Наличные" :
+          a.type==="savings" ? "Накопительный счёт" :
+          a.type==="investment" ? "Инвесткопилка" :
+          "Дебетовая карта";
 
         const debt=
           a.type==="credit"
@@ -2157,7 +2205,7 @@ function renderAccounts(){
 
   const spendable=
     accounts
-      .filter(a=>a.type!=="credit")
+      .filter(a=>a.type!=="credit" && a.type!=="investment" && a.type!=="savings")
       .reduce(
         (s,a)=>s+Number(a.balance||0),
         0
@@ -2681,8 +2729,8 @@ function openHistory(accountId=null, returnScreen="home"){
 function renderHistory(){
   const rows=transactions
     .map((x,index)=>({x,index}))
-    .filter(({x})=>historyAccountId===null || String(x.account)===String(historyAccountId))
-    .filter(({x})=>historyFilter==="all" || x.type===historyFilter)
+    .filter(({x})=>historyAccountId===null || String(x.account)===String(historyAccountId) || (x.type==="transfer" && String(x.toAccount)===String(historyAccountId)))
+    .filter(({x})=>historyFilter==="all" || (historyFilter==="income" ? (x.type==="income" || (x.type==="transfer" && String(x.toAccount)===String(historyAccountId))) : x.type===historyFilter))
     .sort((a,b)=>String(b.x.date||"").localeCompare(String(a.x.date||"")) || b.index-a.index);
 
   if(!rows.length){
@@ -2697,65 +2745,51 @@ function renderHistory(){
       lastDate=x.date;
       html.push(`<div class="history-date">${formatHistoryDate(x.date)}</div>`);
     }
-    const isIncome=x.type==="income";
-    const title=isIncome ? (x.name||"Доход") : (x.category||"Расход");
+    const isTransfer=x.type==="transfer";
+    const isInvestmentIncoming=isTransfer && historyAccountId!==null && String(x.toAccount)===String(historyAccountId);
+    const isIncome=x.type==="income" || isInvestmentIncoming;
+    const title=isTransfer ? (x.name||"Перевод между своими счетами") : (isIncome ? (x.name||"Доход") : (x.category||"Расход"));
+    const meta=isTransfer ? `${accountNameById(x.account)} → ${accountNameById(x.toAccount)}` : accountNameById(x.account);
     const amount=(isIncome?"+":"−")+money(x.amount||0);
     html.push(`<div class="history-row" data-history-index="${index}">
       <div class="history-main">
         <div class="history-name">${title}</div>
-        <div class="history-meta">${accountNameById(x.account)}</div>
+        <div class="history-meta">${meta}</div>
       </div>
       <div class="history-amount ${isIncome?"income":"expense"}">${amount}</div>
-      <button class="history-edit" data-history-edit="${index}" title="Изменить">✎</button>
-      <button class="history-delete" data-history-delete="${index}" title="Удалить">×</button>
+      ${isTransfer ? "" : `<button class="history-edit" data-history-edit="${index}" title="Изменить">✎</button><button class="history-delete" data-history-delete="${index}" title="Удалить">×</button>`}
     </div>`);
   });
   historyList.innerHTML=html.join("");
 }
 
 function reverseTransactionEffect(t){
+  if(!t) return;
   const a=accounts.find(x=>String(x.id)===String(t.account));
-  if(!a) return;
   const v=Number(t.amount||0);
-  if(t.type==="income") a.balance=Number(a.balance||0)-v;
-  else if(t.type==="expense") a.balance=Number(a.balance||0)+v;
+  if(t.type==="income"){ if(a) a.balance=Number(a.balance||0)-v; }
+  else if(t.type==="expense"){ if(a) a.balance=Number(a.balance||0)+v; }
+  else if(t.type==="transfer"){
+    if(a) a.balance=Number(a.balance||0)+v;
+    const to=accounts.find(x=>String(x.id)===String(t.toAccount));
+    if(to) to.balance=Number(to.balance||0)-v;
+  }
 }
 
 function applyTransactionEffect(t){
+  if(!t) return false;
   const a=accounts.find(x=>String(x.id)===String(t.account));
-  if(!a) return false;
   const v=Number(t.amount||0);
-  if(t.type==="income") a.balance=Number(a.balance||0)+v;
-  else if(t.type==="expense") a.balance=Number(a.balance||0)-v;
-  return true;
-}
-
-function editTransaction(index){
-  const t=transactions[index];
-  if(!t) return;
-  editingTransactionIndex=index;
-  operationModalTitle.textContent=t.type==="income" ? "Изменить доход" : "Изменить расход";
-  operationDate.value=t.date||today();
-  incomeFields.style.display=t.type==="income" ? "block" : "none";
-  expenseFields.style.display=t.type==="income" ? "none" : "block";
-  debtFields.style.display="none";
-  deleteOperationButton.style.display="block";
-  saveExpenseButton.textContent="Сохранить изменения";
-
-  if(t.type==="income"){
-    incomeAmount.value=t.amount||0;
-    incomeCategory.value=normalizeIncomeCategory(t)||"other";
-    incomeName.value=t.name||"";
-    incomeNameLabel.style.display=incomeCategory.value==="other" ? "block" : "none";
-    incomeName.style.display=incomeCategory.value==="other" ? "block" : "none";
-    incomeAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}" ${String(a.id)===String(t.account)?"selected":""}>${a.name||"Счёт"} · ${money(a.balance||0)}</option>`).join("");
-  }else{
-    amount.value=t.amount||0;
-    expenseAccount.innerHTML=accounts.map((a,i)=>`<option value="${i}" ${String(a.id)===String(t.account)?"selected":""}>${a.name||"Счёт"} · ${money(a.balance||0)}</option>`).join("");
-    categorySelect.value=t.category||categories[0]?.name||"";
-    calc();
+  if(t.type==="income"){ if(!a) return false; a.balance=Number(a.balance||0)+v; return true; }
+  if(t.type==="expense"){ if(!a) return false; a.balance=Number(a.balance||0)-v; return true; }
+  if(t.type==="transfer"){
+    const to=accounts.find(x=>String(x.id)===String(t.toAccount));
+    if(!a || !to) return false;
+    a.balance=Number(a.balance||0)-v;
+    to.balance=Number(to.balance||0)+v;
+    return true;
   }
-  open("expenseOverlay");
+  return false;
 }
 
 function deleteTransaction(index){
@@ -2763,6 +2797,14 @@ function deleteTransaction(index){
   if(!t) return;
   if(!confirm("Удалить эту операцию?")) return;
   reverseTransactionEffect(t);
+  if(t.roundingTransactionId){
+    const ri=transactions.findIndex(x=>String(x.id)===String(t.roundingTransactionId));
+    if(ri>=0){
+      reverseTransactionEffect(transactions[ri]);
+      transactions.splice(ri,1);
+      if(ri<index) index--;
+    }
+  }
   transactions.splice(index,1);
   save(AK,accounts);
   save(TY,transactions);
@@ -2844,6 +2886,42 @@ function populate(){
       .join("");
 }
 
+
+function investmentAccount(){
+  return accounts.find(a=>a && a.type==="investment");
+}
+
+function isTBankAccount(a){
+  const text=String(a?.bank||a?.name||"").toLowerCase().replace(/ё/g,"е");
+  const icon=String(a?.icon||"").toLowerCase();
+  return text.includes("т-банк") || text.includes("т банк") || text.includes("тинькофф") || text.includes("t-bank") || text.includes("t bank") || text.includes("tinkoff") || text.includes("tbank") || icon==="tbank";
+}
+
+function roundingAmount(value){
+  const v=Math.max(0,Number(value)||0);
+  const rounded=Math.ceil((v-1e-9)/50)*50;
+  return Math.max(0,Math.round((rounded-v)*100)/100);
+}
+
+function transactionRounding(t){
+  return t?.type==="expense" && t.roundingEnabled===true ? Number(t.roundingAmount||0) : 0;
+}
+
+function updateRoundingUI(forceState=null){
+  const box=document.getElementById("roundingBox");
+  const toggle=document.getElementById("roundingEnabled");
+  const preview=document.getElementById("roundingPreview");
+  if(!box || !toggle || !preview) return;
+  const idx=Number(expenseAccount?.value);
+  const account=Number.isInteger(idx) && accounts[idx] ? accounts[idx] : null;
+  const inv=investmentAccount();
+  const eligible=!!account && isTBankAccount(account) && !!inv;
+  box.style.display=eligible ? "block" : "none";
+  if(forceState!==null) toggle.checked=!!forceState;
+  const value=Number(amount?.value||0);
+  const extra=toggle.checked ? roundingAmount(value) : 0;
+  preview.textContent=extra>0 ? `Покупка ${money(value)} → округление ${money(extra)} в «${inv?.name||"Инвесткопилка"}».` : "Округление выключено.";
+}
 
 function calc(){
 
@@ -4250,6 +4328,25 @@ document.addEventListener("touchcancel",()=>{
 }, {passive:true});
 
 
+const mainNavScreens=["home","budget","accounts","debts","goals","settings"];
+let swipeStartX=0,swipeStartY=0,swipeTracking=false;
+document.addEventListener("touchstart",e=>{
+  if(e.touches.length!==1 || document.querySelector(".overlay.open")) return;
+  const target=e.target;
+  if(target.closest("input,select,textarea,button,.account-row")) return;
+  swipeStartX=e.touches[0].clientX; swipeStartY=e.touches[0].clientY; swipeTracking=true;
+},{passive:true});
+document.addEventListener("touchend",e=>{
+  if(!swipeTracking) return; swipeTracking=false;
+  const t=e.changedTouches?.[0]; if(!t) return;
+  const dx=t.clientX-swipeStartX, dy=t.clientY-swipeStartY;
+  if(Math.abs(dx)<70 || Math.abs(dx)<Math.abs(dy)*1.35) return;
+  const active=document.querySelector(".screen.active"); const id=active?.id; const idx=mainNavScreens.indexOf(id);
+  if(idx<0) return;
+  const next=idx+(dx<0?1:-1); if(next<0 || next>=mainNavScreens.length) return;
+  const btn=document.querySelector(`.nav button[data-screen="${mainNavScreens[next]}"]`); if(btn) screen(mainNavScreens[next],btn);
+},{passive:true});
+
 /* =========================
    СТАРТ ПРИЛОЖЕНИЯ
 ========================= */
@@ -4294,6 +4391,8 @@ quickExpenseButton.addEventListener("click", () => {
         ).join("")
       : `<option value="">Сначала добавь счёт</option>`;
 
+  document.getElementById("roundingEnabled").checked=false;
+  updateRoundingUI();
   open("expenseOverlay");
 
   setTimeout(() => {
@@ -4400,22 +4499,19 @@ backFromBudgetHistoryButton.addEventListener("click", () => {
 amount.addEventListener("input", calc);
 
 categorySelect.addEventListener("change", calc);
+expenseAccount.addEventListener("change", ()=>updateRoundingUI());
+document.getElementById("roundingEnabled")?.addEventListener("change", ()=>updateRoundingUI());
+amount.addEventListener("input", ()=>updateRoundingUI());
 
 
 /* СОХРАНЕНИЕ РАСХОДА / ДОХОДА */
 
 saveExpenseButton.addEventListener("click", () => {
-
   const isIncome = incomeFields.style.display !== "none";
   const value = Number((isIncome ? incomeAmount.value : amount.value) || 0);
   if(value <= 0) return;
-
   const date = operationDate.value || today();
-  let accountIndex;
-  let category;
-  let name;
-  let incomeCategoryValue;
-
+  let accountIndex, category, name, incomeCategoryValue;
   if(isIncome){
     accountIndex=Number(incomeAccount.value);
     incomeCategoryValue=incomeCategory.value || "other";
@@ -4425,83 +4521,58 @@ saveExpenseButton.addEventListener("click", () => {
     accountIndex=Number(expenseAccount.value);
     if(!category) return;
   }
-
   if(!Number.isInteger(accountIndex) || !accounts[accountIndex]){
     alert(isIncome ? "Выбери счёт, куда пришли деньги." : "Выбери счёт, с которого списаны деньги.");
     return;
   }
+  const account=accounts[accountIndex];
+  const inv=investmentAccount();
+  const roundingEnabled=!isIncome && isTBankAccount(account) && !!inv && document.getElementById("roundingEnabled")?.checked===true;
+  const extra=roundingEnabled ? roundingAmount(value) : 0;
 
-  /* РЕДАКТИРОВАНИЕ СУЩЕСТВУЮЩЕЙ ОПЕРАЦИИ */
   if(editingTransactionIndex!==null){
     const old=transactions[editingTransactionIndex];
     if(!old) return;
-
     reverseTransactionEffect(old);
-
-    const updated={
-      ...old,
-      amount:value,
-      account:accounts[accountIndex].id,
-      date
-    };
-
-    if(isIncome){
-      updated.name=name;
-      updated.incomeCategory=incomeCategoryValue;
-    }else updated.category=category;
-
-    updated.type=isIncome ? "income" : "expense";
-
-    if(!applyTransactionEffect(updated)){
-      applyTransactionEffect(old);
-      return;
+    if(old.roundingTransactionId){
+      const ri=transactions.findIndex(x=>String(x.id)===String(old.roundingTransactionId));
+      if(ri>=0){ reverseTransactionEffect(transactions[ri]); transactions.splice(ri,1); }
     }
-
+    const updated={...old,amount:value,account:account.id,date,type:isIncome?"income":"expense"};
+    if(isIncome){
+      updated.name=name; updated.incomeCategory=incomeCategoryValue;
+      delete updated.roundingEnabled; delete updated.roundingAmount; delete updated.roundingAccount; delete updated.roundingTransactionId;
+      applyTransactionEffect(updated);
+    }else{
+      updated.category=category;
+      updated.roundingEnabled=extra>0; updated.roundingAmount=extra; updated.roundingAccount=extra>0?inv.id:null;
+      updated.roundingTransactionId=extra>0?"round-"+updated.id:null;
+      applyTransactionEffect(updated);
+      if(extra>0){
+        applyTransactionEffect({id:updated.roundingTransactionId,type:"transfer",amount:extra,account:updated.account,toAccount:inv.id,date,name:"Округление покупки",roundingFor:String(updated.id)});
+        transactions.push({id:updated.roundingTransactionId,type:"transfer",amount:extra,account:updated.account,toAccount:inv.id,date,name:"Округление покупки",roundingFor:String(updated.id)});
+      }
+    }
     transactions[editingTransactionIndex]=updated;
-    save(AK,accounts);
-    save(TY,transactions);
-    scheduleAutoSync();
-    close("expenseOverlay");
-    editingTransactionIndex=null;
-    deleteOperationButton.style.display="none";
-    renderAccounts();
-    renderDebts();
-    renderCats();
-    home();
-    if(document.getElementById("history").classList.contains("active")) renderHistory();
-    return;
-  }
-
-  /* НОВАЯ ОПЕРАЦИЯ */
-  const account=accounts[accountIndex];
-  const transaction={
-    id:Date.now(),
-    type:isIncome ? "income" : "expense",
-    amount:value,
-    account:account.id,
-    date
-  };
-
-  if(isIncome){
-    transaction.name=name;
-    transaction.incomeCategory=incomeCategoryValue;
-    account.balance=Number(account.balance||0)+value;
   }else{
-    transaction.category=category;
-    account.balance=Number(account.balance||0)-value;
+    const transaction={id:Date.now(),type:isIncome?"income":"expense",amount:value,account:account.id,date};
+    if(isIncome){
+      transaction.name=name; transaction.incomeCategory=incomeCategoryValue; applyTransactionEffect(transaction);
+    }else{
+      transaction.category=category; transaction.roundingEnabled=extra>0; transaction.roundingAmount=extra; transaction.roundingAccount=extra>0?inv.id:null; transaction.roundingTransactionId=extra>0?"round-"+transaction.id:null;
+      applyTransactionEffect(transaction);
+      transactions.push(transaction);
+      if(extra>0){
+        const transfer={id:transaction.roundingTransactionId,type:"transfer",amount:extra,account:account.id,toAccount:inv.id,date,name:"Округление покупки",roundingFor:String(transaction.id)};
+        applyTransactionEffect(transfer); transactions.push(transfer);
+      }
+    }
+    if(isIncome || !transactions.includes(transaction)) transactions.push(transaction);
   }
-
-  transactions.push(transaction);
-  save(AK,accounts);
-  save(TY,transactions);
-  scheduleAutoSync();
-  close("expenseOverlay");
-  renderAccounts();
-  renderDebts();
-  renderCats();
-  home();
+  save(AK,accounts); save(TY,transactions); scheduleAutoSync();
+  close("expenseOverlay"); editingTransactionIndex=null; deleteOperationButton.style.display="none";
+  renderAccounts(); renderDebts(); renderCats(); home(); renderHistory();
 });
-
 
 /* ЛИМИТ КАТЕГОРИИ */
 
