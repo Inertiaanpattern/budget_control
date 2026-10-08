@@ -442,10 +442,11 @@ button{
 
 .category-actions,
 .account-actions{
-  display:grid;
-  grid-template-columns:minmax(78px,auto) auto;
-  align-items:center;
-  gap:10px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  justify-content:center;
+  gap:8px;
   flex:0 0 auto;
   min-width:0
 }
@@ -900,9 +901,29 @@ button{
 
 .account-main-stacked{
   display:flex;
-  flex-direction:column;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  gap:12px;
   min-width:0;
   flex:1 1 auto
+}
+
+.account-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  column-gap:14px;
+}
+
+.account-main-stacked > div:first-child{
+  flex:0 0 42px;
+  width:42px;
+}
+
+.account-main-stacked .account-left{
+  min-width:0;
+  text-align:left;
 }
 
 .account-row > .account-main-stacked{
