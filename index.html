@@ -3709,6 +3709,23 @@ function sameSyncData(a,b){
 }
 
 
+function hasSyncData(data){
+
+  const d=normalizeSyncData(data||{});
+
+  return (
+    Object.keys(d.plans||{}).length>0 ||
+    (Array.isArray(d.accounts) && d.accounts.length>0) ||
+    (Array.isArray(d.transactions) && d.transactions.length>0) ||
+    (Array.isArray(d.goals) && d.goals.length>0) ||
+    (Array.isArray(d.debts) && d.debts.length>0) ||
+    (Array.isArray(d.plannedPayments) && d.plannedPayments.length>0) ||
+    (d.settings && Number(d.settings.savingsPercent||0)!==0)
+  );
+
+}
+
+
 /* -------------------------
    ПРОВЕРКА LEGACY GOOGLE
 ------------------------- */
@@ -4286,7 +4303,66 @@ function mergeLegacyGoogleWithLocal(google){
 ------------------------- */
 
 async function syncWithGoogle(){
-  return autoSyncOnce(true);
+  const statusEl = document.getElementById("syncStatus");
+  if(syncButton){
+    syncButton.disabled=true;
+    syncButton.textContent="Синхронизация…";
+  }
+  if(statusEl) statusEl.textContent = "Загрузка данных из Google…";
+
+  try{
+    const googleRaw = await googleLoad();
+    const google = normalizeSyncData(googleRaw || {});
+    const local = normalizeSyncData(localSyncData());
+
+    const googleHasData = hasSyncData(google);
+    const localHasData = hasSyncData(local);
+
+    // Ручная кнопка — это именно восстановление/синхронизация с Google.
+    // Если в Google есть данные, они имеют приоритет: это позволяет восстановить
+    // актуальное состояние после удаления/переустановки PWA.
+    if(googleHasData){
+      if(localHasData && !sameSyncData(local, google)){
+        const ok = confirm("В Google найдены сохранённые данные. Загрузить их на устройство и заменить текущие локальные данные?");
+        if(!ok){
+          if(statusEl) statusEl.textContent = "Синхронизация отменена";
+          return false;
+        }
+      }
+
+      applyGoogleData(google);
+      localStorage.setItem(
+        SYNC_LAST_GOOGLE_KEY,
+        JSON.stringify(google)
+      );
+      renderAccounts();
+      renderDebts();
+      renderGoals();
+      renderBudget();
+      home();
+      if(statusEl) statusEl.textContent = "Данные из Google загружены ✓";
+      return true;
+    }
+
+    // Если Google пуст, но на устройстве есть данные — сохраняем их в Google.
+    if(localHasData){
+      await googlePush(local);
+      if(statusEl) statusEl.textContent = "Данные сохранены в Google ✓";
+      return true;
+    }
+
+    if(statusEl) statusEl.textContent = "Данных для синхронизации пока нет";
+    return true;
+  }catch(error){
+    console.error("Manual Google sync error:", error);
+    if(statusEl) statusEl.textContent = "Ошибка синхронизации с Google";
+    return false;
+  }finally{
+    if(syncButton){
+      syncButton.disabled=false;
+      syncButton.textContent="↻ Синхронизировать с Google";
+    }
+  }
 }
 
 async function autoSyncOnce(showStatus=false){
