@@ -650,7 +650,7 @@ button{
   position:fixed;
   inset:0;
   background:#28232461;
-  z-index:1000;
+  z-index:2000;
   align-items:flex-end;
   justify-content:center
 }
@@ -659,6 +659,11 @@ button{
   display:flex
 }
 
+/* FIX: modal sizing */
+.modal{box-sizing:border-box;max-width:100vw;overflow-x:hidden;}
+.modal *{box-sizing:border-box;max-width:100%;}
+.modal input,.modal select,.modal textarea,.modal .date-input,.modal .text-input{max-width:100%;width:100%;min-width:0;box-sizing:border-box;}
+#operationDate{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;}
 .modal{
   width:100%;
   max-width:480px;
@@ -4683,6 +4688,12 @@ quickExpenseButton.addEventListener("click", () => {
 
   amount.value = "";
 
+  if(!Array.isArray(accounts) || accounts.length===0){
+  const storedAccounts=read(AK,[]);
+  if(Array.isArray(storedAccounts) && storedAccounts.length)
+    accounts=ensureAccountIds(storedAccounts);
+}
+
   expenseAccount.innerHTML =
     accounts.length
       ? accounts.map((a,i) =>
@@ -4723,6 +4734,12 @@ quickIncomeButton.addEventListener("click", () => {
   incomeName.value = "Зарплата";
   incomeNameLabel.style.display = "none";
   incomeName.style.display = "none";
+
+  if(!Array.isArray(accounts) || accounts.length===0){
+  const storedAccounts=read(AK,[]);
+  if(Array.isArray(storedAccounts) && storedAccounts.length)
+    accounts=ensureAccountIds(storedAccounts);
+}
 
   incomeAccount.innerHTML =
     accounts.length
