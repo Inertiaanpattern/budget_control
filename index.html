@@ -3855,7 +3855,7 @@ function googleLoad(){
           reject(
             new Error(
               data?.error ||
-              "Не удалось получить данные из Google."
+              "Google вернул пустой или некорректный ответ."
             )
           );
 
@@ -3874,7 +3874,7 @@ function googleLoad(){
 
         finishError(
           new Error(
-            "Не удалось подключиться к Google Sheets."
+            "Не удалось подключиться к Google Sheets. Проверь интернет и доступ к Google."
           )
         );
 
@@ -4354,8 +4354,11 @@ async function syncWithGoogle(){
     if(statusEl) statusEl.textContent = "Данных для синхронизации пока нет";
     return true;
   }catch(error){
+    const message = error && error.message
+      ? error.message
+      : "Неизвестная ошибка";
     console.error("Manual Google sync error:", error);
-    if(statusEl) statusEl.textContent = "Ошибка синхронизации с Google";
+    if(statusEl) statusEl.textContent = "Ошибка: " + message;
     return false;
   }finally{
     if(syncButton){
