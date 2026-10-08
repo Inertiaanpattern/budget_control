@@ -85,7 +85,7 @@ button{
 .app{
   max-width:480px;
   margin:auto;
-  padding:18px 16px 105px
+  padding:18px 16px calc(105px + env(safe-area-inset-bottom))
 }
 
 .header{
@@ -442,9 +442,28 @@ button{
 
 .category-actions,
 .account-actions{
-  display:flex;
+  display:grid;
+  grid-template-columns:minmax(78px,auto) auto;
   align-items:center;
-  gap:8px
+  gap:10px;
+  flex:0 0 auto;
+  min-width:0
+}
+
+.account-actions .account-balance{
+  text-align:right;
+  white-space:nowrap;
+  font-size:18px;
+  line-height:1.1
+}
+
+.account-actions .account-action-icons{
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:0
 }
 
 .action-icon{
@@ -751,13 +770,19 @@ button{
   left:0;
   right:0;
   bottom:0;
+  width:100%;
+  padding-bottom:env(safe-area-inset-bottom);
   background:#fffafaF0;
   backdrop-filter:blur(15px);
+  -webkit-backdrop-filter:blur(15px);
   border-top:1px solid var(--border);
-  z-index:10
+  z-index:1000;
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0)
 }
 
 .nav-inner{
+  width:100%;
   max-width:480px;
   margin:auto;
   display:flex;
@@ -877,6 +902,15 @@ button{
   display:flex;
   flex-direction:column;
   min-width:0;
+  flex:1 1 auto
+}
+
+.account-row > .account-main-stacked{
+  min-width:0
+}
+
+.account-row .account-action-icons .small-button{
+  flex:0 0 34px
 }
 .account-financials{
   margin-top:7px;
@@ -1631,7 +1665,7 @@ button{
       Долги
     </button>
     <button data-screen="goals">
-      <span class="nav-icon nav-icon-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 4V2M20 12h2"/></svg></span>
+      <span class="nav-icon nav-icon-svg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/><path d="M12 1.8V4M22.2 12H20M12 20v2.2M4 12H1.8"/></svg></span>
       Цели
     </button>
     <button data-screen="settings">
