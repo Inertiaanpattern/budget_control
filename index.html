@@ -1157,7 +1157,7 @@ button{
       <input id="forecastIncomeDate" class="text-input" type="date">
       <div class="field-label" style="margin-top:10px">Название поступления</div>
       <input id="forecastIncomeName" class="text-input" type="text" placeholder="Например, аванс или зарплата">
-      <button type="button" class="primary" id="addForecastIncomeButton" style="margin-top:10px" onclick="addForecastIncome()">＋ Добавить прогноз</button>
+      <button type="button" class="primary" id="addForecastIncomeButton" style="margin-top:10px" >＋ Добавить прогноз</button>
     </div>
 
     <div class="settings-group">
@@ -2869,23 +2869,54 @@ function addForecastIncome(){
   const amountEl=document.getElementById("forecastIncomeAmount");
   const dateEl=document.getElementById("forecastIncomeDate");
   const nameEl=document.getElementById("forecastIncomeName");
-  const amount=Math.max(0,Number(amountEl?.value)||0);
-  const date=String(dateEl?.value||"");
+  const amount=Number(String(amountEl?.value||"").trim().replace(",","."));
+  const date=String(dateEl?.value||"").trim();
   const name=String(nameEl?.value||"").trim()||"Ожидаемое поступление";
-  if(!amount || !/^\d{4}-\d{2}-\d{2}$/.test(date)){
-    alert("Укажи ожидаемую сумму и дату поступления.");
+
+  if(!Number.isFinite(amount) || amount<=0){
+    alert("Укажи сумму поступления больше нуля.");
+    amountEl?.focus();
     return;
   }
-  forecastIncomes.push({id:"forecast_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),name,amount,date});
-  save(FIK,forecastIncomes);
-  scheduleAutoSync();
-  amountEl.value="";
-  dateEl.value="";
-  nameEl.value="";
-  renderForecastIncomeList();
-  home();
-}
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+     Number.isNaN(new Date(date+"T00:00:00").getTime())){
+    alert("Укажи дату поступления.");
+    dateEl?.focus();
+    return;
+  }
+  if(date<today()){
+    alert("Дата прогноза уже прошла. Выбери сегодняшнюю или будущую дату.");
+    dateEl?.focus();
+    return;
+  }
 
+  try{
+    const current=read(FIK,[]);
+    forecastIncomes=Array.isArray(current)?current:[];
+    forecastIncomes.push({
+      id:"forecast_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),
+      name,
+      amount,
+      date
+    });
+    save(FIK,forecastIncomes);
+
+    amountEl.value="";
+    dateEl.value="";
+    nameEl.value="";
+    renderForecastIncomeList();
+    home();
+
+    try{
+      scheduleAutoSync();
+    }catch(syncError){
+      console.error("Не удалось запланировать синхронизацию прогноза:",syncError);
+    }
+  }catch(error){
+    console.error("Не удалось сохранить прогноз поступления:",error);
+    alert("Не удалось сохранить прогноз на этом устройстве. Попробуй ещё раз; если ошибка повторится, сообщи мне.");
+  }
+}
 function deleteForecastIncome(id){
   forecastIncomes=forecastIncomes.filter(x=>String(x.id)!==String(id));
   save(FIK,forecastIncomes);
@@ -6470,6 +6501,11 @@ updateFinance();
 home();
 setTimeout(()=>autoSyncOnce(false),1200);
 
+
+document.getElementById("addForecastIncomeButton")?.addEventListener("click",event=>{
+  event.preventDefault();
+  addForecastIncome();
+});
 
 document.getElementById("forecastIncomeList")?.addEventListener("click",event=>{
   const button=event.target.closest("[data-delete-forecast]");
