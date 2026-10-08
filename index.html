@@ -2958,7 +2958,14 @@ function periodDailyLimit(){
   const reservedDebt=plannedDebtUntilNextSalary(info);
   const availableAfterDebt=Math.max(0,realMoney-reservedDebt);
 
-  return Math.max(0,availableAfterDebt/info.days);
+  // Второе ограничение — оставшийся план расходов на месяц.
+  // Поэтому изменение лимитов категорий влияет на дневной лимит,
+  // но кредитные карты по-прежнему не считаются доступными деньгами.
+  const monthBudgetLeft=remainingBudget();
+  const cashDailyLimit=availableAfterDebt/info.days;
+  const budgetDailyLimit=monthBudgetLeft/info.days;
+
+  return Math.max(0,Math.min(cashDailyLimit,budgetDailyLimit));
 }
 function home(){
 
