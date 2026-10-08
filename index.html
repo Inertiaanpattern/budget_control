@@ -1064,8 +1064,6 @@ button{
     </div>
   </div>
 
-  <input id="accountsSearch" class="text-input list-search" type="search" placeholder="Поиск счёта…" autocomplete="off">
-
   <div class="card" id="accountsList"></div>
 
   <button class="secondary" id="addAccountButton">
@@ -2363,8 +2361,7 @@ function renderAccounts(){
   if(!Array.isArray(accounts))
     accounts=[];
 
-  const q=String(document.getElementById("accountsSearch")?.value||"").trim().toLocaleLowerCase("ru-RU");
-  const visibleAccounts=accounts.map((a,i)=>({a,i})).filter(({a})=>!q || String(a.name||"").toLocaleLowerCase("ru-RU").includes(q) || String(a.bank||"").toLocaleLowerCase("ru-RU").includes(q));
+  const visibleAccounts=accounts.map((a,i)=>({a,i}));
 
   accountsList.innerHTML=
     visibleAccounts.length
@@ -4769,7 +4766,6 @@ historyList.addEventListener("click", e => {
   if(del){ deleteTransaction(Number(del.dataset.historyDelete)); }
 });
 
-document.getElementById("accountsSearch")?.addEventListener("input",renderAccounts);
 document.getElementById("historySearch")?.addEventListener("input",renderHistory);
 
 document.querySelectorAll(".history-filter").forEach(button => {
