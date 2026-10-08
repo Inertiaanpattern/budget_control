@@ -4303,38 +4303,47 @@ function mergeLegacyGoogleWithLocal(google){
 ------------------------- */
 
 async function syncWithGoogle(){
-  const statusEl = document.getElementById("syncStatus");
+  const statusEl=document.getElementById("syncStatus");
+
   if(syncButton){
     syncButton.disabled=true;
     syncButton.textContent="Синхронизация…";
   }
-  if(statusEl) statusEl.textContent = "Загрузка данных из Google…";
+
+  if(statusEl){
+    statusEl.textContent="Сравниваю данные телефона и Google…";
+  }
 
   try{
-    const googleRaw = await googleLoad();
-    const google = normalizeSyncData(googleRaw || {});
-    const local = normalizeSyncData(localSyncData());
+    const googleRaw=await googleLoad();
+    const google=normalizeSyncData(googleRaw||{});
+    const local=normalizeSyncData(localSyncData());
 
-    const googleHasData = hasSyncData(google);
-    const localHasData = hasSyncData(local);
+    const googleHasData=hasSyncData(google);
+    const localHasData=hasSyncData(local);
 
-    // Ручная кнопка — это именно восстановление/синхронизация с Google.
-    // Если в Google есть данные, они имеют приоритет: это позволяет восстановить
-    // актуальное состояние после удаления/переустановки PWA.
-    if(googleHasData){
-      if(localHasData && !sameSyncData(local, google)){
-        const ok = confirm("В Google найдены сохранённые данные. Загрузить их на устройство и заменить текущие локальные данные?");
-        if(!ok){
-          if(statusEl) statusEl.textContent = "Синхронизация отменена";
-          return false;
-        }
-      }
+    /*
+     * Ручная кнопка — это именно ДВУСТОРОННЯЯ синхронизация.
+     * Она не должна безусловно заменять телефон данными из Google.
+     *
+     * Правило:
+     *  1. только Google заполнен -> Google -> телефон;
+     *  2. только телефон заполнен -> телефон -> Google;
+     *  3. обе стороны заполнены -> смотрим updatedAt;
+     *  4. более свежая сторона становится источником;
+     *  5. одинаковое время, но разные данные -> используем последний
+     *     сохранённый снимок Google, а если конфликт не удаётся определить,
+     *     предлагаем пользователю выбрать направление.
+     */
 
+    if(!localHasData && googleHasData){
       applyGoogleData(google);
+
       localStorage.setItem(
         SYNC_LAST_GOOGLE_KEY,
         JSON.stringify(google)
       );
+
       renderCats();
       renderAccounts();
       renderDebts();
@@ -4343,26 +4352,188 @@ async function syncWithGoogle(){
       renderHistory();
       updateFinance();
       home();
-      if(statusEl) statusEl.textContent = "Данные из Google загружены ✓";
+
+      if(statusEl){
+        statusEl.textContent="Данные из Google загружены на телефон ✓";
+      }
+
       return true;
     }
 
-    // Если Google пуст, но на устройстве есть данные — сохраняем их в Google.
-    if(localHasData){
-      await googlePush(local);
-      if(statusEl) statusEl.textContent = "Данные сохранены в Google ✓";
+    if(localHasData && !googleHasData){
+      await googlePush();
+
+      localStorage.setItem(
+        SYNC_LAST_GOOGLE_KEY,
+        JSON.stringify(local)
+      );
+
+      if(statusEl){
+        statusEl.textContent="Данные телефона сохранены в Google ✓";
+      }
+
       return true;
     }
 
-    if(statusEl) statusEl.textContent = "Данных для синхронизации пока нет";
+    if(!localHasData && !googleHasData){
+      if(statusEl){
+        statusEl.textContent="Данных для синхронизации пока нет";
+      }
+      return true;
+    }
+
+    if(sameSyncData(local,google)){
+      localStorage.setItem(
+        SYNC_LAST_GOOGLE_KEY,
+        JSON.stringify(google)
+      );
+
+      if(statusEl){
+        statusEl.textContent="Телефон и Google уже синхронизированы ✓";
+      }
+
+      return true;
+    }
+
+    const localUpdated=Number(local.updatedAt||0);
+    const googleUpdated=Number(google.updatedAt||0);
+
+    if(localUpdated>googleUpdated){
+      await googlePush();
+
+      localStorage.setItem(
+        SYNC_LAST_GOOGLE_KEY,
+        JSON.stringify(local)
+      );
+
+      if(statusEl){
+        statusEl.textContent="Данные телефона сохранены в Google ✓";
+      }
+
+      return true;
+    }
+
+    if(googleUpdated>localUpdated){
+      applyGoogleData(google);
+
+      localStorage.setItem(
+        SYNC_LAST_GOOGLE_KEY,
+        JSON.stringify(google)
+      );
+
+      renderCats();
+      renderAccounts();
+      renderDebts();
+      renderGoals();
+      renderBudgetHistory();
+      renderHistory();
+      updateFinance();
+      home();
+
+      if(statusEl){
+        statusEl.textContent="Более новые данные из Google загружены на телефон ✓";
+      }
+
+      return true;
+    }
+
+    /*
+     * updatedAt одинаковый, но содержимое различается.
+     * Сначала пытаемся понять, какая сторона изменилась относительно
+     * последнего известного снимка Google.
+     */
+    let last=null;
+    try{
+      const raw=localStorage.getItem(SYNC_LAST_GOOGLE_KEY);
+      last=raw?normalizeSyncData(JSON.parse(raw)):null;
+    }catch(e){
+      last=null;
+    }
+
+    if(last){
+      const googleChanged=!sameSyncData(google,last);
+      const localChanged=!sameSyncData(local,last);
+
+      if(localChanged && !googleChanged){
+        await googlePush();
+        localStorage.setItem(
+          SYNC_LAST_GOOGLE_KEY,
+          JSON.stringify(local)
+        );
+
+        if(statusEl){
+          statusEl.textContent="Изменения телефона сохранены в Google ✓";
+        }
+        return true;
+      }
+
+      if(googleChanged && !localChanged){
+        applyGoogleData(google);
+        localStorage.setItem(
+          SYNC_LAST_GOOGLE_KEY,
+          JSON.stringify(google)
+        );
+
+        renderCats();
+        renderAccounts();
+        renderDebts();
+        renderGoals();
+        renderBudgetHistory();
+        renderHistory();
+        updateFinance();
+        home();
+
+        if(statusEl){
+          statusEl.textContent="Изменения Google загружены на телефон ✓";
+        }
+        return true;
+      }
+    }
+
+    /*
+     * Настоящий конфликт: обе стороны менялись независимо.
+     * Не затираем телефон молча. По умолчанию сохраняем телефон в Google,
+     * потому что ручная кнопка нажата пользователем после изменения данных
+     * на устройстве; перед этим спрашиваем подтверждение.
+     */
+    const ok=confirm(
+      "Данные телефона и Google отличаются, но время изменения одинаковое. "+
+      "Сохранить данные телефона в Google и заменить ими данные Google?"
+    );
+
+    if(!ok){
+      if(statusEl){
+        statusEl.textContent="Синхронизация отменена";
+      }
+      return false;
+    }
+
+    await googlePush();
+
+    localStorage.setItem(
+      SYNC_LAST_GOOGLE_KEY,
+      JSON.stringify(local)
+    );
+
+    if(statusEl){
+      statusEl.textContent="Данные телефона сохранены в Google ✓";
+    }
+
     return true;
+
   }catch(error){
-    const message = error && error.message
-      ? error.message
-      : "Неизвестная ошибка";
-    console.error("Manual Google sync error:", error);
-    if(statusEl) statusEl.textContent = "Ошибка: " + message;
+    const message=error&&error.message
+      ?error.message
+      :"Неизвестная ошибка";
+
+    console.error("Manual Google sync error:",error);
+
+    if(statusEl){
+      statusEl.textContent="Ошибка: "+message;
+    }
+
     return false;
+
   }finally{
     if(syncButton){
       syncButton.disabled=false;
