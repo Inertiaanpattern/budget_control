@@ -2874,9 +2874,32 @@ function plannedPaymentsForMonth(year=budgetYear,month=budgetMonth){
 }
 
 function plannedDebtTotalForMonth(year=budgetYear,month=budgetMonth){
-  return plannedPaymentsForMonth(year,month)
-    .filter(p=>p.category==="Кредиты | Долги")
-    .reduce((s,p)=>s+Number(p.amount||0),0);
+  const monthPayments=plannedPaymentsForMonth(year,month)
+    .filter(p=>p.category==="Кредиты | Долги");
+
+  let total=monthPayments
+    .reduce((s,p)=>s+Math.max(0,Number(p.amount)||0),0);
+
+  // Надёжный резервный источник: если сам плановый платёж по долгу
+  // почему-то не сохранился/не приехал из синхронизации, но у долга
+  // есть дата возврата, учитываем его напрямую. Это особенно важно
+  // для обычных долгов вроде «Маша — 18 000 ₽ до 15.10».
+  debts.forEach(d=>{
+    if(!d || d.kind==="installment") return;
+    const date=normalizeAppDate(d.dueDate);
+    if(!date) return;
+    const prefix=`${year}-${String(month+1).padStart(2,"0")}`;
+    if(!date.startsWith(prefix)) return;
+
+    const alreadyPlanned=monthPayments.some(p=>
+      String(p.debtId)===String(d.id)
+    );
+    if(!alreadyPlanned){
+      total+=Math.max(0,Number(d.amount)||0);
+    }
+  });
+
+  return total;
 }
 
 function remainingBudget(){
@@ -2890,15 +2913,35 @@ function plannedDebtUntilNextSalary(info){
   const nextStart=new Date(info.next.dateObj);
   nextStart.setHours(0,0,0,0);
 
-  return plannedPayments
-    .filter(p=>{
-      if(p.paid || p.category!=="Кредиты | Долги") return false;
-      const raw=normalizeAppDate(p.date);
-      if(!raw) return false;
-      const d=new Date(raw+"T00:00:00");
-      return !Number.isNaN(d.getTime()) && d>todayStart && d<=nextStart;
-    })
+  const matchingPayments=plannedPayments.filter(p=>{
+    if(p.paid || p.category!=="Кредиты | Долги") return false;
+    const raw=normalizeAppDate(p.date);
+    if(!raw) return false;
+    const d=new Date(raw+"T00:00:00");
+    return !Number.isNaN(d.getTime()) && d>todayStart && d<=nextStart;
+  });
+
+  let total=matchingPayments
     .reduce((sum,p)=>sum+Math.max(0,Number(p.amount)||0),0);
+
+  // Если планового платежа нет, но обычный долг имеет дату возврата
+  // в текущем периоде, резервируем сумму самого долга.
+  debts.forEach(d=>{
+    if(!d || d.kind==="installment") return;
+    const raw=normalizeAppDate(d.dueDate);
+    if(!raw) return;
+    const date=new Date(raw+"T00:00:00");
+    if(Number.isNaN(date.getTime()) || date<=todayStart || date>nextStart) return;
+
+    const alreadyPlanned=matchingPayments.some(p=>
+      String(p.debtId)===String(d.id)
+    );
+    if(!alreadyPlanned){
+      total+=Math.max(0,Number(d.amount)||0);
+    }
+  });
+
+  return total;
 }
 
 function periodDailyLimit(){
