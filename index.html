@@ -4302,6 +4302,65 @@ function mergeLegacyGoogleWithLocal(google){
    ПОЛНАЯ СИНХРОНИЗАЦИЯ
 ------------------------- */
 
+/* -------------------------
+   ПРОВЕРКА ПОСЛЕ ЗАПИСИ В GOOGLE
+------------------------- */
+
+function sameSyncContent(a,b){
+  const na=normalizeSyncData(a||{});
+  const nb=normalizeSyncData(b||{});
+
+  return JSON.stringify({
+    plans:na.plans,
+    accounts:na.accounts,
+    transactions:na.transactions,
+    goals:na.goals,
+    debts:na.debts,
+    plannedPayments:na.plannedPayments,
+    settings:na.settings
+  })===JSON.stringify({
+    plans:nb.plans,
+    accounts:nb.accounts,
+    transactions:nb.transactions,
+    goals:nb.goals,
+    debts:nb.debts,
+    plannedPayments:nb.plannedPayments,
+    settings:nb.settings
+  });
+}
+
+async function googlePushVerified(){
+  const local=normalizeSyncData(localSyncData());
+
+  await googlePush();
+
+  /*
+   * Сам факт завершения POST ещё не означает, что Apps Script
+   * действительно сохранил данные. Сразу перечитываем Google.
+   * Это особенно важно на iPhone/Safari, где скрытый iframe
+   * может сообщить onload слишком рано.
+   */
+  for(let attempt=1; attempt<=2; attempt++){
+    await new Promise(resolve=>setTimeout(resolve, attempt===1 ? 1200 : 2000));
+
+    const saved=normalizeSyncData(await googleLoad());
+
+    if(sameSyncContent(local,saved)){
+      return saved;
+    }
+
+    /* Если первый POST не дошёл до сохранения, повторяем запись. */
+    if(attempt===1){
+      await googlePush();
+    }
+  }
+
+  throw new Error(
+    "Google не подтвердил сохранение данных. Данные телефона не потеряны."
+  );
+}
+
+
 async function syncWithGoogle(){
   const statusEl=document.getElementById("syncStatus");
 
@@ -4361,7 +4420,7 @@ async function syncWithGoogle(){
     }
 
     if(localHasData && !googleHasData){
-      await googlePush();
+      await googlePushVerified();
 
       localStorage.setItem(
         SYNC_LAST_GOOGLE_KEY,
@@ -4399,7 +4458,7 @@ async function syncWithGoogle(){
     const googleUpdated=Number(google.updatedAt||0);
 
     if(localUpdated>googleUpdated){
-      await googlePush();
+      await googlePushVerified();
 
       localStorage.setItem(
         SYNC_LAST_GOOGLE_KEY,
@@ -4455,7 +4514,7 @@ async function syncWithGoogle(){
       const localChanged=!sameSyncData(local,last);
 
       if(localChanged && !googleChanged){
-        await googlePush();
+        await googlePushVerified();
         localStorage.setItem(
           SYNC_LAST_GOOGLE_KEY,
           JSON.stringify(local)
@@ -4508,7 +4567,7 @@ async function syncWithGoogle(){
       return false;
     }
 
-    await googlePush();
+    await googlePushVerified();
 
     localStorage.setItem(
       SYNC_LAST_GOOGLE_KEY,
@@ -4619,7 +4678,7 @@ async function autoSyncOnce(showStatus=false){
      * Тогда сохраняем телефон в Google.
      */
     if(localHasData && !googleHasData){
-      await googlePush();
+      await googlePushVerified();
 
       localStorage.setItem(
         SYNC_LAST_GOOGLE_KEY,
@@ -4682,7 +4741,7 @@ async function autoSyncOnce(showStatus=false){
     }
 
     if(localUpdated>googleUpdatedAt){
-      await googlePush();
+      await googlePushVerified();
 
       localStorage.setItem(
         SYNC_LAST_GOOGLE_KEY,
@@ -4731,7 +4790,7 @@ async function autoSyncOnce(showStatus=false){
           );
         }
       }else{
-        await googlePush();
+        await googlePushVerified();
 
         localStorage.setItem(
           SYNC_LAST_GOOGLE_KEY,
