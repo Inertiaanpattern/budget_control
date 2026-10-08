@@ -4335,10 +4335,13 @@ async function syncWithGoogle(){
         SYNC_LAST_GOOGLE_KEY,
         JSON.stringify(google)
       );
+      renderCats();
       renderAccounts();
       renderDebts();
       renderGoals();
-      renderBudget();
+      renderBudgetHistory();
+      renderHistory();
+      updateFinance();
       home();
       if(statusEl) statusEl.textContent = "Данные из Google загружены ✓";
       return true;
