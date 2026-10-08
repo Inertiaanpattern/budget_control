@@ -650,7 +650,7 @@ button{
   position:fixed;
   inset:0;
   background:#28232461;
-  z-index:20;
+  z-index:1000;
   align-items:flex-end;
   justify-content:center
 }
@@ -2466,23 +2466,19 @@ function renderDebts(){
     all.length
       ?all.map((d,i)=>{
 
-        const due=
-          d.dueDate
-            ?new Date(
-              d.dueDate+"T00:00:00"
-            ).toLocaleDateString("ru-RU")
-            :"";
+        const normalizedDueDate=normalizeAppDate(d.dueDate);
+        const due=displayAppDate(normalizedDueDate);
+
+        const dueDateObj=normalizedDueDate
+          ?new Date(normalizedDueDate+"T00:00:00")
+          :null;
 
         const days=
-          d.dueDate
+          dueDateObj && !Number.isNaN(dueDateObj.getTime())
             ?Math.max(
               1,
               Math.ceil(
-                (
-                  new Date(
-                    d.dueDate+"T00:00:00"
-                  )-new Date()
-                )/86400000
+                (dueDateObj-new Date())/86400000
               )
             )
             :null;
@@ -2823,10 +2819,35 @@ function spendableBalance(){
     .reduce((s,a)=>s+Number(a.balance||0),0);
 }
 
+function normalizeAppDate(value){
+  const raw=String(value??"").trim();
+  if(!raw) return "";
+
+  if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+  const ru=raw.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})$/);
+  if(ru){
+    const [,dd,mm,yyyy]=ru;
+    return `${yyyy}-${mm.padStart(2,"0")}-${dd.padStart(2,"0")}`;
+  }
+
+  const d=new Date(raw);
+  if(Number.isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+function displayAppDate(value){
+  const normalized=normalizeAppDate(value);
+  if(!normalized) return "";
+  const d=new Date(normalized+"T00:00:00");
+  if(Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("ru-RU");
+}
+
 function plannedPaymentsForMonth(year=budgetYear,month=budgetMonth){
   const prefix=`${year}-${String(month+1).padStart(2,"0")}`;
   return plannedPayments.filter(p=>
-    !p.paid && String(p.date||"").startsWith(prefix)
+    !p.paid && normalizeAppDate(p.date).startsWith(prefix)
   );
 }
 
@@ -3083,7 +3104,15 @@ function deleteTransaction(index){
   renderHistory();
 }
 
+function closeAllOverlays(){
+  document.querySelectorAll(".overlay.open").forEach(overlay=>{
+    overlay.classList.remove("open");
+  });
+}
+
 function screen(id,b){
+
+  closeAllOverlays();
 
   document
     .querySelectorAll(".screen")
@@ -5066,6 +5095,22 @@ saveAccountButton.addEventListener(
 
 /* ПЕРЕВОД */
 
+function refreshTransferToOptions(preferredIndex=null){
+  const from=Number(transferFrom.value);
+  const available=accounts
+    .map((a,i)=>({a,i}))
+    .filter(({i})=>i!==from);
+
+  transferTo.innerHTML=available
+    .map(({a,i})=>`<option value="${i}">${a.name || "Счёт"}</option>`)
+    .join("");
+
+  if(preferredIndex!==null && available.some(x=>x.i===Number(preferredIndex)))
+    transferTo.value=String(preferredIndex);
+  else if(available.length)
+    transferTo.value=String(available[0].i);
+}
+
 function prepareTransfer(fromIndex=null, toIndex=null){
   if(accounts.length < 2){
     alert("Для перевода нужно минимум два счёта.");
@@ -5077,16 +5122,10 @@ function prepareTransfer(fromIndex=null, toIndex=null){
       `<option value="${i}">${a.name || "Счёт"}</option>`
     ).join("");
 
-  transferTo.innerHTML =
-    accounts.map((a,i) =>
-      `<option value="${i}">${a.name || "Счёт"}</option>`
-    ).join("");
-
   if(fromIndex !== null)
     transferFrom.value = String(fromIndex);
 
-  if(toIndex !== null && toIndex !== fromIndex)
-    transferTo.value = String(toIndex);
+  refreshTransferToOptions(toIndex);
 
   transferAmount.value = "";
   transferDate.value = today();
@@ -5361,6 +5400,10 @@ accountsList.addEventListener(
       e.preventDefault();
   }
 );
+
+transferFrom.addEventListener("change",()=>{
+  refreshTransferToOptions();
+});
 
 closeTransferButton.addEventListener(
   "click",
@@ -5660,7 +5703,7 @@ saveDebtButton.addEventListener(
     const d={id,name,amount,dueDate:null,kind:type};
 
     if(type==="personal"){
-      d.dueDate=manualDebtDueDate.value||null;
+      d.dueDate=normalizeAppDate(manualDebtDueDate.value);
       if(!d.dueDate){ alert("Укажи дату возврата."); return; }
     }else{
       const file=installmentFile.files?.[0];
@@ -5668,7 +5711,7 @@ saveDebtButton.addEventListener(
         alert("Укажи первый платёж, сумму и количество платежей или загрузи CSV-график.");
         return;
       }
-      d.dueDate=installmentFirstDate.value||null;
+      d.dueDate=normalizeAppDate(installmentFirstDate.value);
     }
 
     if(editingDebt===null) debts.push(d);
@@ -5685,7 +5728,7 @@ saveDebtButton.addEventListener(
         const added=parseInstallmentCSV(text,name,id);
         if(!added){ alert("Не удалось найти в CSV строки с датой и суммой."); return; }
       }else{
-        addMonthlyPayments(id,name,Number(installmentPayment.value),installmentFirstDate.value,Math.floor(Number(installmentCount.value)));
+        addMonthlyPayments(id,name,Number(installmentPayment.value),normalizeAppDate(installmentFirstDate.value),Math.floor(Number(installmentCount.value)));
       }
     }
 
@@ -5750,11 +5793,11 @@ debtsList.addEventListener(
       debtModalTitle.textContent = "Изменить обязательство";
       manualDebtName.value = d.name || "";
       manualDebtAmount.value = d.amount || 0;
-      manualDebtDueDate.value = d.dueDate || "";
+      manualDebtDueDate.value = normalizeAppDate(d.dueDate);
       manualDebtType.value = d.kind==="installment" ? "installment" : "personal";
       personalDebtFields.style.display=manualDebtType.value==="personal"?"block":"none";
       installmentDebtFields.style.display=manualDebtType.value==="installment"?"block":"none";
-      installmentFirstDate.value = d.dueDate || "";
+      installmentFirstDate.value = normalizeAppDate(d.dueDate);
       installmentPayment.value = "";
       installmentCount.value = "";
       installmentFile.value = "";
