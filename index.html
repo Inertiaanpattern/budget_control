@@ -2532,11 +2532,11 @@ function renderDebts(){
                 </div>
 
                 ${
-                  d.kind!=="credit"
+                  !String(d.id||"").startsWith("card_")
                     ?`
                       <div class="actions-row account-action-icons">
-                        <button class="small-button action-button" data-dei="${i}" title="Изменить" aria-label="Изменить"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg></button>
-                        <button class="small-button danger-icon action-button" data-di="${i}" title="Удалить" aria-label="Удалить"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/><path d="M10 11v6M14 11v6"/></svg></button>
+                        <button class="small-button action-button" data-debt-edit="${d.id}" title="Изменить" aria-label="Изменить"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg></button>
+                        <button class="small-button danger-icon action-button" data-debt-delete="${d.id}" title="Удалить" aria-label="Удалить"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/><path d="M10 11v6M14 11v6"/></svg></button>
                       </div>
                     `
                     :""
@@ -2861,22 +2861,38 @@ function remainingBudget(){
   return Math.max(0,budget()-spent()-plannedDebtTotalForMonth());
 }
 
+function plannedDebtUntilNextSalary(info){
+  if(!info?.next?.dateObj) return 0;
+  const todayStart=new Date();
+  todayStart.setHours(0,0,0,0);
+  const nextStart=new Date(info.next.dateObj);
+  nextStart.setHours(0,0,0,0);
+
+  return plannedPayments
+    .filter(p=>{
+      if(p.paid || p.category!=="Кредиты | Долги") return false;
+      const raw=normalizeAppDate(p.date);
+      if(!raw) return false;
+      const d=new Date(raw+"T00:00:00");
+      return !Number.isNaN(d.getTime()) && d>todayStart && d<=nextStart;
+    })
+    .reduce((sum,p)=>sum+Math.max(0,Number(p.amount)||0),0);
+}
+
 function periodDailyLimit(){
   const info=salaryPeriodInfo();
   const realMoney=Math.max(0,spendableBalance());
-  const remaining=remainingBudget();
 
-  // Без подтверждённой истории двух выплат мы не знаем,
-  // сколько дней осталось до следующей выплаты.
   if(!info.next || !info.days)
     return 0;
 
-  const byCash=realMoney/info.days;
-  const byBudget=remaining/info.days;
+  // Обязательные выплаты по долгам резервируются из реальных денег до следующей зарплаты.
+  // Они не должны исчезать только потому, что в категории «Кредиты | Долги» стоит лимит 0.
+  const reservedDebt=plannedDebtUntilNextSalary(info);
+  const availableAfterDebt=Math.max(0,realMoney-reservedDebt);
 
-  return Math.max(0,Math.min(byCash,byBudget));
+  return Math.max(0,availableAfterDebt/info.days);
 }
-
 function home(){
 
   const b=budget();
@@ -5747,95 +5763,51 @@ saveDebtButton.addEventListener(
 debtsList.addEventListener(
   "click",
   e => {
-
-    const editButton =
-      e.target.closest("[data-dei]");
-
-    const deleteButton =
-      e.target.closest("[data-di]");
-
-    /* Для списка all сначала идут кредитные карты,
-       затем личные долги. Поэтому находим реальный объект
-       по его id, а не просто по позиции. */
-    const all =
-      accounts
-        .filter(
-          a =>
-            a.type === "credit" &&
-            Number(a.balance || 0) < 0
-        )
-        .map(a => ({
-          id:"card_"+a.name,
-          kind:"credit"
-        }))
-        .concat(
-          debts.map(d => ({
-            ...d,
-            kind:"personal"
-          }))
-        );
+    const editButton=e.target.closest("[data-debt-edit]");
+    const deleteButton=e.target.closest("[data-debt-delete]");
 
     if(editButton){
-      const item =
-        all[Number(editButton.dataset.dei)];
+      const id=String(editButton.dataset.debtEdit);
+      const index=debts.findIndex(d=>String(d.id)===id);
+      if(index<0) return;
 
-      if(!item || item.kind !== "personal")
-        return;
-
-      editingDebt =
-        debts.findIndex(d => d.id === item.id);
-
-      if(editingDebt < 0)
-        return;
-
-      const d = debts[editingDebt];
-
-      debtModalTitle.textContent = "Изменить обязательство";
-      manualDebtName.value = d.name || "";
-      manualDebtAmount.value = d.amount || 0;
-      manualDebtDueDate.value = normalizeAppDate(d.dueDate);
-      manualDebtType.value = d.kind==="installment" ? "installment" : "personal";
+      editingDebt=index;
+      const d=debts[index];
+      debtModalTitle.textContent="Изменить обязательство";
+      manualDebtName.value=d.name||"";
+      manualDebtAmount.value=d.amount||0;
+      manualDebtDueDate.value=normalizeAppDate(d.dueDate);
+      manualDebtType.value=d.kind==="installment" ? "installment" : "personal";
       personalDebtFields.style.display=manualDebtType.value==="personal"?"block":"none";
       installmentDebtFields.style.display=manualDebtType.value==="installment"?"block":"none";
-      installmentFirstDate.value = normalizeAppDate(d.dueDate);
-      installmentPayment.value = "";
-      installmentCount.value = "";
-      installmentFile.value = "";
-      saveDebtButton.textContent = "Сохранить изменения";
-
+      installmentFirstDate.value=normalizeAppDate(d.dueDate);
+      installmentPayment.value="";
+      installmentCount.value="";
+      installmentFile.value="";
+      saveDebtButton.textContent="Сохранить изменения";
       open("debtOverlay");
       return;
     }
 
     if(deleteButton){
-      const item =
-        all[Number(deleteButton.dataset.di)];
+      const id=String(deleteButton.dataset.debtDelete);
+      const index=debts.findIndex(d=>String(d.id)===id);
+      if(index<0) return;
+      if(!confirm(`Удалить обязательство «${debts[index].name||"Обязательство"}»?`)) return;
 
-      if(!item || item.kind !== "personal")
-        return;
-
-      const i =
-        debts.findIndex(d => d.id === item.id);
-
-      if(i < 0)
-        return;
-
-      const removedId=debts[i].id;
-      debts.splice(i,1);
+      const removedId=debts[index].id;
+      debts.splice(index,1);
       removePlannedPaymentsForDebt(removedId);
-
-      save(
-        DK,
-        debts
-      );
+      save(DK,debts);
       save(PK,plannedPayments);
       scheduleAutoSync();
-
       renderDebts();
+      renderCats();
+      home();
     }
-
   }
 );
+
 
 /* GOOGLE */
 
