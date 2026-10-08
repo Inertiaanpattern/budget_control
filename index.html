@@ -1147,9 +1147,17 @@ button{
     <div class="settings-group">
       <div class="settings-group-title">Прогноз</div>
       <div class="small-note" style="margin-top:0">
-        Выплаты для прогноза берутся только из фактических операций с категорией «Зарплата».
-        Суммы и даты не нужно вводить отдельно.
+        Добавляй ожидаемые поступления заранее. Они определяют ближайшую прогнозную дату,
+        но не увеличивают реальный остаток на счетах до фактического поступления.
       </div>
+      <div id="forecastIncomeList" style="margin-top:10px"></div>
+      <div class="field-label" style="margin-top:12px">Ожидаемая сумма</div>
+      <input id="forecastIncomeAmount" class="text-input" type="number" min="0" step="1" inputmode="decimal" placeholder="Например, 25000">
+      <div class="field-label" style="margin-top:10px">Ожидаемая дата</div>
+      <input id="forecastIncomeDate" class="text-input" type="date">
+      <div class="field-label" style="margin-top:10px">Название поступления</div>
+      <input id="forecastIncomeName" class="text-input" type="text" placeholder="Например, аванс или зарплата">
+      <button class="primary" id="addForecastIncomeButton" style="margin-top:10px">＋ Добавить прогноз</button>
     </div>
 
     <div class="settings-group">
@@ -1709,6 +1717,7 @@ let CK="";
 const AK="babki_accounts_real_v1";
 const FK="babki_finance_settings_v1";
 const SK="babki_savings_goal_percent_v1";
+const FIK="babki_forecast_incomes_v1";
 const GK="babki_goals_v1";
 const DK="babki_personal_debts_v1";
 const PK="babki_planned_payments_v1";
@@ -1730,6 +1739,7 @@ let advance=0;
 let advanceDate=null;
 let mainSalaryDate=15;
 let savingsPercent=20;
+let forecastIncomes=[];
 let paymentFacts={};
 
 let transactions=[];
@@ -1931,6 +1941,9 @@ function ensureAccountIds(list){
 
 
 function load(){
+
+  const savedForecastIncomes=read(FIK,[]);
+  forecastIncomes=Array.isArray(savedForecastIncomes)?savedForecastIncomes:[];
 
   updateNavTodayDate();
   const periodChanged=ensureCurrentBudgetMonth();
@@ -2772,6 +2785,115 @@ function salaryIntervalDays(){
   return diffs.length ? Math.round(median(diffs)) : null;
 }
 
+function futureForecastIncomes(){
+  const todayKey=today();
+  return forecastIncomes
+    .filter(x=>x && Number(x.amount)>0 && /^\d{4}-\d{2}-\d{2}$/.test(String(x.date||"")) && x.date>=todayKey)
+    .slice()
+    .sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+function reconcileForecastIncomes(){
+  if(!Array.isArray(forecastIncomes) || !forecastIncomes.length) return false;
+
+  const salaryOps=transactions.filter(x=>
+    x && x.type==="income" && normalizeIncomeCategory(x)==="salary" && x.date
+  );
+  if(!salaryOps.length) return false;
+
+  const dayMs=86400000;
+  const remaining=forecastIncomes.slice();
+  let changed=false;
+
+  // Фактическое поступление заменяет прогноз, если дата отличается не более чем на 3 дня.
+  // В расчётах после этого используется реальная сумма операции, а не прогнозная сумма.
+  for(const op of salaryOps){
+    const opDate=normalizeAppDate(op.date);
+    if(!opDate) continue;
+    const opTime=new Date(opDate+"T00:00:00").getTime();
+    let bestIndex=-1;
+    let bestDiff=4;
+
+    remaining.forEach((item,index)=>{
+      const fDate=normalizeAppDate(item.date);
+      if(!fDate) return;
+      const fTime=new Date(fDate+"T00:00:00").getTime();
+      const diff=Math.abs(Math.round((fTime-opTime)/dayMs));
+      if(diff<bestDiff){
+        bestDiff=diff;
+        bestIndex=index;
+      }
+    });
+
+    if(bestIndex>=0){
+      remaining.splice(bestIndex,1);
+      changed=true;
+    }
+  }
+
+  if(changed){
+    forecastIncomes=remaining;
+    save(FIK,forecastIncomes);
+    if(typeof scheduleAutoSync==="function") scheduleAutoSync();
+  }
+  return changed;
+}
+
+function renderForecastIncomeList(){
+  const host=document.getElementById("forecastIncomeList");
+  if(!host) return;
+  const list=futureForecastIncomes();
+  if(!list.length){
+    host.innerHTML='<div class="small-note">Пока нет прогнозных поступлений.</div>';
+    return;
+  }
+  host.innerHTML=list.map(x=>`
+    <div class="stat-row" style="align-items:flex-start;gap:8px">
+      <div style="min-width:0;flex:1">
+        <div style="font-weight:700">${escapeForecastText(x.name||"Ожидаемое поступление")}</div>
+        <div class="small-note">${displayAppDate(x.date)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;white-space:nowrap">
+        <span class="stat-value">${money(x.amount)}</span>
+        <button class="small-button danger-icon" data-delete-forecast="${escapeForecastText(x.id)}" aria-label="Удалить прогноз">×</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function escapeForecastText(value){
+  return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+}
+
+function addForecastIncome(){
+  const amountEl=document.getElementById("forecastIncomeAmount");
+  const dateEl=document.getElementById("forecastIncomeDate");
+  const nameEl=document.getElementById("forecastIncomeName");
+  const amount=Math.max(0,Number(amountEl?.value)||0);
+  const date=String(dateEl?.value||"");
+  const name=String(nameEl?.value||"").trim()||"Ожидаемое поступление";
+  if(!amount || !/^\d{4}-\d{2}-\d{2}$/.test(date)){
+    alert("Укажи ожидаемую сумму и дату поступления.");
+    return;
+  }
+  forecastIncomes.push({id:"forecast_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),name,amount,date});
+  save(FIK,forecastIncomes);
+  scheduleAutoSync();
+  amountEl.value="";
+  dateEl.value="";
+  nameEl.value="";
+  renderForecastIncomeList();
+  home();
+}
+
+function deleteForecastIncome(id){
+  forecastIncomes=forecastIncomes.filter(x=>String(x.id)!==String(id));
+  save(FIK,forecastIncomes);
+  scheduleAutoSync();
+  renderForecastIncomeList();
+  home();
+}
+
 function salaryPeriodInfo(){
   const now=new Date();
   const todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate());
@@ -2782,13 +2904,19 @@ function salaryPeriodInfo(){
     .sort((a,b)=>b.dateObj-a.dateObj)[0] || null;
 
   if(!previous){
-    // Новый пользователь: пока нет ни одной фактической зарплаты,
-    // временно считаем ближайшей выплатой 15-е число текущего/следующего месяца.
-    const nextDate=new Date(todayStart.getFullYear(),todayStart.getMonth(),15);
-    if(nextDate<=todayStart) nextDate.setMonth(nextDate.getMonth()+1);
+    const forecast=futureForecastIncomes()[0]||null;
+    const nextDate=forecast
+      ?new Date(forecast.date+"T00:00:00")
+      :new Date(todayStart.getFullYear(),todayStart.getMonth(),15);
+    if(!forecast && nextDate<=todayStart) nextDate.setMonth(nextDate.getMonth()+1);
     return {
       previous:null,
-      next:{date:nextDate,dateObj:nextDate,amount:0,type:"salary",inferred:true,startup:true},
+      next:{
+        date:nextDate,dateObj:nextDate,
+        amount:forecast?Number(forecast.amount)||0:0,
+        type:"salary",inferred:!forecast,startup:true,
+        forecastId:forecast?.id||null,forecast:!!forecast
+      },
       periodStart:todayStart,
       periodEnd:nextDate,
       days:Math.max(1,Math.ceil((nextDate-todayStart)/86400000)),
@@ -2821,6 +2949,34 @@ function salaryPeriodInfo(){
       type:"salary",
       inferred:true
     };
+  }
+
+  const upcomingForecast=futureForecastIncomes()[0]||null;
+  if(upcomingForecast && (!next || new Date(upcomingForecast.date+"T00:00:00")<next.dateObj)){
+    const forecastDate=new Date(upcomingForecast.date+"T00:00:00");
+    next={
+      date:forecastDate,dateObj:forecastDate,
+      amount:Number(upcomingForecast.amount)||0,type:"salary",
+      inferred:false,forecast:true,forecastId:upcomingForecast.id
+    };
+  }
+
+  // Если вручную задано ожидаемое поступление раньше расчётной даты,
+  // используем его как ближайшую выплату. Сумма прогноза не добавляется к реальным деньгам.
+  const forecast=futureForecastIncomes()[0]||null;
+  if(forecast){
+    const forecastDate=new Date(forecast.date+"T00:00:00");
+    if(!next || forecastDate<next.dateObj){
+      next={
+        date:forecastDate,
+        dateObj:forecastDate,
+        amount:Number(forecast.amount)||0,
+        type:"salary",
+        inferred:true,
+        forecastId:forecast.id,
+        forecast:true
+      };
+    }
   }
 
   const days=next
@@ -2953,14 +3109,11 @@ function periodDailyLimit(){
   if(!info.next || !info.days)
     return 0;
 
-  // Обязательные выплаты по долгам резервируются из реальных денег до следующей зарплаты.
-  // Они не должны исчезать только потому, что в категории «Кредиты | Долги» стоит лимит 0.
+  // Обязательные выплаты по долгам резервируются из реальных денег до следующего поступления.
   const reservedDebt=plannedDebtUntilNextSalary(info);
   const availableAfterDebt=Math.max(0,realMoney-reservedDebt);
 
-  // Второе ограничение — оставшийся план расходов на месяц.
-  // Поэтому изменение лимитов категорий влияет на дневной лимит,
-  // но кредитные карты по-прежнему не считаются доступными деньгами.
+  // Дневной лимит ограничен и фактически доступными деньгами, и оставшимся планом расходов.
   const monthBudgetLeft=remainingBudget();
   const cashDailyLimit=availableAfterDebt/info.days;
   const budgetDailyLimit=monthBudgetLeft/info.days;
@@ -2968,6 +3121,9 @@ function periodDailyLimit(){
   return Math.max(0,Math.min(cashDailyLimit,budgetDailyLimit));
 }
 function home(){
+
+  reconcileForecastIncomes();
+  renderForecastIncomeList();
 
   const b=budget();
   const s=spent();
@@ -3023,7 +3179,7 @@ function home(){
   if(period.next && period.days){
     const dateText=period.next.dateObj.toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
     dailyDescription.textContent=
-      `До следующей зарплаты: ${period.days} ${
+      `${period.next.forecast ? "До прогнозного поступления" : "До следующей зарплаты"}: ${period.days} ${
         period.days===1 ? "день" : period.days<5 ? "дня" : "дней"
       } · ориентировочно ${dateText}`;
   }else if(period.previous){
@@ -3453,8 +3609,8 @@ function localSyncData(){
         :[],
 
     settings:{
-      // Сохраняем только действительно используемую настройку.
-      savingsPercent:Number(savingsPercent)||0
+      savingsPercent:Number(savingsPercent)||0,
+      forecastIncomes:Array.isArray(forecastIncomes)?forecastIncomes:[]
     }
 
   };
@@ -3673,7 +3829,15 @@ function normalizeSyncData(data){
 
 
   const normalizedSettings={
-    savingsPercent:Number(s.savingsPercent||0)
+    savingsPercent:Number(s.savingsPercent||0),
+    forecastIncomes:Array.isArray(s.forecastIncomes)
+      ?s.forecastIncomes.map(x=>({
+        id:String(x.id||("forecast_"+Date.now()+"_"+Math.random().toString(36).slice(2,7))),
+        name:String(x.name||"Ожидаемое поступление"),
+        amount:Math.max(0,Number(x.amount)||0),
+        date:String(x.date||"")
+      })).filter(x=>x.amount>0 && /^\\d{4}-\\d{2}-\\d{2}$/.test(x.date))
+      :[]
   };
 
 
@@ -3727,7 +3891,8 @@ function hasSyncData(data){
     (Array.isArray(d.goals) && d.goals.length>0) ||
     (Array.isArray(d.debts) && d.debts.length>0) ||
     (Array.isArray(d.plannedPayments) && d.plannedPayments.length>0) ||
-    (d.settings && Number(d.settings.savingsPercent||0)!==0)
+    (d.settings && Number(d.settings.savingsPercent||0)!==0) ||
+    (d.settings && Array.isArray(d.settings.forecastIncomes) && d.settings.forecastIncomes.length>0)
   );
 
 }
@@ -4259,6 +4424,8 @@ function applyGoogleData(data){
       );
 
     save(SK,savingsPercent);
+    forecastIncomes=Array.isArray(s.forecastIncomes)?s.forecastIncomes:[];
+    save(FIK,forecastIncomes);
 
   }
 
@@ -6302,6 +6469,14 @@ renderGoals();
 updateFinance();
 home();
 setTimeout(()=>autoSyncOnce(false),1200);
+
+
+document.getElementById("addForecastIncomeButton")?.addEventListener("click",addForecastIncome);
+document.getElementById("forecastIncomeList")?.addEventListener("click",event=>{
+  const button=event.target.closest("[data-delete-forecast]");
+  if(button) deleteForecastIncome(button.dataset.deleteForecast);
+});
+renderForecastIncomeList();
 
 </script>
 
