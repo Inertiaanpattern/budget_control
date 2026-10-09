@@ -960,6 +960,13 @@ button{
   min-width:0;
   box-sizing:border-box;
 }
+#forecastIncomeDate{
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
 </style>
 </head>
 
@@ -2866,24 +2873,48 @@ function escapeForecastText(value){
 }
 
 function addForecastIncome(){
-  const amountEl=document.getElementById("forecastIncomeAmount");
-  const dateEl=document.getElementById("forecastIncomeDate");
-  const nameEl=document.getElementById("forecastIncomeName");
-  const amount=Math.max(0,Number(amountEl?.value)||0);
-  const date=String(dateEl?.value||"");
-  const name=String(nameEl?.value||"").trim()||"Ожидаемое поступление";
-  if(!amount || !/^\d{4}-\d{2}-\d{2}$/.test(date)){
-    alert("Укажи ожидаемую сумму и дату поступления.");
-    return;
+  try{
+    const amountEl=document.getElementById("forecastIncomeAmount");
+    const dateEl=document.getElementById("forecastIncomeDate");
+    const nameEl=document.getElementById("forecastIncomeName");
+    const amount=Number(String(amountEl?.value||"").replace(",","."));
+    const date=String(dateEl?.value||"").trim();
+    const name=String(nameEl?.value||"").trim()||"Ожидаемое поступление";
+
+    if(!Number.isFinite(amount) || amount<=0){
+      alert("Укажи сумму поступления больше нуля.");
+      amountEl?.focus();
+      return;
+    }
+    if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)){
+      alert("Выбери дату поступления.");
+      dateEl?.focus();
+      return;
+    }
+
+    if(!Array.isArray(forecastIncomes)) forecastIncomes=[];
+    const item={
+      id:"forecast_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),
+      name,
+      amount,
+      date
+    };
+    forecastIncomes.push(item);
+    save(FIK,forecastIncomes);
+
+    // Сразу показываем результат локально; синхронизация выполняется отдельно.
+    renderForecastIncomeList();
+    amountEl.value="";
+    dateEl.value="";
+    if(nameEl) nameEl.value="";
+    alert("Прогноз добавлен.");
+
+    try{ scheduleAutoSync(); }catch(syncError){ console.error("Ошибка синхронизации прогноза",syncError); }
+    try{ home(); }catch(renderError){ console.error("Ошибка обновления главного экрана",renderError); }
+  }catch(error){
+    console.error("Не удалось добавить прогноз",error);
+    alert("Не удалось сохранить прогноз. Попробуй ещё раз; если ошибка повторится, пришли скриншот.");
   }
-  forecastIncomes.push({id:"forecast_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),name,amount,date});
-  save(FIK,forecastIncomes);
-  scheduleAutoSync();
-  amountEl.value="";
-  dateEl.value="";
-  nameEl.value="";
-  renderForecastIncomeList();
-  home();
 }
 
 function deleteForecastIncome(id){
