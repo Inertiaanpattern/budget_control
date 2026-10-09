@@ -2907,10 +2907,9 @@ function addForecastIncome(){
     amountEl.value="";
     dateEl.value="";
     if(nameEl) nameEl.value="";
-    alert("Прогноз добавлен.");
-
     try{ scheduleAutoSync(); }catch(syncError){ console.error("Ошибка синхронизации прогноза",syncError); }
     try{ home(); }catch(renderError){ console.error("Ошибка обновления главного экрана",renderError); }
+    alert("Прогноз добавлен.");
   }catch(error){
     console.error("Не удалось добавить прогноз",error);
     alert("Не удалось сохранить прогноз. Попробуй ещё раз; если ошибка повторится, пришли скриншот.");
@@ -3153,7 +3152,6 @@ function periodDailyLimit(){
 }
 function home(){
 
-  reconcileForecastIncomes();
   renderForecastIncomeList();
 
   const b=budget();
