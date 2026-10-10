@@ -3143,12 +3143,9 @@ function periodDailyLimit(){
   const reservedDebt=plannedDebtUntilNextSalary(info);
   const availableAfterDebt=Math.max(0,realMoney-reservedDebt);
 
-  // Дневной лимит ограничен и фактически доступными деньгами, и оставшимся планом расходов.
-  const monthBudgetLeft=remainingBudget();
-  const cashDailyLimit=availableAfterDebt/info.days;
-  const budgetDailyLimit=monthBudgetLeft/info.days;
-
-  return Math.max(0,Math.min(cashDailyLimit,budgetDailyLimit));
+  // Дневной лимит рассчитываем по реальным деньгам после резерва долгов.
+  // Месячные лимиты категорий не должны обнулять дневной лимит сами по себе.
+  return Math.max(0,availableAfterDebt/info.days);
 }
 function home(){
 
