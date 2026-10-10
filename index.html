@@ -716,14 +716,38 @@ button{
   box-sizing:border-box
 }
 
-/* На iPhone поле даты не должно раздвигать модальное окно */
+/* Поля даты: Safari/iPhone не должны расширять карточку или форму */
+input[type="date"],
 .modal input[type="date"]{
   display:block;
   width:100%;
   min-width:0;
   max-width:100%;
   box-sizing:border-box;
-  overflow:hidden
+  font-size:16px;
+  padding-left:10px;
+  padding-right:6px;
+  -webkit-appearance:none;
+  appearance:none;
+}
+
+/* В поле графика платежей дата не должна вытеснять сумму и кнопку удаления */
+.schedule-payment-row{
+  grid-template-columns:minmax(0,1fr) minmax(0,.8fr) 36px;
+  min-width:0;
+  width:100%;
+}
+.schedule-payment-row input[type="date"]{
+  min-width:0;
+  width:100%;
+  padding:10px 4px;
+  font-size:13px;
+}
+.schedule-payment-row input[type="number"]{
+  min-width:0;
+  width:100%;
+  padding:10px 6px;
+  font-size:14px;
 }
 
 .amount{
@@ -777,7 +801,7 @@ button{
   right:0;
   bottom:0;
   width:100%;
-  padding-bottom:env(safe-area-inset-bottom);
+  padding-bottom:env(safe-area-inset-bottom, 0px);
   background:#fffafaF0;
   backdrop-filter:blur(15px);
   -webkit-backdrop-filter:blur(15px);
@@ -967,6 +991,11 @@ button{
   min-width:0;
   box-sizing:border-box;
 }
+
+.schedule-payment-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.8fr) 36px;gap:6px;align-items:center;margin:8px 0}
+.schedule-payment-row input{min-width:0;padding:10px 8px;font-size:14px}
+.schedule-payment-row .remove-schedule-payment{height:38px;border:1px solid var(--border);border-radius:10px;background:var(--pp);color:var(--danger);font-size:20px}
+
 </style>
 </head>
 
@@ -1667,8 +1696,13 @@ button{
       <div class="field-label">Количество платежей</div>
       <input id="installmentCount" class="text-input" type="number" inputmode="numeric" min="1" step="1" placeholder="36">
 
-      <div class="small-note" style="margin-top:8px">Можно также загрузить CSV-график с колонками «Дата» и «Сумма».</div>
+      <div class="small-note" style="margin-top:8px">Можно задать график вручную ниже, сгенерировать ежемесячные платежи или загрузить CSV с колонками «Дата» и «Сумма».</div>
       <input id="installmentFile" type="file" accept=".csv,text/csv" class="text-input">
+
+      <div class="field-label" style="margin-top:16px">График платежей по этой рассрочке</div>
+      <div id="installmentScheduleRows"></div>
+      <button type="button" class="secondary" id="addInstallmentPaymentButton" style="width:100%;margin-top:8px">＋ Добавить платёж</button>
+      <div class="small-note" id="installmentScheduleSummary" style="margin-top:8px">Укажи даты и суммы платежей. Они будут учитываться в обязательных расходах.</div>
     </div>
 
     <button
@@ -2551,11 +2585,12 @@ function renderDebts(){
                   ${
                     d.kind==="credit"
                       ?"Задолженность по кредитной карте"
-                      :(due
-                        ?"Вернуть до "+due
-                        :"Личный долг")
+                      :(d.kind==="installment"
+                        ?"Рассрочка · последний платёж "+(due||"дата не указана")
+                        :(due?"Вернуть до "+due:"Личный долг"))
                   }
                 </div>
+                ${d.kind==="installment" ? (()=>{const ps=plannedPayments.filter(p=>String(p.debtId)===String(d.id)&&!p.paid).sort((a,b)=>normalizeAppDate(a.date).localeCompare(normalizeAppDate(b.date)));return `<div class="debt-meta">Осталось платежей: ${ps.length} · ${money(ps.reduce((sum,p)=>sum+Math.max(0,Number(p.amount)||0),0))}</div>`;})() : ""}
 
                 ${
                   due
@@ -3823,7 +3858,9 @@ function normalizeSyncData(data){
 
       dueDate:x.dueDate
         ?String(x.dueDate)
-        :null
+        :null,
+
+      kind:String(x.kind||"personal")
 
     }))
     .sort(
@@ -6228,6 +6265,7 @@ addDebtButton.addEventListener(
     installmentPayment.value = "";
     installmentCount.value = "";
     installmentFile.value = "";
+    renderInstallmentScheduleRows([]);
     personalDebtFields.style.display="block";
     installmentDebtFields.style.display="none";
     saveDebtButton.textContent = "Сохранить";
@@ -6248,6 +6286,7 @@ manualDebtType.addEventListener("change",()=>{
   const installment=manualDebtType.value==="installment";
   personalDebtFields.style.display=installment?"none":"block";
   installmentDebtFields.style.display=installment?"block":"none";
+  if(!installment) renderInstallmentScheduleRows([]);
 });
 
 function removePlannedPaymentsForDebt(debtId){
@@ -6297,6 +6336,51 @@ function parseInstallmentCSV(text,name,debtId){
   return added;
 }
 
+function renderInstallmentScheduleRows(items=[]){
+  const root=document.getElementById("installmentScheduleRows");
+  if(!root) return;
+  root.innerHTML="";
+  items.forEach(item=>addInstallmentScheduleRow(item.date||"",item.amount||""));
+  updateInstallmentScheduleSummary();
+}
+
+function addInstallmentScheduleRow(date="",amount=""){
+  const root=document.getElementById("installmentScheduleRows");
+  if(!root) return;
+  const row=document.createElement("div");
+  row.className="schedule-payment-row";
+  row.innerHTML=`<input class="text-input" type="date" data-schedule-date aria-label="Дата платежа" value="${String(date).replace(/[^0-9-]/g,"")}"><input class="text-input" type="number" inputmode="decimal" min="0" step="0.01" data-schedule-amount aria-label="Сумма платежа" placeholder="Сумма" value="${Number(amount)>0?Number(amount):""}"><button type="button" class="remove-schedule-payment" aria-label="Удалить платёж">×</button>`;
+  row.querySelectorAll("input").forEach(input=>input.addEventListener("input",updateInstallmentScheduleSummary));
+  row.querySelector(".remove-schedule-payment").addEventListener("click",()=>{row.remove();updateInstallmentScheduleSummary();});
+  root.appendChild(row);
+  updateInstallmentScheduleSummary();
+}
+
+function readInstallmentScheduleRows(){
+  return [...document.querySelectorAll("#installmentScheduleRows .schedule-payment-row")].map(row=>({
+    date:normalizeAppDate(row.querySelector("[data-schedule-date]").value),
+    amount:Number(row.querySelector("[data-schedule-amount]").value||0)
+  })).filter(p=>p.date && Number.isFinite(p.amount) && p.amount>0).sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+function updateInstallmentScheduleSummary(){
+  const summary=document.getElementById("installmentScheduleSummary");
+  if(!summary) return;
+  const rows=[...document.querySelectorAll("#installmentScheduleRows .schedule-payment-row")];
+  let total=0, valid=0, last="";
+  rows.forEach(row=>{
+    const date=normalizeAppDate(row.querySelector("[data-schedule-date]").value);
+    const amount=Number(row.querySelector("[data-schedule-amount]").value||0);
+    if(date && amount>0 && Number.isFinite(amount)){total+=amount;valid++;if(!last||date>last)last=date;}
+  });
+  summary.textContent=valid
+    ?`Платежей: ${valid} · Всего: ${money(total)} · Последний платёж: ${displayAppDate(last)}`
+    :"Укажи даты и суммы платежей. Они будут учитываться в обязательных расходах.";
+}
+
+document.getElementById("addInstallmentPaymentButton").addEventListener("click",()=>addInstallmentScheduleRow());
+installmentFile.addEventListener("change",()=>{if(installmentFile.files?.length) renderInstallmentScheduleRows([]);});
+
 saveDebtButton.addEventListener(
   "click",
   async () => {
@@ -6312,12 +6396,18 @@ saveDebtButton.addEventListener(
       d.dueDate=normalizeAppDate(manualDebtDueDate.value);
       if(!d.dueDate){ alert("Укажи дату возврата."); return; }
     }else{
+      const manualSchedule=readInstallmentScheduleRows();
       const file=installmentFile.files?.[0];
-      if(!file && (!installmentFirstDate.value || Number(installmentPayment.value)<=0 || Number(installmentCount.value)<=0)){
-        alert("Укажи первый платёж, сумму и количество платежей или загрузи CSV-график.");
+      const generatorValid=!!installmentFirstDate.value && Number(installmentPayment.value)>0 && Number(installmentCount.value)>0;
+      if(manualSchedule.length===0 && !file && !generatorValid){
+        alert("Добавь платежи в график ниже, укажи первый платёж, сумму и количество платежей или загрузи CSV-график.");
         return;
       }
-      d.dueDate=normalizeAppDate(installmentFirstDate.value);
+      if(document.querySelectorAll("#installmentScheduleRows .schedule-payment-row").length && manualSchedule.length!==document.querySelectorAll("#installmentScheduleRows .schedule-payment-row").length){
+        alert("Заполни дату и положительную сумму у каждого платежа в графике или удали пустую строку.");
+        return;
+      }
+      d.dueDate=manualSchedule.length ? manualSchedule[manualSchedule.length-1].date : normalizeAppDate(installmentFirstDate.value);
     }
 
     if(editingDebt===null) debts.push(d);
@@ -6328,13 +6418,21 @@ saveDebtButton.addEventListener(
     if(type==="personal"){
       addPlannedPayment(id,name,amount,d.dueDate);
     }else{
+      const manualSchedule=readInstallmentScheduleRows();
       const file=installmentFile.files?.[0];
-      if(file){
+      if(manualSchedule.length){
+        manualSchedule.forEach(p=>addPlannedPayment(id,name,p.amount,p.date,"installment"));
+        d.dueDate=manualSchedule[manualSchedule.length-1].date;
+      }else if(file){
         const text=await file.text();
         const added=parseInstallmentCSV(text,name,id);
         if(!added){ alert("Не удалось найти в CSV строки с датой и суммой."); return; }
+        const dates=plannedPayments.filter(p=>String(p.debtId)===String(id)).map(p=>normalizeAppDate(p.date)).filter(Boolean).sort();
+        d.dueDate=dates[dates.length-1]||d.dueDate;
       }else{
         addMonthlyPayments(id,name,Number(installmentPayment.value),normalizeAppDate(installmentFirstDate.value),Math.floor(Number(installmentCount.value)));
+        const dates=plannedPayments.filter(p=>String(p.debtId)===String(id)).map(p=>normalizeAppDate(p.date)).filter(Boolean).sort();
+        d.dueDate=dates[dates.length-1]||d.dueDate;
       }
     }
 
@@ -6370,10 +6468,15 @@ debtsList.addEventListener(
       manualDebtType.value=d.kind==="installment" ? "installment" : "personal";
       personalDebtFields.style.display=manualDebtType.value==="personal"?"block":"none";
       installmentDebtFields.style.display=manualDebtType.value==="installment"?"block":"none";
-      installmentFirstDate.value=normalizeAppDate(d.dueDate);
+      const debtSchedule=plannedPayments
+        .filter(p=>String(p.debtId)===String(d.id) && p.category==="Кредиты | Долги")
+        .sort((a,b)=>normalizeAppDate(a.date).localeCompare(normalizeAppDate(b.date)))
+        .map(p=>({date:normalizeAppDate(p.date),amount:Number(p.amount||0)}));
+      installmentFirstDate.value=debtSchedule[0]?.date||normalizeAppDate(d.dueDate);
       installmentPayment.value="";
       installmentCount.value="";
       installmentFile.value="";
+      renderInstallmentScheduleRows(manualDebtType.value==="installment"?debtSchedule:[]);
       saveDebtButton.textContent="Сохранить изменения";
       open("debtOverlay");
       return;
