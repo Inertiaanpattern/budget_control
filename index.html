@@ -2295,19 +2295,17 @@ function renderCats(){
           )
         : Number(c.plan||0);
 
-    const committed =
-      c.name === "Кредиты | Долги"
-        ? plannedForCategory
-        : 0;
-
-    const r=effectivePlan-s-committed;
+    // Плановые выплаты по долгам задают размер категории, если
+    // пользователь не установил больший лимит, но не считаются
+    // фактическими расходами и не уменьшают остаток категории.
+    const r=effectivePlan-s;
 
     const p=effectivePlan
       ?Math.min(
         100,
         Math.max(
           0,
-          (s+committed)/effectivePlan*100
+          s/effectivePlan*100
         )
       )
       :0;
