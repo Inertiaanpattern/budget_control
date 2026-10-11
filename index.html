@@ -1196,6 +1196,19 @@ input[type="date"],
       <button type="button" class="primary" id="addForecastIncomeButton" style="margin-top:10px" onclick="addForecastIncome()">＋ Добавить прогноз</button>
     </div>
 
+    <div class="settings-group" id="purchaseReserveSettings">
+      <div class="settings-group-title">Резерв на ближайшую покупку</div>
+      <div class="small-note" style="margin-top:0">Отложи сумму на конкретную покупку: она уменьшит дневной лимит, но не спишется со счёта и не уменьшит месячный лимит до фактического расхода.</div>
+      <div id="purchaseReserveSummary" style="margin-top:10px"></div>
+      <div class="field-label" style="margin-top:12px">На что откладываем</div>
+      <input id="purchaseReserveName" class="text-input" type="text" placeholder="Например, подарок">
+      <div class="field-label" style="margin-top:10px">Сумма резерва</div>
+      <input id="purchaseReserveAmount" class="text-input" type="number" min="0" step="1" inputmode="decimal" placeholder="Например, 7000">
+      <div class="field-label" style="margin-top:10px">Когда планируешь покупку</div>
+      <input id="purchaseReserveDate" class="text-input" type="date">
+      <div class="actions-row" style="margin-top:10px"><button type="button" class="primary" id="savePurchaseReserveButton">Сохранить резерв</button><button type="button" class="secondary" id="clearPurchaseReserveButton">Снять резерв</button></div>
+    </div>
+
     <div class="settings-group">
       <div class="settings-group-title">Накопления</div>
 
@@ -1759,6 +1772,7 @@ const AK="babki_accounts_real_v1";
 const FK="babki_finance_settings_v1";
 const SK="babki_savings_goal_percent_v1";
 const FIK="babki_forecast_incomes_v1";
+const RIK="babki_purchase_reserve_v1";
 const GK="babki_goals_v1";
 const DK="babki_personal_debts_v1";
 const PK="babki_planned_payments_v1";
@@ -1781,6 +1795,7 @@ let advanceDate=null;
 let mainSalaryDate=15;
 let savingsPercent=20;
 let forecastIncomes=[];
+let purchaseReserve=null;
 let paymentFacts={};
 
 let transactions=[];
@@ -1985,6 +2000,7 @@ function load(){
 
   const savedForecastIncomes=read(FIK,[]);
   forecastIncomes=Array.isArray(savedForecastIncomes)?savedForecastIncomes:[];
+  purchaseReserve=normalizePurchaseReserve(read(RIK,null));
 
   updateNavTodayDate();
   const periodChanged=ensureCurrentBudgetMonth();
@@ -3165,21 +3181,65 @@ function plannedDebtUntilNextSalary(info){
   return total;
 }
 
+function normalizePurchaseReserve(value){
+  if(!value || typeof value!=="object") return null;
+  const amount=Math.max(0,Number(value.amount)||0);
+  const date=normalizeAppDate(value.date);
+  if(amount<=0 || !date) return null;
+  return {id:String(value.id||("reserve_"+Date.now())),name:String(value.name||"Ближайшая покупка"),amount,date};
+}
+
+function renderPurchaseReserve(){
+  const summary=document.getElementById("purchaseReserveSummary");
+  const nameEl=document.getElementById("purchaseReserveName");
+  const amountEl=document.getElementById("purchaseReserveAmount");
+  const dateEl=document.getElementById("purchaseReserveDate");
+  const active=normalizePurchaseReserve(purchaseReserve);
+  purchaseReserve=active;
+  if(nameEl) nameEl.value=active?.name||"";
+  if(amountEl) amountEl.value=active?String(active.amount):"";
+  if(dateEl) dateEl.value=active?.date||"";
+  if(summary) summary.innerHTML=active
+    ? `<div class="stat-row"><span>Зарезервировано: ${escapeForecastText(active.name)}</span><strong>${money(active.amount)}</strong></div><div class="small-note">Плановая дата: ${displayAppDate(active.date)}. Резерв не меняет баланс. Он снимется при расходе ровно на эту сумму в дату покупки или позже либо вручную.</div>`
+    : '<div class="small-note">Резерв пока не задан.</div>';
+}
+
+function savePurchaseReserve(){
+  const nameEl=document.getElementById("purchaseReserveName"), amountEl=document.getElementById("purchaseReserveAmount"), dateEl=document.getElementById("purchaseReserveDate");
+  const amount=Number(String(amountEl?.value||"").replace(",","."));
+  const date=String(dateEl?.value||"").trim();
+  const name=String(nameEl?.value||"").trim()||"Ближайшая покупка";
+  if(!Number.isFinite(amount)||amount<=0){alert("Укажи сумму резерва больше нуля.");amountEl?.focus();return;}
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){alert("Выбери дату покупки.");dateEl?.focus();return;}
+  purchaseReserve={id:purchaseReserve?.id||("reserve_"+Date.now()),name,amount,date};
+  save(RIK,purchaseReserve); scheduleAutoSync(); renderPurchaseReserve(); home();
+}
+
+function clearPurchaseReserve(){
+  purchaseReserve=null; localStorage.removeItem(RIK);
+  for(const id of ["purchaseReserveName","purchaseReserveAmount","purchaseReserveDate"]){const el=document.getElementById(id);if(el)el.value="";}
+  scheduleAutoSync(); renderPurchaseReserve(); home();
+}
+
+function reconcilePurchaseReserveWithExpense(transaction){
+  const reserve=normalizePurchaseReserve(purchaseReserve);
+  if(!reserve || !transaction || transaction.type!=="expense") return false;
+  const expenseDate=normalizeAppDate(transaction.date);
+  if(!expenseDate || expenseDate<reserve.date || Math.abs(Number(transaction.amount||0)-reserve.amount)>0.01) return false;
+  purchaseReserve=null; localStorage.removeItem(RIK); return true;
+}
+
 function periodDailyLimit(){
   const info=salaryPeriodInfo();
   const realMoney=Math.max(0,spendableBalance());
-
-  if(!info.next || !info.days)
-    return 0;
-
-  // Обязательные выплаты по долгам резервируются из реальных денег до следующего поступления.
+  if(!info.next || !info.days) return 0;
   const reservedDebt=plannedDebtUntilNextSalary(info);
-  const availableAfterDebt=Math.max(0,realMoney-reservedDebt);
-
-  // Дневной лимит рассчитываем по реальным деньгам после резерва долгов.
-  // Месячные лимиты категорий не должны обнулять дневной лимит сами по себе.
-  return Math.max(0,availableAfterDebt/info.days);
+  const reservedPurchase=normalizePurchaseReserve(purchaseReserve)?.amount||0;
+  const availableAfterReserves=Math.max(0,realMoney-reservedDebt-reservedPurchase);
+  // Прогноз не прибавляется к реальным деньгам; месячные лимиты здесь повторно не вычитаются.
+  return Math.max(0,availableAfterReserves/info.days);
 }
+
 function home(){
 
   renderForecastIncomeList();
@@ -3237,10 +3297,13 @@ function home(){
 
   if(period.next && period.days){
     const dateText=period.next.dateObj.toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
+    const reserveText=normalizePurchaseReserve(purchaseReserve)
+      ?` · резерв покупки ${money(purchaseReserve.amount)}`
+      :"";
     dailyDescription.textContent=
       `${period.next.forecast ? "До прогнозного поступления" : "До следующей зарплаты"}: ${period.days} ${
         period.days===1 ? "день" : period.days<5 ? "дня" : "дней"
-      } · ориентировочно ${dateText}`;
+      } · ориентировочно ${dateText}${reserveText}`;
   }else if(period.previous){
     dailyDescription.textContent=
       "Нужна ещё одна фактическая выплата «Зарплата», чтобы определить следующий период";
@@ -3669,7 +3732,8 @@ function localSyncData(){
 
     settings:{
       savingsPercent:Number(savingsPercent)||0,
-      forecastIncomes:Array.isArray(forecastIncomes)?forecastIncomes:[]
+      forecastIncomes:Array.isArray(forecastIncomes)?forecastIncomes:[],
+      purchaseReserve:normalizePurchaseReserve(purchaseReserve)
     }
 
   };
@@ -3897,8 +3961,11 @@ function normalizeSyncData(data){
         name:String(x.name||"Ожидаемое поступление"),
         amount:Math.max(0,Number(x.amount)||0),
         date:String(x.date||"")
-      })).filter(x=>x.amount>0 && /^\\d{4}-\\d{2}-\\d{2}$/.test(x.date))
-      :[]
+      })).filter(x=>x.amount>0 && /^\d{4}-\d{2}-\d{2}$/.test(x.date))
+      :[],
+    purchaseReserve:Object.prototype.hasOwnProperty.call(s,"purchaseReserve")
+      ?normalizePurchaseReserve(s.purchaseReserve)
+      :null
   };
 
 
@@ -3953,7 +4020,8 @@ function hasSyncData(data){
     (Array.isArray(d.debts) && d.debts.length>0) ||
     (Array.isArray(d.plannedPayments) && d.plannedPayments.length>0) ||
     (d.settings && Number(d.settings.savingsPercent||0)!==0) ||
-    (d.settings && Array.isArray(d.settings.forecastIncomes) && d.settings.forecastIncomes.length>0)
+    (d.settings && Array.isArray(d.settings.forecastIncomes) && d.settings.forecastIncomes.length>0) ||
+    !!d.settings?.purchaseReserve
   );
 
 }
@@ -4487,8 +4555,11 @@ function applyGoogleData(data){
     save(SK,savingsPercent);
     forecastIncomes=Array.isArray(s.forecastIncomes)?s.forecastIncomes:[];
     save(FIK,forecastIncomes);
+    purchaseReserve=normalizePurchaseReserve(s.purchaseReserve);
+    if(purchaseReserve) save(RIK,purchaseReserve); else localStorage.removeItem(RIK);
 
   }
+  renderPurchaseReserve();
 
 }
 
@@ -4857,19 +4928,13 @@ async function autoSyncOnce(showStatus=false){
      * потому что список категорий существует и без пользовательских данных.
      * Реальными данными считаем счета, операции, цели, долги и плановые платежи.
      */
-    const googleHasData =
-      googleData.accounts.length>0 ||
-      googleData.transactions.length>0 ||
-      googleData.goals.length>0 ||
-      googleData.debts.length>0 ||
-      googleData.plannedPayments.length>0;
-
-    const localHasData =
-      localData.accounts.length>0 ||
-      localData.transactions.length>0 ||
-      localData.goals.length>0 ||
-      localData.debts.length>0 ||
-      localData.plannedPayments.length>0;
+    const hasUserSettings = d => !!(
+      Number(d.settings?.savingsPercent||0)!==0 ||
+      (Array.isArray(d.settings?.forecastIncomes) && d.settings.forecastIncomes.length>0) ||
+      d.settings?.purchaseReserve
+    );
+    const googleHasData = googleData.accounts.length>0 || googleData.transactions.length>0 || googleData.goals.length>0 || googleData.debts.length>0 || googleData.plannedPayments.length>0 || hasUserSettings(googleData);
+    const localHasData = localData.accounts.length>0 || localData.transactions.length>0 || localData.goals.length>0 || localData.debts.length>0 || localData.plannedPayments.length>0 || hasUserSettings(localData);
 
     /*
      * ЗАЩИТА ОТ ЗАТИРАНИЯ:
@@ -5432,6 +5497,7 @@ saveExpenseButton.addEventListener("click", () => {
     }
     if(isIncome || !transactions.includes(transaction)) transactions.push(transaction);
   }
+  if(!isIncome) reconcilePurchaseReserveWithExpense({type:"expense",amount:value,date,category,name});
   save(AK,accounts); save(TY,transactions); scheduleAutoSync();
   close("expenseOverlay"); editingTransactionIndex=null; deleteOperationButton.style.display="none";
   renderAccounts(); renderDebts(); renderCats(); home(); renderHistory();
@@ -6602,7 +6668,10 @@ document.getElementById("forecastIncomeList")?.addEventListener("click",event=>{
   const button=event.target.closest("[data-delete-forecast]");
   if(button) deleteForecastIncome(button.dataset.deleteForecast);
 });
+document.getElementById("savePurchaseReserveButton")?.addEventListener("click",savePurchaseReserve);
+document.getElementById("clearPurchaseReserveButton")?.addEventListener("click",clearPurchaseReserve);
 renderForecastIncomeList();
+renderPurchaseReserve();
 
 </script>
 
