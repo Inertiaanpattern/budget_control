@@ -1089,6 +1089,24 @@ input[type="date"],
   </button>
 
   <div class="card" id="categoryList"></div>
+
+  <div class="card" id="purchaseReserveSettings" style="margin-top:12px">
+    <div class="settings-group-title">Резервы по лимитам</div>
+    <div class="small-note" style="margin-top:0">Зарезервируй часть месячного лимита на будущую покупку. Сумма уменьшит свободный остаток категории и дневной лимит, но не спишется со счёта и не станет расходом до покупки.</div>
+    <div id="purchaseReserveSummary" style="margin-top:10px"></div>
+    <div class="field-label" style="margin-top:12px">На что откладываем</div>
+    <input id="purchaseReserveName" class="text-input" type="text" placeholder="Например, подарок">
+    <div class="field-label" style="margin-top:10px">Категория месячного лимита</div>
+    <select id="purchaseReserveCategory" class="text-input">
+      <option value="">Без категории — только дневной лимит</option>
+    </select>
+    <div class="field-label" style="margin-top:10px">Сумма резерва</div>
+    <input id="purchaseReserveAmount" class="text-input" type="number" min="0" step="1" inputmode="decimal" placeholder="Например, 7000">
+    <div class="field-label" style="margin-top:10px">Когда планируешь покупку</div>
+    <input id="purchaseReserveDate" class="text-input" type="date">
+    <div class="actions-row" style="margin-top:10px"><button type="button" class="primary" id="savePurchaseReserveButton">＋ Добавить резерв</button><button type="button" class="secondary" id="clearPurchaseReserveButton">Очистить поля</button></div>
+    <div class="small-note">У каждого резерва есть свои кнопки «Изменить» и «Удалить». Можно убрать один резерв, не затрагивая остальные.</div>
+  </div>
 </section>
 
 
@@ -1196,18 +1214,6 @@ input[type="date"],
       <button type="button" class="primary" id="addForecastIncomeButton" style="margin-top:10px" onclick="addForecastIncome()">＋ Добавить прогноз</button>
     </div>
 
-    <div class="settings-group" id="purchaseReserveSettings">
-      <div class="settings-group-title">Резерв на ближайшую покупку</div>
-      <div class="small-note" style="margin-top:0">Отложи сумму на конкретную покупку: она уменьшит дневной лимит, но не спишется со счёта и не уменьшит месячный лимит до фактического расхода.</div>
-      <div id="purchaseReserveSummary" style="margin-top:10px"></div>
-      <div class="field-label" style="margin-top:12px">На что откладываем</div>
-      <input id="purchaseReserveName" class="text-input" type="text" placeholder="Например, подарок">
-      <div class="field-label" style="margin-top:10px">Сумма резерва</div>
-      <input id="purchaseReserveAmount" class="text-input" type="number" min="0" step="1" inputmode="decimal" placeholder="Например, 7000">
-      <div class="field-label" style="margin-top:10px">Когда планируешь покупку</div>
-      <input id="purchaseReserveDate" class="text-input" type="date">
-      <div class="actions-row" style="margin-top:10px"><button type="button" class="primary" id="savePurchaseReserveButton">Сохранить резерв</button><button type="button" class="secondary" id="clearPurchaseReserveButton">Снять резерв</button></div>
-    </div>
 
     <div class="settings-group">
       <div class="settings-group-title">Накопления</div>
@@ -1795,7 +1801,8 @@ let advanceDate=null;
 let mainSalaryDate=15;
 let savingsPercent=20;
 let forecastIncomes=[];
-let purchaseReserve=null;
+let purchaseReserves=[];
+let editingPurchaseReserveId=null;
 let paymentFacts={};
 
 let transactions=[];
@@ -2000,7 +2007,8 @@ function load(){
 
   const savedForecastIncomes=read(FIK,[]);
   forecastIncomes=Array.isArray(savedForecastIncomes)?savedForecastIncomes:[];
-  purchaseReserve=normalizePurchaseReserve(read(RIK,null));
+  purchaseReserves=normalizePurchaseReserves(read(RIK,null));
+  save(RIK,purchaseReserves);
 
   updateNavTodayDate();
   const periodChanged=ensureCurrentBudgetMonth();
@@ -2314,14 +2322,15 @@ function renderCats(){
     // Плановые выплаты по долгам задают размер категории, если
     // пользователь не установил больший лимит, но не считаются
     // фактическими расходами и не уменьшают остаток категории.
-    const r=effectivePlan-s;
+    const reservedForCategory=categoryReservedAmount(c.name);
+    const r=effectivePlan-s-reservedForCategory;
 
     const p=effectivePlan
       ?Math.min(
         100,
         Math.max(
           0,
-          s/effectivePlan*100
+          (s+reservedForCategory)/effectivePlan*100
         )
       )
       :0;
@@ -2349,7 +2358,7 @@ function renderCats(){
         <div class="category-actions">
 
           <div class="category-remaining ${r<0?"negative":""}">
-            ${r>=0?"осталось ":"перерасход "}
+            ${r>=0?"свободно ":"сверх лимита "}
             ${money(Math.abs(r))}
           </div>
 
@@ -2363,8 +2372,10 @@ function renderCats(){
       </div>
 
       <div class="category-meta">
-        ${money(s)} из ${money(effectivePlan)}
+        Потрачено ${money(s)} · зарезервировано ${money(reservedForCategory)} из ${money(effectivePlan)}
       </div>
+
+      <button type="button" class="secondary" data-reserve-ci="${i}" style="margin-top:8px;padding:6px 10px;font-size:13px">＋ Зарезервировать из лимита</button>
 
       <div class="category-bar">
         <div
@@ -3182,11 +3193,38 @@ function plannedDebtUntilNextSalary(info){
 }
 
 function normalizePurchaseReserve(value){
-  if(!value || typeof value!=="object") return null;
+  if(!value || typeof value!=="object" || Array.isArray(value)) return null;
   const amount=Math.max(0,Number(value.amount)||0);
   const date=normalizeAppDate(value.date);
   if(amount<=0 || !date) return null;
-  return {id:String(value.id||("reserve_"+Date.now())),name:String(value.name||"Ближайшая покупка"),amount,date};
+  return {id:String(value.id||("reserve_"+Date.now()+"_"+Math.random().toString(36).slice(2,7))),name:String(value.name||"Ближайшая покупка"),category:String(value.category||""),amount,date};
+}
+
+function normalizePurchaseReserves(value){
+  // Поддержка старого формата, где хранился только один резерв.
+  const list=Array.isArray(value)?value:(value && typeof value==="object"?[value]:[]);
+  const seen=new Set();
+  return list.map(normalizePurchaseReserve).filter(r=>{
+    if(!r || seen.has(r.id)) return false;
+    seen.add(r.id); return true;
+  });
+}
+
+function categoryReservedAmount(categoryName){
+  const monthPrefix=`${budgetYear}-${String(budgetMonth+1).padStart(2,"0")}`;
+  return normalizePurchaseReserves(purchaseReserves)
+    .filter(r=>r.category===categoryName && String(r.date||"").startsWith(monthPrefix))
+    .reduce((sum,r)=>sum+Number(r.amount||0),0);
+}
+
+function populatePurchaseReserveCategories(selectedValue=""){
+  const select=document.getElementById("purchaseReserveCategory");
+  if(!select) return;
+  const current=selectedValue || select.value || "";
+  select.innerHTML='<option value="">Без категории — только дневной лимит</option>'+
+    categories.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru",{sensitivity:"base"}))
+      .map(c=>`<option value="${escapeForecastText(c.name)}">${escapeForecastText(c.name)}</option>`).join("");
+  select.value=current;
 }
 
 function renderPurchaseReserve(){
@@ -3194,39 +3232,104 @@ function renderPurchaseReserve(){
   const nameEl=document.getElementById("purchaseReserveName");
   const amountEl=document.getElementById("purchaseReserveAmount");
   const dateEl=document.getElementById("purchaseReserveDate");
-  const active=normalizePurchaseReserve(purchaseReserve);
-  purchaseReserve=active;
-  if(nameEl) nameEl.value=active?.name||"";
-  if(amountEl) amountEl.value=active?String(active.amount):"";
-  if(dateEl) dateEl.value=active?.date||"";
-  if(summary) summary.innerHTML=active
-    ? `<div class="stat-row"><span>Зарезервировано: ${escapeForecastText(active.name)}</span><strong>${money(active.amount)}</strong></div><div class="small-note">Плановая дата: ${displayAppDate(active.date)}. Резерв не меняет баланс. Он снимется при расходе ровно на эту сумму в дату покупки или позже либо вручную.</div>`
-    : '<div class="small-note">Резерв пока не задан.</div>';
+  const categoryEl=document.getElementById("purchaseReserveCategory");
+  purchaseReserves=normalizePurchaseReserves(purchaseReserves);
+  populatePurchaseReserveCategories(editingPurchaseReserveId ? (purchaseReserves.find(r=>String(r.id)===String(editingPurchaseReserveId))?.category||"") : "");
+  const total=purchaseReserves.reduce((sum,r)=>sum+r.amount,0);
+  if(summary){
+    summary.innerHTML=purchaseReserves.length
+      ? `<div class="stat-row"><span>Активных резервов: ${purchaseReserves.length}</span><strong>${money(total)}</strong></div>
+         ${purchaseReserves.map(r=>`<div class="card" style="margin-top:8px;padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--card)">
+           <div class="stat-row" style="gap:8px"><strong style="overflow-wrap:anywhere">${escapeForecastText(r.name)}</strong><strong>${money(r.amount)}</strong></div>
+           <div class="small-note" style="margin-top:5px">Категория: ${r.category ? escapeForecastText(r.category) : "не выбрана"}</div>
+           <div class="small-note" style="margin-top:3px">Покупка: ${displayAppDate(r.date)}</div>
+           <div class="actions-row" style="margin-top:8px">
+             <button type="button" class="secondary" data-reserve-edit="${escapeForecastText(r.id)}">✎ Изменить</button>
+             <button type="button" class="danger-button" data-reserve-delete="${escapeForecastText(r.id)}">Удалить</button>
+           </div>
+         </div>`).join("")}
+         <div class="small-note" style="margin-top:8px">Общая сумма резервов: ${money(total)}. Резервы уменьшают дневной лимит, но не меняют баланс счетов.</div>`
+      : '<div class="small-note">Резервов пока нет. Добавь первый ниже.</div>';
+  }
+  if(!editingPurchaseReserveId){
+    if(nameEl) nameEl.value="";
+    if(amountEl) amountEl.value="";
+    if(dateEl) dateEl.value="";
+    const saveButton=document.getElementById("savePurchaseReserveButton");
+    if(saveButton) saveButton.textContent="＋ Добавить резерв";
+  }
 }
 
 function savePurchaseReserve(){
-  const nameEl=document.getElementById("purchaseReserveName"), amountEl=document.getElementById("purchaseReserveAmount"), dateEl=document.getElementById("purchaseReserveDate");
+  const nameEl=document.getElementById("purchaseReserveName"), amountEl=document.getElementById("purchaseReserveAmount"), dateEl=document.getElementById("purchaseReserveDate"), categoryEl=document.getElementById("purchaseReserveCategory");
   const amount=Number(String(amountEl?.value||"").replace(",","."));
   const date=String(dateEl?.value||"").trim();
   const name=String(nameEl?.value||"").trim()||"Ближайшая покупка";
+  const category=String(categoryEl?.value||"");
   if(!Number.isFinite(amount)||amount<=0){alert("Укажи сумму резерва больше нуля.");amountEl?.focus();return;}
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){alert("Выбери дату покупки.");dateEl?.focus();return;}
-  purchaseReserve={id:purchaseReserve?.id||("reserve_"+Date.now()),name,amount,date};
-  save(RIK,purchaseReserve); scheduleAutoSync(); renderPurchaseReserve(); home();
+  if(editingPurchaseReserveId){
+    const idx=purchaseReserves.findIndex(r=>String(r.id)===String(editingPurchaseReserveId));
+    if(idx>=0) purchaseReserves[idx]={...purchaseReserves[idx],name,category,amount,date};
+    else purchaseReserves.push({id:"reserve_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),name,category,amount,date});
+  }else{
+    purchaseReserves.push({id:"reserve_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),name,category,amount,date});
+  }
+  editingPurchaseReserveId=null;
+  // После сохранения очищаем все поля ввода, чтобы следующая запись начиналась с нуля.
+  if(nameEl) nameEl.value="";
+  if(amountEl) amountEl.value="";
+  if(dateEl) dateEl.value="";
+  if(categoryEl) categoryEl.value="";
+  const saveButton=document.getElementById("savePurchaseReserveButton");
+  if(saveButton) saveButton.textContent="＋ Добавить резерв";
+  save(RIK,purchaseReserves); scheduleAutoSync(); renderPurchaseReserve(); renderCats(); home();
 }
 
 function clearPurchaseReserve(){
-  purchaseReserve=null; localStorage.removeItem(RIK);
-  for(const id of ["purchaseReserveName","purchaseReserveAmount","purchaseReserveDate"]){const el=document.getElementById(id);if(el)el.value="";}
-  scheduleAutoSync(); renderPurchaseReserve(); home();
+  editingPurchaseReserveId=null;
+  for(const id of ["purchaseReserveName","purchaseReserveAmount","purchaseReserveDate","purchaseReserveCategory"]){const el=document.getElementById(id);if(el)el.value="";}
+  const saveButton=document.getElementById("savePurchaseReserveButton");
+  if(saveButton) saveButton.textContent="＋ Добавить резерв";
+  renderPurchaseReserve();
+}
+
+function editPurchaseReserve(id){
+  const reserve=purchaseReserves.find(r=>String(r.id)===String(id));
+  if(!reserve) return;
+  editingPurchaseReserveId=String(reserve.id);
+  document.getElementById("purchaseReserveName").value=reserve.name;
+  document.getElementById("purchaseReserveAmount").value=String(reserve.amount);
+  document.getElementById("purchaseReserveDate").value=reserve.date;
+  populatePurchaseReserveCategories(reserve.category||"");
+  document.getElementById("purchaseReserveCategory").value=reserve.category||"";
+  const saveButton=document.getElementById("savePurchaseReserveButton");
+  if(saveButton) saveButton.textContent="Сохранить изменения";
+  document.getElementById("purchaseReserveName")?.scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+function deletePurchaseReserve(id){
+  const reserve=purchaseReserves.find(r=>String(r.id)===String(id));
+  if(!reserve) return;
+  if(!confirm(`Удалить резерв «${reserve.name}» на ${money(reserve.amount)}? Остальные резервы останутся без изменений.`)) return;
+  purchaseReserves=purchaseReserves.filter(r=>String(r.id)!==String(id));
+  if(String(editingPurchaseReserveId)===String(id)) editingPurchaseReserveId=null;
+  save(RIK,purchaseReserves); scheduleAutoSync(); renderPurchaseReserve(); renderCats(); home();
 }
 
 function reconcilePurchaseReserveWithExpense(transaction){
-  const reserve=normalizePurchaseReserve(purchaseReserve);
-  if(!reserve || !transaction || transaction.type!=="expense") return false;
+  if(!transaction || transaction.type!=="expense") return false;
   const expenseDate=normalizeAppDate(transaction.date);
-  if(!expenseDate || expenseDate<reserve.date || Math.abs(Number(transaction.amount||0)-reserve.amount)>0.01) return false;
-  purchaseReserve=null; localStorage.removeItem(RIK); return true;
+  if(!expenseDate) return false;
+  const idx=purchaseReserves.findIndex(reserve=>
+    expenseDate>=reserve.date &&
+    (!reserve.category || reserve.category===transaction.category) &&
+    Math.abs(Number(transaction.amount||0)-reserve.amount)<=0.01
+  );
+  if(idx<0) return false;
+  purchaseReserves.splice(idx,1);
+  save(RIK,purchaseReserves);
+  return true;
 }
 
 function periodDailyLimit(){
@@ -3234,7 +3337,7 @@ function periodDailyLimit(){
   const realMoney=Math.max(0,spendableBalance());
   if(!info.next || !info.days) return 0;
   const reservedDebt=plannedDebtUntilNextSalary(info);
-  const reservedPurchase=normalizePurchaseReserve(purchaseReserve)?.amount||0;
+  const reservedPurchase=normalizePurchaseReserves(purchaseReserves).reduce((sum,r)=>sum+r.amount,0);
   const availableAfterReserves=Math.max(0,realMoney-reservedDebt-reservedPurchase);
   // Прогноз не прибавляется к реальным деньгам; месячные лимиты здесь повторно не вычитаются.
   return Math.max(0,availableAfterReserves/info.days);
@@ -3297,8 +3400,9 @@ function home(){
 
   if(period.next && period.days){
     const dateText=period.next.dateObj.toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
-    const reserveText=normalizePurchaseReserve(purchaseReserve)
-      ?` · резерв покупки ${money(purchaseReserve.amount)}`
+    const reserveTotal=normalizePurchaseReserves(purchaseReserves).reduce((sum,r)=>sum+r.amount,0);
+    const reserveText=reserveTotal>0
+      ?` · резервы покупок ${money(reserveTotal)}`
       :"";
     dailyDescription.textContent=
       `${period.next.forecast ? "До прогнозного поступления" : "До следующей зарплаты"}: ${period.days} ${
@@ -3733,7 +3837,8 @@ function localSyncData(){
     settings:{
       savingsPercent:Number(savingsPercent)||0,
       forecastIncomes:Array.isArray(forecastIncomes)?forecastIncomes:[],
-      purchaseReserve:normalizePurchaseReserve(purchaseReserve)
+      purchaseReserves:normalizePurchaseReserves(purchaseReserves),
+      purchaseReserve:normalizePurchaseReserves(purchaseReserves)[0]||null
     }
 
   };
@@ -3963,9 +4068,12 @@ function normalizeSyncData(data){
         date:String(x.date||"")
       })).filter(x=>x.amount>0 && /^\d{4}-\d{2}-\d{2}$/.test(x.date))
       :[],
-    purchaseReserve:Object.prototype.hasOwnProperty.call(s,"purchaseReserve")
-      ?normalizePurchaseReserve(s.purchaseReserve)
-      :null
+    purchaseReserves:normalizePurchaseReserves(
+      Array.isArray(s.purchaseReserves) ? s.purchaseReserves : s.purchaseReserve
+    ),
+    purchaseReserve:normalizePurchaseReserves(
+      Array.isArray(s.purchaseReserves) ? s.purchaseReserves : s.purchaseReserve
+    )[0]||null
   };
 
 
@@ -4021,7 +4129,8 @@ function hasSyncData(data){
     (Array.isArray(d.plannedPayments) && d.plannedPayments.length>0) ||
     (d.settings && Number(d.settings.savingsPercent||0)!==0) ||
     (d.settings && Array.isArray(d.settings.forecastIncomes) && d.settings.forecastIncomes.length>0) ||
-    !!d.settings?.purchaseReserve
+    !!d.settings?.purchaseReserve ||
+    (d.settings && Array.isArray(d.settings.purchaseReserves) && d.settings.purchaseReserves.length>0)
   );
 
 }
@@ -4555,8 +4664,10 @@ function applyGoogleData(data){
     save(SK,savingsPercent);
     forecastIncomes=Array.isArray(s.forecastIncomes)?s.forecastIncomes:[];
     save(FIK,forecastIncomes);
-    purchaseReserve=normalizePurchaseReserve(s.purchaseReserve);
-    if(purchaseReserve) save(RIK,purchaseReserve); else localStorage.removeItem(RIK);
+    purchaseReserves=normalizePurchaseReserves(
+      Array.isArray(s.purchaseReserves) ? s.purchaseReserves : s.purchaseReserve
+    );
+    save(RIK,purchaseReserves);
 
   }
   renderPurchaseReserve();
@@ -4931,7 +5042,8 @@ async function autoSyncOnce(showStatus=false){
     const hasUserSettings = d => !!(
       Number(d.settings?.savingsPercent||0)!==0 ||
       (Array.isArray(d.settings?.forecastIncomes) && d.settings.forecastIncomes.length>0) ||
-      d.settings?.purchaseReserve
+      d.settings?.purchaseReserve ||
+      (Array.isArray(d.settings?.purchaseReserves) && d.settings.purchaseReserves.length>0)
     );
     const googleHasData = googleData.accounts.length>0 || googleData.transactions.length>0 || googleData.goals.length>0 || googleData.debts.length>0 || googleData.plannedPayments.length>0 || hasUserSettings(googleData);
     const localHasData = localData.accounts.length>0 || localData.transactions.length>0 || localData.goals.length>0 || localData.debts.length>0 || localData.plannedPayments.length>0 || hasUserSettings(localData);
@@ -5506,6 +5618,20 @@ saveExpenseButton.addEventListener("click", () => {
 /* ЛИМИТ КАТЕГОРИИ */
 
 categoryList.addEventListener("click", e => {
+
+  const reserveButton=e.target.closest("[data-reserve-ci]");
+  if(reserveButton){
+    const categoryIndex=Number(reserveButton.dataset.reserveCi);
+    const category=categories.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru",{sensitivity:"base"}))[categoryIndex];
+    if(category){
+      populatePurchaseReserveCategories(category.name);
+      const categorySelect=document.getElementById("purchaseReserveCategory");
+      if(categorySelect) categorySelect.value=category.name;
+      document.getElementById("purchaseReserveSettings")?.scrollIntoView({behavior:"smooth",block:"start"});
+      document.getElementById("purchaseReserveName")?.focus({preventScroll:true});
+    }
+    return;
+  }
 
   const button =
     e.target.closest("[data-ci]");
@@ -6670,6 +6796,12 @@ document.getElementById("forecastIncomeList")?.addEventListener("click",event=>{
 });
 document.getElementById("savePurchaseReserveButton")?.addEventListener("click",savePurchaseReserve);
 document.getElementById("clearPurchaseReserveButton")?.addEventListener("click",clearPurchaseReserve);
+document.getElementById("purchaseReserveSummary")?.addEventListener("click",event=>{
+  const edit=event.target.closest("[data-reserve-edit]");
+  const del=event.target.closest("[data-reserve-delete]");
+  if(edit) editPurchaseReserve(edit.dataset.reserveEdit);
+  if(del) deletePurchaseReserve(del.dataset.reserveDelete);
+});
 renderForecastIncomeList();
 renderPurchaseReserve();
 
