@@ -1094,18 +1094,20 @@ input[type="date"],
     <div class="settings-group-title">Резервы по лимитам</div>
     <div class="small-note" style="margin-top:0">Зарезервируй часть месячного лимита на будущую покупку. Сумма уменьшит свободный остаток категории и дневной лимит, но не спишется со счёта и не станет расходом до покупки.</div>
     <div id="purchaseReserveSummary" style="margin-top:10px"></div>
-    <div class="field-label" style="margin-top:12px">На что откладываем</div>
-    <input id="purchaseReserveName" class="text-input" type="text" placeholder="Например, подарок">
-    <div class="field-label" style="margin-top:10px">Категория месячного лимита</div>
-    <select id="purchaseReserveCategory" class="text-input">
-      <option value="">Без категории — только дневной лимит</option>
-    </select>
-    <div class="field-label" style="margin-top:10px">Сумма резерва</div>
-    <input id="purchaseReserveAmount" class="text-input" type="number" min="0" step="1" inputmode="decimal" placeholder="Например, 7000">
-    <div class="field-label" style="margin-top:10px">Когда планируешь покупку</div>
-    <input id="purchaseReserveDate" class="text-input" type="date">
-    <div class="actions-row" style="margin-top:10px"><button type="button" class="primary" id="savePurchaseReserveButton">＋ Добавить резерв</button><button type="button" class="secondary" id="clearPurchaseReserveButton">Очистить поля</button></div>
-    <div class="small-note">У каждого резерва есть свои кнопки «Изменить» и «Удалить». Можно убрать один резерв, не затрагивая остальные.</div>
+    <button type="button" class="secondary" id="openPurchaseReserveButton" style="margin-top:12px;width:100%">＋ Добавить резерв</button>
+    <div id="purchaseReserveEditor" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div class="field-label">Комментарий (необязательно)</div>
+      <input id="purchaseReserveName" class="text-input" type="text" placeholder="Например, подарок">
+      <select id="purchaseReserveCategory" class="text-input" style="display:none" aria-hidden="true" tabindex="-1">
+        <option value="">Без категории — только дневной лимит</option>
+      </select>
+      <div class="field-label" style="margin-top:10px">Сумма резерва</div>
+      <input id="purchaseReserveAmount" class="text-input" type="number" min="0" step="1" inputmode="decimal" placeholder="Например, 7000">
+      <div class="field-label" style="margin-top:10px">Дата покупки</div>
+      <input id="purchaseReserveDate" class="text-input" type="date">
+      <div class="actions-row" style="margin-top:10px"><button type="button" class="primary" id="savePurchaseReserveButton">＋ Добавить резерв</button><button type="button" class="secondary" id="clearPurchaseReserveButton">Отмена</button></div>
+    </div>
+    <div class="small-note" style="margin-top:10px">У каждого резерва есть свои кнопки «Изменить» и «Удалить». Можно убрать один резерв, не затрагивая остальные.</div>
   </div>
 </section>
 
@@ -3227,6 +3229,13 @@ function populatePurchaseReserveCategories(selectedValue=""){
   select.value=current;
 }
 
+function setPurchaseReserveEditor(open){
+  const editor=document.getElementById("purchaseReserveEditor");
+  const opener=document.getElementById("openPurchaseReserveButton");
+  if(editor) editor.style.display=open?"block":"none";
+  if(opener) opener.style.display=open?"none":"block";
+}
+
 function renderPurchaseReserve(){
   const summary=document.getElementById("purchaseReserveSummary");
   const nameEl=document.getElementById("purchaseReserveName");
@@ -3283,7 +3292,7 @@ function savePurchaseReserve(){
   if(categoryEl) categoryEl.value="";
   const saveButton=document.getElementById("savePurchaseReserveButton");
   if(saveButton) saveButton.textContent="＋ Добавить резерв";
-  save(RIK,purchaseReserves); scheduleAutoSync(); renderPurchaseReserve(); renderCats(); home();
+  save(RIK,purchaseReserves); scheduleAutoSync(); setPurchaseReserveEditor(false); renderPurchaseReserve(); renderCats(); home();
 }
 
 function clearPurchaseReserve(){
@@ -3291,6 +3300,7 @@ function clearPurchaseReserve(){
   for(const id of ["purchaseReserveName","purchaseReserveAmount","purchaseReserveDate","purchaseReserveCategory"]){const el=document.getElementById(id);if(el)el.value="";}
   const saveButton=document.getElementById("savePurchaseReserveButton");
   if(saveButton) saveButton.textContent="＋ Добавить резерв";
+  setPurchaseReserveEditor(false);
   renderPurchaseReserve();
 }
 
@@ -3298,6 +3308,7 @@ function editPurchaseReserve(id){
   const reserve=purchaseReserves.find(r=>String(r.id)===String(id));
   if(!reserve) return;
   editingPurchaseReserveId=String(reserve.id);
+  setPurchaseReserveEditor(true);
   document.getElementById("purchaseReserveName").value=reserve.name;
   document.getElementById("purchaseReserveAmount").value=String(reserve.amount);
   document.getElementById("purchaseReserveDate").value=reserve.date;
@@ -5624,6 +5635,7 @@ categoryList.addEventListener("click", e => {
     const categoryIndex=Number(reserveButton.dataset.reserveCi);
     const category=categories.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru",{sensitivity:"base"}))[categoryIndex];
     if(category){
+      setPurchaseReserveEditor(true);
       populatePurchaseReserveCategories(category.name);
       const categorySelect=document.getElementById("purchaseReserveCategory");
       if(categorySelect) categorySelect.value=category.name;
@@ -6794,6 +6806,7 @@ document.getElementById("forecastIncomeList")?.addEventListener("click",event=>{
   const button=event.target.closest("[data-delete-forecast]");
   if(button) deleteForecastIncome(button.dataset.deleteForecast);
 });
+document.getElementById("openPurchaseReserveButton")?.addEventListener("click",()=>{ editingPurchaseReserveId=null; clearPurchaseReserve(); setPurchaseReserveEditor(true); document.getElementById("purchaseReserveName")?.focus({preventScroll:true}); });
 document.getElementById("savePurchaseReserveButton")?.addEventListener("click",savePurchaseReserve);
 document.getElementById("clearPurchaseReserveButton")?.addEventListener("click",clearPurchaseReserve);
 document.getElementById("purchaseReserveSummary")?.addEventListener("click",event=>{
